@@ -1,0 +1,817 @@
+
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, Trash2, User, Upload, AlertCircle, Briefcase, Clock, Filter, ArrowUp, ArrowDown, X, Search, Download, ChevronRight, FileText } from 'lucide-react';
+import { Employee, Role, Squad, SystemUser } from '../types';
+import { getEmployees, saveEmployee, deleteEmployee } from '../services/dbService';
+
+interface EmployeeManagerProps {
+  currentUser: SystemUser;
+}
+
+const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isAdmin = currentUser.isAdmin;
+
+  // Filter & Sort State
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [filters, setFilters] = useState({
+    name: '',
+    matricula: '',
+    role: '',
+    squad: '',
+    shiftStart: ''
+  });
+
+  // Form State
+  const [formData, setFormData] = useState<Partial<Employee>>({
+    role: Role.INFRA_ANALYST,
+    squad: Squad.LAKERS,
+    shiftStart: '09:00',
+    shiftEnd: '18:00'
+  });
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = () => {
+    setEmployees(getEmployees());
+  };
+
+  // --- Filtering & Sorting Logic ---
+
+  const toggleSort = () => {
+    setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      name: '',
+      matricula: '',
+      role: '',
+      squad: '',
+      shiftStart: ''
+    });
+  };
+
+  const filteredEmployees = employees.filter(emp => {
+    const matchesName = (emp.firstName + ' ' + emp.lastName).toLowerCase().includes(filters.name.toLowerCase());
+    const matchesMatricula = emp.matricula.includes(filters.matricula);
+    const matchesRole = filters.role ? emp.role === filters.role : true;
+    const matchesSquad = filters.squad ? emp.squad === filters.squad : true;
+    const matchesShift = filters.shiftStart ? emp.shiftStart === filters.shiftStart : true;
+
+    return matchesName && matchesMatricula && matchesRole && matchesSquad && matchesShift;
+  }).sort((a, b) => {
+    const nameA = (a.firstName + ' ' + a.lastName).toLowerCase();
+    const nameB = (b.firstName + ' ' + b.lastName).toLowerCase();
+    
+    if (sortOrder === 'asc') {
+      return nameA.localeCompare(nameB);
+    } else {
+      return nameB.localeCompare(nameA);
+    }
+  });
+
+  const activeFilterCount = Object.values(filters).filter(Boolean).length;
+
+  // --- Modal & CRUD Logic ---
+
+  const openModal = (employee?: Employee) => {
+    // Only allow edit if admin
+    if (!isAdmin) return;
+
+    setFormError(null); // Clear previous errors
+    if (employee) {
+      setFormData(employee);
+      setEditingId(employee.id);
+    } else {
+      setEditingId(null);
+      setFormData({ 
+        role: Role.INFRA_ANALYST, 
+        squad: Squad.LAKERS,
+        shiftStart: '09:00', 
+        shiftEnd: '18:00' 
+      });
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isAdmin) return;
+
+    setFormError(null);
+
+    const targetMatricula = formData.matricula?.trim();
+
+    // Validate Matricula (Numeric)
+    if (!targetMatricula) {
+      setFormError("A matrícula é obrigatória.");
+      return;
+    }
+    
+    if (!/^\d+$/.test(targetMatricula)) {
+      setFormError("A matrícula deve conter apenas números.");
+      return;
+    }
+
+    // Check for Duplicate Matricula (Primary Key logic)
+    const duplicate = employees.find(emp => 
+      emp.matricula === targetMatricula && emp.id !== editingId
+    );
+
+    if (duplicate) {
+      setFormError(`Erro: A matrícula "${targetMatricula}" já está cadastrada para o funcionário ${duplicate.firstName} ${duplicate.lastName}.`);
+      return;
+    }
+
+    if (!formData.squad) {
+      setFormError("A Squad é obrigatória.");
+      return;
+    }
+
+    const newEmp: Employee = {
+      id: editingId || Date.now().toString(),
+      matricula: targetMatricula,
+      firstName: formData.firstName || '',
+      lastName: formData.lastName || '',
+      email: formData.email || '',
+      role: formData.role as Role,
+      squad: formData.squad as Squad,
+      shiftStart: formData.shiftStart || '09:00',
+      shiftEnd: formData.shiftEnd || '18:00'
+    };
+    
+    saveEmployee(newEmp, currentUser.name);
+    loadData();
+    setIsModalOpen(false);
+    setEditingId(null);
+    setFormData({ role: Role.INFRA_ANALYST, squad: Squad.LAKERS, shiftStart: '09:00', shiftEnd: '18:00' });
+  };
+
+  const requestDelete = (id: string) => {
+    if (!isAdmin) return;
+    setDeleteConfirmationId(id);
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirmationId && isAdmin) {
+      // Passes currentUser.name to log who performed the delete
+      deleteEmployee(deleteConfirmationId, currentUser.name);
+      setEmployees(prev => prev.filter(e => e.id !== deleteConfirmationId));
+      setDeleteConfirmationId(null);
+    }
+  };
+
+  // CSV Helper
+  const escapeCsv = (str: string | undefined | null) => {
+    if (!str) return '""';
+    const stringValue = String(str);
+    // Check for semicolon as well
+    if (stringValue.includes(';') || stringValue.includes('"') || stringValue.includes('\n')) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+    }
+    return stringValue;
+  };
+
+  const handleExportCSV = () => {
+    if (filteredEmployees.length === 0) {
+      alert("Não há dados para exportar.");
+      return;
+    }
+
+    const headers = ['Matrícula', 'Nome', 'Sobrenome', 'Email', 'Cargo', 'Squad', 'Início Expediente', 'Fim Expediente'];
+    
+    const rows = filteredEmployees.map(emp => [
+      escapeCsv(emp.matricula),
+      escapeCsv(emp.firstName),
+      escapeCsv(emp.lastName),
+      escapeCsv(emp.email),
+      escapeCsv(emp.role),
+      escapeCsv(emp.squad),
+      escapeCsv(emp.shiftStart),
+      escapeCsv(emp.shiftEnd)
+    ]);
+
+    const csvContent = [
+      headers.join(';'),
+      ...rows.map(r => r.join(';'))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `funcionarios_smarttime_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // CSV Template Download
+  const handleDownloadTemplate = () => {
+    const headers = ['Matricula', 'Nome', 'Sobrenome', 'Email', 'Cargo', 'Squad', 'InicioExpediente', 'FimExpediente'];
+    const exampleRow1 = ['1001', 'João', 'Silva', 'joao.silva@exemplo.com', 'Analista de Infraestrutura', 'Lakers', '09:00', '18:00'];
+    const exampleRow2 = ['1002', 'Maria', 'Santos', 'maria.santos@exemplo.com', 'DBA', 'Bulls', '08:00', '17:00'];
+    
+    const csvContent = [
+      headers.join(';'),
+      exampleRow1.join(';'),
+      exampleRow2.join(';')
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `template_importacao_funcionarios.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // CSV Import Logic
+  const handleImportClick = () => {
+    if (!isAdmin) return;
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    
+    reader.onload = (evt) => {
+      const csvText = evt.target?.result as string;
+      if (csvText) {
+        // Encoding Check: If replacement character exists, it likely failed UTF-8 decode of ANSI file
+        if (csvText.includes('\uFFFD')) {
+             console.log("Detected encoding issue (UTF-8 failed). Retrying with ISO-8859-1...");
+             const retryReader = new FileReader();
+             retryReader.onload = (retryEvt) => {
+                 const retryText = retryEvt.target?.result as string;
+                 processCSV(retryText);
+             };
+             retryReader.readAsText(file, 'ISO-8859-1');
+        } else {
+             processCSV(csvText);
+        }
+      }
+    };
+    
+    reader.readAsText(file); // Defaults to UTF-8
+    e.target.value = '';
+  };
+
+  const processCSV = (csvText: string) => {
+    const lines = csvText.split('\n');
+    let importedCount = 0;
+    let errorCount = 0;
+    let duplicateCount = 0;
+    
+    const currentEmployees = getEmployees(); 
+
+    // Helper to normalize strings (remove accents and lowercase) for comparison
+    const normalizeStr = (str: string) => {
+      return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    };
+
+    // Expected Format: matricula, firstName, lastName, email, role, squad, shiftStart, shiftEnd
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      // Use semicolon splitter
+      const cols = line.split(';').map(c => c.trim().replace(/^"|"$/g, ''));
+      
+      if (cols.length >= 7) { 
+        const [matricula, firstName, lastName, email, roleRaw, squadRaw, shiftStart, shiftEnd] = cols;
+        
+        // CSV Validation
+        if (!/^\d+$/.test(matricula)) {
+             errorCount++; // Invalid matricula format in CSV
+             continue;
+        }
+
+        if (currentEmployees.some(e => e.matricula === matricula)) {
+            duplicateCount++;
+            continue;
+        }
+
+        // Helpers to match enums case-insensitively AND ignoring accents
+        const findEnum = (enumObj: any, val: string) => Object.entries(enumObj).find(([k, v]) => 
+          normalizeStr(v as string) === normalizeStr(val) || normalizeStr(k) === normalizeStr(val)
+        )?.[1];
+
+        const role = findEnum(Role, roleRaw) as Role;
+        const squad = findEnum(Squad, squadRaw) as Squad;
+
+        if (role && squad) {
+           const newEmp: Employee = {
+             id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+             matricula,
+             firstName,
+             lastName,
+             email,
+             role,
+             squad,
+             shiftStart: shiftStart || '09:00',
+             shiftEnd: shiftEnd || '18:00'
+           };
+           saveEmployee(newEmp, currentUser.name);
+           currentEmployees.push(newEmp);
+           importedCount++;
+        } else {
+           errorCount++;
+        }
+      } else {
+        errorCount++;
+      }
+    }
+
+    let msg = `Importação finalizada.\nRegistros importados: ${importedCount}\nErros de formato/dados inválidos: ${errorCount}`;
+    if (duplicateCount > 0) {
+        msg += `\nDuplicatas ignoradas: ${duplicateCount}`;
+    }
+    alert(msg);
+    loadData();
+  };
+
+  const getSquadBadgeColor = (squad: Squad) => {
+    switch (squad) {
+      case Squad.LAKERS:
+        return 'bg-yellow-50 text-yellow-700 border-yellow-100';
+      case Squad.BULLS:
+        return 'bg-red-50 text-red-700 border-red-100';
+      case Squad.WARRIORS:
+        return 'bg-blue-50 text-blue-700 border-blue-100';
+      case Squad.ROCKETS:
+        return 'bg-purple-50 text-purple-700 border-purple-100';
+      default:
+        return 'bg-slate-50 text-slate-700 border-slate-100';
+    }
+  };
+
+  return (
+    <div>
+      {/* Header Responsivo */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-[#1E1E1E]">Funcionários</h1>
+          <p className="text-slate-500">Gerencie o quadro de colaboradores CX.</p>
+          <div className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 p-2 rounded-md inline-flex items-center gap-2 max-w-sm">
+            <AlertCircle size={16} className="flex-shrink-0" />
+            <span className="leading-tight">Dica: Se houver problemas com acentos, verifique se o CSV está em formato UTF-8 ou ANSI.</span>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2 relative w-full md:w-auto">
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            accept=".csv" 
+            className="hidden" 
+          />
+          
+          <button 
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className={`flex-1 md:flex-none px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm border ${isFilterOpen || activeFilterCount > 0 ? 'bg-[#204294]/10 border-[#204294]/20 text-[#204294]' : 'bg-white border-slate-200 text-[#3F3F3F] hover:bg-slate-50'}`}
+          >
+            <Filter size={18} />
+            <span className="hidden sm:inline">Filtrar</span>
+            {activeFilterCount > 0 && (
+              <span className="bg-[#204294] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full ml-1">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+          
+          <button 
+            onClick={handleExportCSV}
+            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+            title="Exportar para CSV"
+          >
+            <Download size={18} />
+            <span className="hidden sm:inline">Exportar</span>
+          </button>
+
+          {isAdmin && (
+            <>
+              <button 
+                onClick={handleDownloadTemplate}
+                className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+                title="Baixar Modelo de Importação"
+              >
+                <FileText size={18} />
+                <span className="hidden sm:inline">Modelo</span>
+              </button>
+              <button 
+                onClick={handleImportClick}
+                className="flex-1 md:flex-none bg-[#01B8A1] hover:bg-[#019f8b] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+              >
+                <Upload size={18} />
+                <span className="hidden sm:inline">Importar</span>
+              </button>
+              <button 
+                onClick={() => openModal()}
+                className="flex-1 md:flex-none bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+              >
+                <Plus size={18} />
+                <span className="hidden sm:inline">Novo</span>
+              </button>
+            </>
+          )}
+
+          {/* Filter Dropdown Panel */}
+          {isFilterOpen && (
+            <div className="absolute top-12 right-0 w-full md:w-80 bg-white rounded-xl shadow-xl border border-slate-200 p-5 z-20">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-[#1E1E1E] flex items-center gap-2">
+                  <Search size={16} /> Filtros
+                </h3>
+                <button onClick={() => setIsFilterOpen(false)} className="text-slate-400 hover:text-slate-600">
+                  <X size={16} />
+                </button>
+              </div>
+              
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">Nome do Funcionário</label>
+                  <input 
+                    type="text" 
+                    placeholder="Buscar por nome..." 
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                    value={filters.name}
+                    onChange={(e) => setFilters({...filters, name: e.target.value})}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">Matrícula</label>
+                    <input 
+                      type="text" 
+                      placeholder="000" 
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      value={filters.matricula}
+                      onChange={(e) => setFilters({...filters, matricula: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">Horário Início</label>
+                    <input 
+                      type="time" 
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      value={filters.shiftStart}
+                      onChange={(e) => setFilters({...filters, shiftStart: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">Squad</label>
+                  <select 
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                    value={filters.squad}
+                    onChange={(e) => setFilters({...filters, squad: e.target.value as Squad})}
+                  >
+                    <option value="">Todas as Squads</option>
+                    {Object.values(Squad).map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">Cargo</label>
+                  <select 
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                    value={filters.role}
+                    onChange={(e) => setFilters({...filters, role: e.target.value as Role})}
+                  >
+                    <option value="">Todos os Cargos</option>
+                    {Object.values(Role).map(r => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button 
+                    onClick={clearFilters}
+                    className="text-xs text-rose-600 hover:text-rose-700 font-medium px-2 py-1"
+                  >
+                    Limpar Filtros
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* MOBILE LIST VIEW (Cards) - Visible only on small screens */}
+      <div className="md:hidden space-y-3">
+        {filteredEmployees.map(emp => (
+          <div 
+            key={emp.id}
+            onClick={() => isAdmin && openModal(emp)}
+            className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative ${isAdmin ? 'active:bg-slate-50' : ''}`}
+          >
+            {/* Header: Name & Avatar */}
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold text-sm">
+                  <User size={18} />
+                </div>
+                <div>
+                   <h3 className="font-bold text-[#1E1E1E] text-sm">{emp.firstName} {emp.lastName}</h3>
+                   <p className="text-xs text-slate-500">{emp.email}</p>
+                </div>
+              </div>
+              {isAdmin && (
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    requestDelete(emp.id);
+                  }}
+                  className="p-2 text-slate-400 text-rose-500 hover:bg-rose-50 rounded-lg"
+                >
+                  <Trash2 size={18} />
+                </button>
+              )}
+            </div>
+
+            {/* Details */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                 <span className="text-slate-500 font-medium">Cargo</span>
+                 <span className="text-slate-700 font-semibold text-right max-w-[60%] truncate">{emp.role}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                 <span className="text-slate-500 font-medium">Matrícula</span>
+                 <span className="font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">{emp.matricula}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-50 mt-2">
+                 <span className={`px-2 py-0.5 rounded-md font-medium border ${getSquadBadgeColor(emp.squad)}`}>
+                    {emp.squad}
+                 </span>
+                 <div className="flex items-center gap-1 text-slate-600 font-medium">
+                    <Clock size={12} />
+                    {emp.shiftStart} - {emp.shiftEnd}
+                 </div>
+              </div>
+            </div>
+          </div>
+        ))}
+        {filteredEmployees.length === 0 && (
+          <div className="text-center p-8 text-slate-500 bg-white rounded-xl border border-slate-200">
+            Nenhum funcionário encontrado.
+          </div>
+        )}
+      </div>
+
+      {/* DESKTOP TABLE VIEW - Hidden on mobile */}
+      <div className="hidden md:block bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden">
+        <table className="w-full text-left border-collapse">
+          <thead className="bg-slate-50 text-[#3F3F3F] border-b border-slate-200">
+            <tr>
+              <th 
+                className="p-4 font-bold text-sm cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                onClick={toggleSort}
+              >
+                <div className="flex items-center gap-1">
+                  Funcionário
+                  <span className={`text-slate-400 group-hover:text-[#204294] transition-colors ${sortOrder === 'asc' ? 'text-[#204294]' : ''}`}>
+                    {sortOrder === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
+                  </span>
+                </div>
+              </th>
+              <th className="p-4 font-bold text-sm">Matrícula</th>
+              <th className="p-4 font-bold text-sm">Cargo</th>
+              <th className="p-4 font-bold text-sm">Squad</th>
+              <th className="p-4 font-bold text-sm">Horário</th>
+              {isAdmin && <th className="p-4 font-bold text-sm text-right">Ações</th>}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {filteredEmployees.map(emp => {
+               return (
+                <tr 
+                  key={emp.id} 
+                  onClick={() => isAdmin && openModal(emp)}
+                  className={`group transition-all duration-200 ${isAdmin ? 'hover:bg-[#204294]/5 cursor-pointer hover:shadow-sm' : 'cursor-default'}`}
+                >
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] transition-colors ${isAdmin ? 'group-hover:bg-[#204294] group-hover:text-white' : ''}`}>
+                        <User size={16} />
+                      </div>
+                      <div>
+                        <div className={`font-bold text-[#1E1E1E] transition-colors ${isAdmin ? 'group-hover:text-[#204294]' : ''}`}>{emp.firstName} {emp.lastName}</div>
+                        <div className="text-xs text-slate-500">{emp.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-4 text-sm text-slate-600 font-mono">{emp.matricula}</td>
+                  <td className="p-4">
+                    <span className="font-medium text-slate-700 text-sm">{emp.role}</span>
+                  </td>
+                  <td className="p-4 text-sm text-slate-600">
+                    <span className={`px-2 py-1 rounded-md font-medium text-xs border ${getSquadBadgeColor(emp.squad)}`}>
+                      {emp.squad}
+                    </span>
+                  </td>
+                  <td className="p-4 text-sm text-slate-600">
+                    {emp.shiftStart} - {emp.shiftEnd}
+                  </td>
+                  {isAdmin && (
+                    <td className="p-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button 
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            requestDelete(emp.id);
+                          }} 
+                          className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-lg transition-colors z-10"
+                          title="Excluir funcionário"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  )}
+                </tr>
+            )})}
+            {filteredEmployees.length === 0 && (
+              <tr>
+                <td colSpan={isAdmin ? 6 : 5} className="p-8 text-center text-slate-500">
+                  {employees.length === 0 ? "Nenhum funcionário cadastrado." : "Nenhum funcionário encontrado com os filtros selecionados."}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Edit/Create Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-[#1E1E1E]">
+                {editingId ? 'Editar Funcionário' : 'Novo Funcionário'}
+              </h3>
+              <button 
+                onClick={() => setIsModalOpen(false)} 
+                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors"
+                title="Fechar"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto">
+              
+              {formError && (
+                <div className="bg-rose-50 border border-rose-200 text-rose-700 p-3 rounded-lg text-sm flex items-start gap-2">
+                  <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
+                  <span>{formError}</span>
+                </div>
+              )}
+
+              {/* Personal Info */}
+              <div>
+                <h4 className="text-sm font-bold text-[#204294] mb-3 flex items-center gap-2">
+                  <User size={16} /> Dados Pessoais
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Nome</label>
+                    <input required type="text" className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900" 
+                      value={formData.firstName || ''} onChange={e => setFormData({...formData, firstName: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Sobrenome</label>
+                    <input required type="text" className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900" 
+                      value={formData.lastName || ''} onChange={e => setFormData({...formData, lastName: e.target.value})} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Email Corporativo</label>
+                    <input required type="email" className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900" 
+                      value={formData.email || ''} onChange={e => setFormData({...formData, email: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Matrícula</label>
+                    <input required type="text" className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900" 
+                      placeholder="Ex: 123"
+                      value={formData.matricula || ''} onChange={e => setFormData({...formData, matricula: e.target.value.replace(/\D/g,'')})} />
+                     <span className="text-xs text-slate-400">Somente números.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 pt-4">
+                <h4 className="text-sm font-bold text-[#204294] mb-3 flex items-center gap-2">
+                  <Briefcase size={16} /> Cargo e Alocação
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Cargo</label>
+                    <select required className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
+                      value={formData.role} onChange={e => setFormData({...formData, role: e.target.value as Role})}>
+                      {Object.values(Role).map(role => (
+                        <option key={role} value={role}>{role}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  {/* Squad always visible */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Squad</label>
+                    <select required className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
+                      value={formData.squad || ''} onChange={e => setFormData({...formData, squad: e.target.value as Squad})}>
+                      <option value="">Selecione uma Squad...</option>
+                      {Object.values(Squad).map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 pt-4">
+                <h4 className="text-sm font-bold text-[#204294] mb-3 flex items-center gap-2">
+                  <Clock size={16} /> Jornada de Trabalho
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Início Expediente</label>
+                    <input required type="time" className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900" 
+                      value={formData.shiftStart} onChange={e => setFormData({...formData, shiftStart: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Fim Expediente</label>
+                    <input required type="time" className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900" 
+                      value={formData.shiftEnd} onChange={e => setFormData({...formData, shiftEnd: e.target.value})} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium">
+                  Cancelar
+                </button>
+                <button type="submit" className="px-4 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] transition-colors shadow-sm font-bold">
+                  Salvar Funcionário
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmationId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden p-6 text-center">
+            <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-600">
+              <Trash2 size={24} />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Excluir Funcionário?</h3>
+            <p className="text-slate-500 mb-6 text-sm">
+              Esta ação não pode ser desfeita. Todos os registros relacionados (ausências, plantões, trocas) serão removidos permanentemente.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button 
+                onClick={() => setDeleteConfirmationId(null)}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors shadow-sm font-medium"
+              >
+                Sim, Excluir e Limpar Dados
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default EmployeeManager;
