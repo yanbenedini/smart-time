@@ -1,29 +1,26 @@
 version: '3.8'
 
 services:
-  # Base de Dados Postgres
+  # Servidor de Banco de Dados Postgres
   db:
     image: postgres:15
     container_name: smart_time_db
-    restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password123 # Altere para uma senha segura em produção
+      POSTGRES_PASSWORD: password123
       POSTGRES_DB: smart_time_db
     volumes:
       - pgdata:/var/lib/postgresql/data
-      # Inicializa o banco com o seu SQL de administrador
       - ./server/database.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     networks:
-      - smart-network
+      - app-network
 
   # API Backend Node.js
   api:
     build: ./server
     container_name: smart_time_api
-    restart: always
     depends_on:
       - db
     environment:
@@ -31,32 +28,15 @@ services:
       DB_USER: postgres
       DB_PASSWORD: password123
       DB_NAME: smart_time_db
-      DB_PORT: 5432
       PORT: 5000
     ports:
-      - "127.0.0.1:5000:5000" # Exposto apenas localmente para o Caddy fazer o proxy
+      - "5000:5000"
     networks:
-      - smart-network
-
-  # Frontend React (Vite)
-  frontend:
-    build:
-      context: .
-      args:
-        # Define a URL da API para o domínio que comprou
-        - VITE_API_URL=https://api.ymoura.com.br
-    container_name: smart_time_web
-    restart: always
-    ports:
-      - "127.0.0.1:8080:80" # Exposto apenas localmente na porta 8080 para o Caddy
-    depends_on:
-      - api
-    networks:
-      - smart-network
+      - app-network
 
 volumes:
   pgdata:
 
 networks:
-  smart-network:
+  app-network:
     driver: bridge
