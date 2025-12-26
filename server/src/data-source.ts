@@ -10,15 +10,15 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 export const AppDataSource = new DataSource({
-    type: "postgres",
-    host: process.env.DB_HOST || "db",
-    port: Number(process.env.DB_PORT) || 5432,
-    username: process.env.DB_USER || "postgres",
-    password: process.env.DB_PASSWORD || "postgres",
-    database: process.env.DB_NAME || "smart_time_db",
-    synchronize: true, // CUIDADO: Cria tabelas automaticamente (true apenas para dev)
-    logging: false,
-    entities: [Employee, Absence, ShiftChange, OnCallShift, SystemUser],
-    subscribers: [],
-    migrations: [],
+  type: "postgres",
+  host: process.env.DB_HOST || "db",
+  port: Number(process.env.DB_PORT) || 5432,
+  username: process.env.DB_USER || "postgres",
+  password: process.env.DB_PASSWORD || "postgres",
+  database: process.env.DB_NAME || "smart_time_db",
+  synchronize: false, // CUIDADO: Cria tabelas automaticamente (true apenas para dev)
+  logging: false,
+  entities: [Employee, Absence, ShiftChange, OnCallShift, SystemUser],
+  subscribers: [],
+  migrations: [],
 });

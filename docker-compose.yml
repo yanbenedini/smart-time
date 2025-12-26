@@ -1,36 +1,57 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  # Servidor de Banco de Dados Postgres
+  # --- Banco de Dados ---
   db:
     image: postgres:15
     container_name: smart_time_db
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password123
       POSTGRES_DB: smart_time_db
     volumes:
       - pgdata:/var/lib/postgresql/data
+      # Garante que o script SQL seja executado na criação do banco
       - ./server/database.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      # Mapeia a porta 5433 do seu servidor para a 5432 do container
+      - "5433:5432"
     networks:
       - app-network
 
-  # API Backend Node.js
+  # --- API Backend ---
   api:
     build: ./server
     container_name: smart_time_api
+    restart: always
     depends_on:
       - db
     environment:
+      # Dentro da rede Docker, o host é o nome do serviço ('db'), não localhost
       DB_HOST: db
+      DB_PORT: 5432 # Internamente o container db ainda ouve na 5432
       DB_USER: postgres
       DB_PASSWORD: password123
       DB_NAME: smart_time_db
       PORT: 5000
     ports:
       - "5000:5000"
+    networks:
+      - app-network
+
+  # --- Frontend React ---
+  frontend:
+    build: .
+    container_name: smart_time_frontend
+    restart: always
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+    environment:
+      # Variável para o Vite saber onde está a API (se necessário no código front)
+      VITE_API_URL: http://localhost:5000
     networks:
       - app-network
 
