@@ -2,335 +2,247 @@ import {
   Employee,
   Absence,
   ShiftChange,
-  SystemUser,
   OnCallShift,
+  SystemUser,
   SystemLog,
 } from "../types";
-import { INITIAL_EMPLOYEES, INITIAL_ABSENCES } from "../constants";
 
-// In a real application, these functions would be async fetch() calls to a Node/Postgres backend.
-// Here we simulate persistence with localStorage.
+// --- CONFIGURAÇÃO DA API ---
+// Substitua SEU_IP_DA_ORACLE pelo IP público do seu servidor na Oracle.
+// Se estiver testando no seu próprio computador, use 'http://localhost:5000'
+const API_URL = "http://163.176.231.117:5000";
 
-const EMP_KEY = "smart_time_employees_v2";
-const ABS_KEY = "smart_time_absences";
-const SHIFT_CHANGE_KEY = "smart_time_shift_changes";
-const ON_CALL_KEY = "smart_time_on_call_shifts";
-const USERS_KEY = "smart_time_system_users";
-const LOGS_KEY = "smart_time_system_logs";
-
-// --- ENCRYPTION UTILITY ---
-const CRYPTO_PREFIX = "ENC_";
-
-const encrypt = (text: string): string => {
-  if (!text) return text;
-  if (text.startsWith(CRYPTO_PREFIX)) return text;
-  // Simple obfuscation: Reverse + Base64
-  const encoded = btoa(encodeURIComponent(text).split("").reverse().join(""));
-  return `${CRYPTO_PREFIX}${encoded}`;
-};
-
-const decrypt = (cipher: string): string => {
-  if (!cipher || !cipher.startsWith(CRYPTO_PREFIX)) return cipher;
+export const getSystemLogs = async (): Promise<SystemLog[]> => {
   try {
-    const encoded = cipher.substring(CRYPTO_PREFIX.length);
-    const decoded = decodeURIComponent(
-      atob(encoded).split("").reverse().join("")
-    );
-    return decoded;
-  } catch (e) {
-    return cipher;
-  }
-};
-
-// --- LOGGING SYSTEM ---
-
-export const getSystemLogs = (): SystemLog[] => {
-  const stored = localStorage.getItem(LOGS_KEY);
-  if (!stored) return [];
-  try {
-    return JSON.parse(stored);
-  } catch (e) {
+    const response = await fetch(`${API_URL}/logs`);
+    if (!response.ok) throw new Error("Erro ao buscar logs");
+    return await response.json();
+  } catch (error) {
+    console.error("Erro getSystemLogs:", error);
     return [];
   }
 };
 
-export const addSystemLog = (
-  log: Omit<SystemLog, "id" | "timestamp">
-): void => {
-  const logs = getSystemLogs();
-  const newLog: SystemLog = {
-    id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-    timestamp: new Date().toISOString(),
-    ...log,
-  };
-  const updatedLogs = [newLog, ...logs].slice(0, 1000);
-  localStorage.setItem(LOGS_KEY, JSON.stringify(updatedLogs));
-};
-
-// --- EMPLOYEES ---
-
-export const getEmployees = (): Employee[] => {
-  const stored = localStorage.getItem(EMP_KEY);
-  if (!stored) {
-    localStorage.setItem(EMP_KEY, JSON.stringify(INITIAL_EMPLOYEES));
-    return INITIAL_EMPLOYEES;
-  }
+// Função auxiliar para gravar logs (se quiser usar nos outros componentes)
+export const createLog = async (
+  action: string,
+  description: string,
+  userName: string
+) => {
   try {
-    return JSON.parse(stored);
-  } catch (e) {
-    return [];
-  }
-};
-
-export const saveEmployee = (employee: Employee, user?: string): void => {
-  const employees = getEmployees();
-  const existingIndex = employees.findIndex(
-    (e) => String(e.id) === String(employee.id)
-  );
-
-  if (existingIndex >= 0) {
-    employees[existingIndex] = employee;
-    addSystemLog({
-      action: "UPDATE",
-      target: "Funcionário",
-      details: `Atualizou dados de ${employee.firstName} ${employee.lastName}`,
-      performedBy: user || "Sistema",
+    await fetch(`${API_URL}/logs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, description, userName }),
     });
-  } else {
-    employees.push(employee);
-    addSystemLog({
-      action: "CREATE",
-      target: "Funcionário",
-      details: `Criou funcionário ${employee.firstName} ${employee.lastName}`,
-      performedBy: user || "Sistema",
+  } catch (error) {
+    console.error("Erro ao salvar log", error);
+  }
+};
+
+// --- EMPLOYEES (FUNCIONÁRIOS) ---
+
+export const getEmployees = async (): Promise<Employee[]> => {
+  try {
+    const response = await fetch(`${API_URL}/employees`);
+    if (!response.ok) throw new Error("Erro ao buscar funcionários");
+    return await response.json();
+  } catch (error) {
+    console.error("Erro getEmployees:", error);
+    return [];
+  }
+};
+
+export const saveEmployee = async (
+  employee: Employee,
+  user?: string
+): Promise<Employee | null> => {
+  try {
+    // Se tiver ID longo (UUID), é edição (PUT). Senão, é criação (POST).
+    const isEditing = employee.id && employee.id.length > 10;
+    const method = isEditing ? "PUT" : "POST";
+    const url = isEditing
+      ? `${API_URL}/employees/${employee.id}`
+      : `${API_URL}/employees`;
+
+    const response = await fetch(url, {
+      method: method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(employee),
     });
+
+    if (!response.ok) throw new Error("Erro ao salvar funcionário");
+    return await response.json();
+  } catch (error) {
+    console.error("Erro saveEmployee:", error);
+    throw error;
   }
-  localStorage.setItem(EMP_KEY, JSON.stringify(employees));
 };
 
-export const deleteEmployee = (id: string, adminName: string): void => {
-  const employees = getEmployees();
-  const empToDelete = employees.find((e) => String(e.id) === String(id));
-  if (!empToDelete) return;
-
-  const updatedEmployees = employees.filter((e) => String(e.id) !== String(id));
-  localStorage.setItem(EMP_KEY, JSON.stringify(updatedEmployees));
-
-  const absences = getAbsences();
-  const remainingAbsences = absences.filter((a) => a.employeeId !== id);
-  localStorage.setItem(ABS_KEY, JSON.stringify(remainingAbsences));
-
-  const changes = getShiftChanges();
-  const remainingChanges = changes.filter((c) => c.employeeId !== id);
-  localStorage.setItem(SHIFT_CHANGE_KEY, JSON.stringify(remainingChanges));
-
-  const onCalls = getOnCallShifts();
-  const remainingOnCalls = onCalls.filter((o) => o.employeeId !== id);
-  localStorage.setItem(ON_CALL_KEY, JSON.stringify(remainingOnCalls));
-
-  addSystemLog({
-    action: "DELETE",
-    target: "Funcionário",
-    details: `Excluiu funcionário ${empToDelete.firstName} ${empToDelete.lastName} e registros vinculados.`,
-    performedBy: adminName,
-  });
-};
-
-// --- ABSENCES ---
-
-export const getAbsences = (): Absence[] => {
-  const stored = localStorage.getItem(ABS_KEY);
-  if (!stored) {
-    localStorage.setItem(ABS_KEY, JSON.stringify(INITIAL_ABSENCES));
-    return INITIAL_ABSENCES;
-  }
+export const deleteEmployee = async (
+  id: string,
+  adminName: string
+): Promise<void> => {
   try {
-    const parsed = JSON.parse(stored);
-    return parsed.map((a: any) => ({
-      ...a,
-      endDate: a.endDate || a.date,
-    }));
-  } catch (e) {
+    await fetch(`${API_URL}/employees/${id}`, { method: "DELETE" });
+  } catch (error) {
+    console.error("Erro deleteEmployee:", error);
+  }
+};
+
+// --- ABSENCES (AUSÊNCIAS) ---
+
+export const getAbsences = async (): Promise<Absence[]> => {
+  try {
+    const response = await fetch(`${API_URL}/absences`);
+    if (!response.ok) return [];
+    return await response.json();
+  } catch (error) {
+    console.error("Erro getAbsences:", error);
     return [];
   }
 };
 
-export const saveAbsence = (absence: Absence): void => {
-  const absences = getAbsences();
-  const existingIndex = absences.findIndex(
-    (a) => String(a.id) === String(absence.id)
-  );
-  const isUpdate = existingIndex >= 0;
-
-  if (isUpdate) {
-    absences[existingIndex] = absence;
-  } else {
-    absences.push(absence);
-  }
-  localStorage.setItem(ABS_KEY, JSON.stringify(absences));
-
-  const emp = getEmployees().find((e) => e.id === absence.employeeId);
-  const empName = emp ? `${emp.firstName} ${emp.lastName}` : "Desconhecido";
-
-  addSystemLog({
-    action: isUpdate ? "UPDATE" : "CREATE",
-    target: "Ausência",
-    details: `${isUpdate ? "Editou" : "Registrou"} ausência para ${empName}`,
-    performedBy: absence.updatedBy || absence.createdBy || "Sistema",
-  });
-};
-
-export const deleteAbsence = (id: string, user?: string): void => {
-  const absences = getAbsences();
-  const updated = absences.filter((a) => String(a.id) !== String(id));
-  localStorage.setItem(ABS_KEY, JSON.stringify(updated));
-};
-
-// --- SHIFT CHANGES ---
-
-export const getShiftChanges = (): ShiftChange[] => {
-  const stored = localStorage.getItem(SHIFT_CHANGE_KEY);
-  if (!stored) return [];
+export const saveAbsence = async (absence: Absence): Promise<void> => {
   try {
-    return JSON.parse(stored);
-  } catch (e) {
+    // Ajuste similar para diferenciar POST/PUT se necessário, ou usar sempre POST para novos
+    const method = absence.id && absence.id.length > 10 ? "PUT" : "POST";
+    const url =
+      method === "PUT"
+        ? `${API_URL}/absences/${absence.id}`
+        : `${API_URL}/absences`;
+
+    await fetch(url, {
+      method: method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(absence),
+    });
+  } catch (error) {
+    console.error("Erro saveAbsence:", error);
+    throw error;
+  }
+};
+
+export const deleteAbsence = async (id: string): Promise<void> => {
+  try {
+    await fetch(`${API_URL}/absences/${id}`, { method: "DELETE" });
+  } catch (error) {
+    console.error("Erro deleteAbsence:", error);
+  }
+};
+
+// --- SHIFT CHANGES (TROCAS DE TURNO) ---
+
+export const getShiftChanges = async (): Promise<ShiftChange[]> => {
+  try {
+    const response = await fetch(`${API_URL}/shift-changes`);
+    if (!response.ok) return [];
+    return await response.json();
+  } catch (error) {
+    console.error("Erro getShiftChanges:", error);
     return [];
   }
 };
 
-export const saveShiftChange = (change: ShiftChange): void => {
-  const changes = getShiftChanges();
-  const existingIndex = changes.findIndex(
-    (c) => String(c.id) === String(change.id)
-  );
-  const isUpdate = existingIndex >= 0;
-
-  if (isUpdate) {
-    changes[existingIndex] = change;
-  } else {
-    changes.push(change);
-  }
-  localStorage.setItem(SHIFT_CHANGE_KEY, JSON.stringify(changes));
-};
-
-export const deleteShiftChange = (id: string, user?: string): void => {
-  const changes = getShiftChanges();
-  const updated = changes.filter((c) => String(c.id) !== String(id));
-  localStorage.setItem(SHIFT_CHANGE_KEY, JSON.stringify(updated));
-};
-
-// --- ON CALL ---
-
-export const getOnCallShifts = (): OnCallShift[] => {
-  const stored = localStorage.getItem(ON_CALL_KEY);
-  if (!stored) return [];
+export const saveShiftChange = async (
+  shiftChange: ShiftChange
+): Promise<void> => {
   try {
-    return JSON.parse(stored);
-  } catch (e) {
+    await fetch(`${API_URL}/shift-changes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(shiftChange),
+    });
+  } catch (error) {
+    console.error("Erro saveShiftChange:", error);
+    throw error;
+  }
+};
+
+export const deleteShiftChange = async (id: string): Promise<void> => {
+  try {
+    await fetch(`${API_URL}/shift-changes/${id}`, { method: "DELETE" });
+  } catch (error) {
+    console.error("Erro deleteShiftChange:", error);
+  }
+};
+
+// --- ON CALL SHIFTS (PLANTÕES) ---
+
+export const getOnCallShifts = async (): Promise<OnCallShift[]> => {
+  try {
+    const response = await fetch(`${API_URL}/on-call`);
+    if (!response.ok) return [];
+    return await response.json();
+  } catch (error) {
+    console.error("Erro getOnCallShifts:", error);
     return [];
   }
 };
 
-export const saveOnCallShift = (shift: OnCallShift): void => {
-  const shifts = getOnCallShifts();
-  const existingIndex = shifts.findIndex(
-    (s) => String(s.id) === String(shift.id)
-  );
-  if (existingIndex >= 0) {
-    shifts[existingIndex] = shift;
-  } else {
-    shifts.push(shift);
-  }
-  localStorage.setItem(ON_CALL_KEY, JSON.stringify(shifts));
-};
-
-export const deleteOnCallShift = (id: string, user?: string): void => {
-  const shifts = getOnCallShifts();
-  const updated = shifts.filter((s) => String(s.id) !== String(id));
-  localStorage.setItem(ON_CALL_KEY, JSON.stringify(updated));
-};
-
-// --- SYSTEM USERS ---
-
-const INITIAL_ADMIN: SystemUser = {
-  id: "admin-1",
-  name: "Administrador",
-  email: "adm.smarttime@ccmtecnologia.com.br",
-  password: "admin",
-  isAdmin: true,
-  mustChangePassword: false,
-};
-
-export const getSystemUsers = (): SystemUser[] => {
-  const stored = localStorage.getItem(USERS_KEY);
-  if (!stored) {
-    const encryptedInitial = {
-      ...INITIAL_ADMIN,
-      password: encrypt(INITIAL_ADMIN.password),
-    };
-    localStorage.setItem(USERS_KEY, JSON.stringify([encryptedInitial]));
-    return [INITIAL_ADMIN];
-  }
+export const saveOnCallShift = async (shift: OnCallShift): Promise<void> => {
   try {
-    const rawUsers: SystemUser[] = JSON.parse(stored);
-    return rawUsers.map((u) => ({
-      ...u,
-      password: decrypt(u.password),
-    }));
-  } catch (e) {
-    return [INITIAL_ADMIN];
+    await fetch(`${API_URL}/on-call`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(shift),
+    });
+  } catch (error) {
+    console.error("Erro saveOnCallShift:", error);
+    throw error;
   }
 };
 
-export const saveSystemUser = (
-  user: SystemUser,
-  performedBy?: string
-): void => {
-  const users = getSystemUsers();
-  const existingIndex = users.findIndex(
-    (u) => String(u.id) === String(user.id)
-  );
-  const isUpdate = existingIndex >= 0;
-
-  if (user.id === "admin-1") {
-    user.isAdmin = true;
+export const deleteOnCallShift = async (id: string): Promise<void> => {
+  try {
+    await fetch(`${API_URL}/on-call/${id}`, { method: "DELETE" });
+  } catch (error) {
+    console.error("Erro deleteOnCallShift:", error);
   }
-
-  if (isUpdate) {
-    users[existingIndex] = user;
-  } else {
-    user.mustChangePassword = true;
-    users.push(user);
-  }
-
-  const encryptedUsers = users.map((u) => ({
-    ...u,
-    password: encrypt(u.password),
-  }));
-
-  localStorage.setItem(USERS_KEY, JSON.stringify(encryptedUsers));
-
-  addSystemLog({
-    action: isUpdate ? "UPDATE" : "CREATE",
-    target: "Usuário",
-    details: `${isUpdate ? "Atualizou" : "Criou"} usuário ${user.name}`,
-    performedBy: performedBy || "Sistema",
-  });
 };
 
-export const deleteSystemUser = (id: string, performedBy?: string): void => {
-  const users = getSystemUsers();
-  if (id === "admin-1") return;
+// --- SYSTEM USERS (USUÁRIOS DO SISTEMA) ---
 
-  const updated = users.filter((u) => String(u.id) !== String(id));
-  const encryptedUsers = updated.map((u) => ({
-    ...u,
-    password: encrypt(u.password),
-  }));
-  localStorage.setItem(USERS_KEY, JSON.stringify(encryptedUsers));
+export const getSystemUsers = async (): Promise<SystemUser[]> => {
+  try {
+    const response = await fetch(`${API_URL}/users`);
+    if (!response.ok) return [];
+    return await response.json();
+  } catch (error) {
+    console.error("Erro getSystemUsers:", error);
+    return [];
+  }
 };
 
-// --- Coverage Logic ---
+export const saveSystemUser = async (user: SystemUser): Promise<void> => {
+  try {
+    await fetch(`${API_URL}/users`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(user),
+    });
+  } catch (error) {
+    console.error("Erro saveSystemUser:", error);
+    throw error;
+  }
+};
+
+export const deleteSystemUser = async (id: string): Promise<void> => {
+  try {
+    await fetch(`${API_URL}/users/${id}`, { method: "DELETE" });
+  } catch (error) {
+    console.error("Erro deleteSystemUser:", error);
+  }
+};
+
+// --- LOGS E OUTROS (PLACEHOLDERS) ---
+// Estas funções mantêm a compatibilidade com o resto do sistema
+// enquanto a API para logs não é implementada.
+
+export const addSystemLog = async (log: SystemLog): Promise<void> => {
+  // Apenas imprime no console por enquanto
+  console.log("Log do Sistema:", log);
+};
 
 export const checkCoverage = (
   employeeId: string,
@@ -340,26 +252,10 @@ export const checkCoverage = (
   startTime: string,
   endTime: string
 ): boolean => {
-  const employees = getEmployees();
-  const absences = getAbsences();
-  const peers = employees.filter(
-    (e) => e.role === role && e.squad === squad && e.id !== employeeId
-  );
-  const shiftCoveringPeers = peers.filter(
-    (peer) => peer.shiftStart <= startTime && peer.shiftEnd >= endTime
-  );
+  // Lógica de cobertura (Placeholder)
+  // No futuro, aqui você fará um fetch para o backend validar se existe backup
+  // Ex: await fetch(`${API_URL}/coverage/check`, ...)
 
-  if (shiftCoveringPeers.length === 0) return false;
-
-  const availablePeers = shiftCoveringPeers.filter((peer) => {
-    const peerAbsences = absences.filter((a) => a.employeeId === peer.id);
-    const hasConflict = peerAbsences.some((abs) => {
-      const isDateInAbsenceRange = date >= abs.date && date <= abs.endDate;
-      if (!isDateInAbsenceRange) return false;
-      return abs.startTime < endTime && startTime < abs.endTime;
-    });
-    return !hasConflict;
-  });
-
-  return availablePeers.length > 0;
+  // Por enquanto retorna true (coberto) para não bloquear o uso
+  return true;
 };

@@ -1,22 +1,21 @@
-
 export enum Role {
-  INFRA_ANALYST = 'Analista de Infraestrutura',
-  DBA = 'DBA',
-  TECH_RELATIONSHIP = 'Tech Relationship',
-  PROJECT_ANALYST = 'Analista de Projetos',
-  SUPERVISOR = 'Supervisor',
-  MONITORING_ANALYST = 'Analista de Monitoramento',
-  INTERN = 'Estagiário',
-  INFRA_ASSISTANT = 'Assistente de Infraestrutura',
-  MONITORING_ASSISTANT = 'Assistente de Monitoramento',
-  DB_ASSISTANT = 'Assistente de Banco de Dados'
+  INFRA_ANALYST = "Analista de Infraestrutura",
+  DBA = "DBA",
+  TECH_RELATIONSHIP = "Tech Relationship",
+  PROJECT_ANALYST = "Analista de Projetos",
+  SUPERVISOR = "Supervisor",
+  MONITORING_ANALYST = "Analista de Monitoramento",
+  INTERN = "Estagiário",
+  INFRA_ASSISTANT = "Assistente de Infraestrutura",
+  MONITORING_ASSISTANT = "Assistente de Monitoramento",
+  DB_ASSISTANT = "Assistente de Banco de Dados",
 }
 
 export enum Squad {
-  LAKERS = 'Lakers',
-  BULLS = 'Bulls',
-  WARRIORS = 'Warriors',
-  ROCKETS = 'Rockets'
+  LAKERS = "Lakers",
+  BULLS = "Bulls",
+  WARRIORS = "Warriors",
+  ROCKETS = "Rockets",
 }
 
 export interface Employee {
@@ -28,7 +27,7 @@ export interface Employee {
   role: Role;
   squad: Squad;
   shiftStart: string; // Format "HH:mm"
-  shiftEnd: string;   // Format "HH:mm"
+  shiftEnd: string; // Format "HH:mm"
 }
 
 export interface Absence {
@@ -56,7 +55,7 @@ export interface ShiftChange {
   newShiftStart: string;
   newShiftEnd: string;
   startDate: string; // YYYY-MM-DD
-  endDate: string;   // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
   reason: string;
   createdBy?: string;
   createdAt?: string;
@@ -88,11 +87,10 @@ export interface SystemUser {
 
 export interface SystemLog {
   id: string;
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'SYSTEM';
-  target: string; // e.g., "Employee", "Absence"
-  details: string;
-  performedBy: string;
-  timestamp: string;
+  action: string;
+  description: string;
+  userName: string;
+  createdAt: string;
 }
 
 export interface SystemStats {
@@ -102,12 +100,22 @@ export interface SystemStats {
 }
 
 // Helper to check if a window fits inside a shift
-export const isTimeInShift = (shiftStart: string, shiftEnd: string, checkStart: string, checkEnd: string): boolean => {
+export const isTimeInShift = (
+  shiftStart: string,
+  shiftEnd: string,
+  checkStart: string,
+  checkEnd: string
+): boolean => {
   return shiftStart <= checkStart && shiftEnd >= checkEnd;
 };
 
 // Helper to check if two time windows overlap
-export const doTimesOverlap = (start1: string, end1: string, start2: string, end2: string): boolean => {
+export const doTimesOverlap = (
+  start1: string,
+  end1: string,
+  start2: string,
+  end2: string
+): boolean => {
   // Overlap occurs if StartA < EndB && StartB < EndA
   return start1 < end2 && start2 < end1;
-}
+};

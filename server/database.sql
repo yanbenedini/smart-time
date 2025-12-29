@@ -75,6 +75,15 @@ CREATE TABLE IF NOT EXISTS on_call_shift (
     CONSTRAINT fk_oncall_employee FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE CASCADE
 );
 
+-- 6. Criação da tabela de logs
+CREATE TABLE IF NOT EXISTS system_log (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    action VARCHAR(50) NOT NULL,
+    description TEXT NOT NULL,
+    user_name VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Criação do usuário Admin inicial (Obrigatório para o primeiro login, conforme lógica do UserManager)
 -- A senha 'admin' deve ser criptografada na aplicação, mas aqui inserimos texto plano para inicialização se seu backend suportar,
 -- ou você pode ajustar conforme a lógica de hash do seu sistema.

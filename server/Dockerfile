@@ -17,7 +17,7 @@ COPY . .
 RUN npm run build
 
 # Expõe a porta que a API usa
-EXPOSE 8080
+EXPOSE 5000
 
 # Comando para iniciar a aplicação (definido no package.json como "node dist/index.js")
 CMD ["npm", "start"]
