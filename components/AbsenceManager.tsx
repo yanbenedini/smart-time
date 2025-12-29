@@ -68,10 +68,20 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
   // Delete Confirmation State
   const [deleteConfirmationId, setDeleteConfirmationId] = useState<string | null>(null);
 
+  // --- DATA LOADING ---
   useEffect(() => {
-    setEmployees(getEmployees());
-    setAbsences(getAbsences());
+    loadData();
   }, []);
+
+  const loadData = async () => {
+    try {
+      const [emps, abs] = await Promise.all([getEmployees(), getAbsences()]);
+      setEmployees(emps);
+      setAbsences(abs);
+    } catch (err) {
+      console.error("Erro ao carregar dados:", err);
+    }
+  };
 
   // Filtering Logic
   const filteredAbsences = absences.filter(abs => {
@@ -83,8 +93,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
     // 2. Reason
     const reasonMatch = abs.reason.toLowerCase().includes(filters.reason.toLowerCase());
     
-    // 3. Date Range (If filter date is set, absence date must be >= start and <= end)
-    // We check overlap or simple containment. For simplicity, we check if the absence *starts* in the filtered range or *ends* in the filtered range.
+    // 3. Date Range
     let dateMatch = true;
     if (filters.startDate) {
         dateMatch = dateMatch && abs.endDate >= filters.startDate;
@@ -148,7 +157,6 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
-    // Reset basic form data for clean slate next time
     setError(null);
     setSuccess(null);
   };
@@ -201,16 +209,20 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
     setDeleteConfirmationId(id);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteConfirmationId) {
-      deleteAbsence(deleteConfirmationId);
-      setAbsences(getAbsences());
-      if (editingId === deleteConfirmationId) closeModal();
-      setDeleteConfirmationId(null);
+      try {
+        await deleteAbsence(deleteConfirmationId);
+        await loadData(); // Reload from DB
+        if (editingId === deleteConfirmationId) closeModal();
+        setDeleteConfirmationId(null);
+      } catch (err) {
+        alert("Erro ao excluir ausência.");
+      }
     }
   };
 
-  const executeSave = (absenceData: any) => {
+  const executeSave = async (absenceData: any) => {
     const { 
         absenceType, 
         startDate, 
@@ -235,75 +247,83 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
         approved: true,
     };
 
-    if (editingId) {
-        // Updating existing record
-        const existing = absences.find(a => a.id === editingId);
-        
-        let updateDate = date;
-        let updateEndDate = date;
+    try {
+      if (editingId) {
+          // Updating existing record
+          const existing = absences.find(a => a.id === editingId);
+          
+          let updateDate = date;
+          let updateEndDate = date;
 
-        if (absenceType === 'range') {
-            updateDate = startDate;
-            updateEndDate = endDate;
-        }
+          if (absenceType === 'range') {
+              updateDate = startDate;
+              updateEndDate = endDate;
+          }
 
-        const updatedAbsence: Absence = {
-            id: editingId,
-            ...commonData,
-            date: updateDate,
-            endDate: updateEndDate,
-            createdBy: existing?.createdBy,
-            createdAt: existing?.createdAt,
-            updatedBy: currentUser.name,
-            updatedAt: new Date().toISOString()
-        };
-        saveAbsence(updatedAbsence);
-    } else {
-        // Creating new record(s)
-        const auditInfo = {
-            createdBy: currentUser.name,
-            createdAt: new Date().toISOString()
-        };
+          const updatedAbsence: Absence = {
+              id: editingId,
+              ...commonData,
+              date: updateDate,
+              endDate: updateEndDate,
+              createdBy: existing?.createdBy,
+              createdAt: existing?.createdAt,
+              updatedBy: currentUser.name,
+              updatedAt: new Date().toISOString()
+          };
+          
+          await saveAbsence(updatedAbsence);
+      } else {
+          // Creating new record(s)
+          // We pass ID as empty string so backend generates UUID
+          const auditInfo = {
+              createdBy: currentUser.name,
+              createdAt: new Date().toISOString()
+          };
 
-        const newAbsences: Absence[] = [];
+          const newAbsences: Absence[] = [];
 
-        if (absenceType === 'range') {
-             newAbsences.push({
-                 id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-                 ...commonData,
-                 ...auditInfo,
-                 date: startDate,
-                 endDate: endDate
-             });
-        } else if (absenceType === 'single') {
-             newAbsences.push({
-                 id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-                 ...commonData,
-                 ...auditInfo,
-                 date: date,
-                 endDate: date
-             });
-        } else if (absenceType === 'multi') {
-             manualDates.forEach((d: string) => {
-                 newAbsences.push({
-                    id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          if (absenceType === 'range') {
+              newAbsences.push({
+                  id: '',
+                  ...commonData,
+                  ...auditInfo,
+                  date: startDate,
+                  endDate: endDate
+              });
+          } else if (absenceType === 'single') {
+              newAbsences.push({
+                  id: '',
+                  ...commonData,
+                  ...auditInfo,
+                  date: date,
+                  endDate: date
+              });
+          } else if (absenceType === 'multi') {
+              manualDates.forEach((d: string) => {
+                  newAbsences.push({
+                    id: '',
                     ...commonData,
                     ...auditInfo,
                     date: d,
                     endDate: d
-                 });
-             });
-        }
-        
-        newAbsences.forEach((abs: Absence) => saveAbsence(abs));
-    }
+                  });
+              });
+          }
+          
+          // Save all concurrently
+          await Promise.all(newAbsences.map(abs => saveAbsence(abs)));
+      }
 
-    setAbsences(getAbsences());
-    
-    // Close modal and reset
-    setWarningModalOpen(false);
-    setPendingAbsenceData(null);
-    closeModal();
+      await loadData(); // Refresh list
+      
+      // Close modal and reset
+      setWarningModalOpen(false);
+      setPendingAbsenceData(null);
+      closeModal();
+    } catch (err) {
+      console.error(err);
+      setError("Erro ao salvar os dados. Tente novamente.");
+    }
   };
 
   const handleRequest = (e: React.FormEvent) => {
@@ -388,9 +408,11 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
     };
 
     // 4. Validate Coverage
+    // Note: checkCoverage checks against currently loaded employees/absences state.
+    // Ensure dbService's implementation logic supports passing state if needed, 
+    // or assumes the backend logic will handle this in future.
     let missingCoverageDates: string[] = [];
     for (const d of targetDates) {
-      // Pass SQUAD to checkCoverage
       const hasCoverage = checkCoverage(emp.id, emp.role, emp.squad, d, finalStartTime, finalEndTime);
       if (!hasCoverage) {
         missingCoverageDates.push(d);
@@ -695,9 +717,9 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40 p-4 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-200">
-             
-             {/* Modal Header */}
-             <div className="flex justify-between items-center p-6 border-b border-slate-100">
+              
+              {/* Modal Header */}
+              <div className="flex justify-between items-center p-6 border-b border-slate-100">
                 <div>
                     <h3 className="text-lg font-bold text-[#1E1E1E] flex items-center gap-2">
                         {editingId ? <Edit2 size={18} className="text-[#204294]" /> : <Plus size={18} className="text-[#204294]" />}
@@ -708,10 +730,10 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                 <button onClick={closeModal} className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors">
                     <X size={20} />
                 </button>
-             </div>
+              </div>
 
-             {/* Modal Body - Scrollable */}
-             <div className="p-6 overflow-y-auto">
+              {/* Modal Body - Scrollable */}
+              <div className="p-6 overflow-y-auto">
                 <form onSubmit={handleRequest} className="space-y-5">
                     
                     {/* Employee Selection */}
@@ -916,17 +938,17 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                         </div>
                     )}
                 </form>
-             </div>
+              </div>
 
-             {/* Modal Footer */}
-             <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50 rounded-b-xl">
-                 <button onClick={closeModal} className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors font-medium">
+              {/* Modal Footer */}
+              <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50 rounded-b-xl">
+                  <button onClick={closeModal} className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors font-medium">
                     Cancelar
-                 </button>
-                 <button onClick={handleRequest} className="px-6 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] transition-colors shadow-sm font-bold">
+                  </button>
+                  <button onClick={handleRequest} className="px-6 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] transition-colors shadow-sm font-bold">
                     {editingId ? 'Salvar Alterações' : 'Registrar Ausência'}
-                 </button>
-             </div>
+                  </button>
+              </div>
           </div>
         </div>
       )}

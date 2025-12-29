@@ -43,9 +43,14 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
     loadData();
   }, []);
 
-  const loadData = () => {
-    setEmployees(getEmployees());
-    setShifts(getOnCallShifts());
+  const loadData = async () => {
+    try {
+      const [emps, onCalls] = await Promise.all([getEmployees(), getOnCallShifts()]);
+      setEmployees(emps);
+      setShifts(onCalls);
+    } catch (err) {
+      console.error("Erro ao carregar dados:", err);
+    }
   };
 
   // Filtering Logic
@@ -98,7 +103,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -115,7 +120,8 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
     const existing = editingId ? shifts.find(s => s.id === editingId) : null;
 
     const newShift: OnCallShift = {
-      id: editingId || Date.now().toString(),
+      // Se for edição, mantém ID. Se novo, envia vazio para backend criar UUID.
+      id: editingId || '', 
       employeeId: selectedEmpId,
       date,
       startTime,
@@ -128,21 +134,30 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
       updatedAt: existing ? new Date().toISOString() : undefined
     };
 
-    saveOnCallShift(newShift);
-    setShifts(getOnCallShifts());
-    closeModal();
+    try {
+      await saveOnCallShift(newShift);
+      await loadData(); // Recarrega lista atualizada
+      closeModal();
+    } catch (err) {
+      setError("Erro ao salvar plantão. Tente novamente.");
+      console.error(err);
+    }
   };
 
   const requestDelete = (id: string) => {
     setDeleteConfirmationId(id);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteConfirmationId) {
-      deleteOnCallShift(deleteConfirmationId);
-      setShifts(getOnCallShifts());
-      if (editingId === deleteConfirmationId) closeModal();
-      setDeleteConfirmationId(null);
+      try {
+        await deleteOnCallShift(deleteConfirmationId);
+        await loadData();
+        if (editingId === deleteConfirmationId) closeModal();
+        setDeleteConfirmationId(null);
+      } catch (err) {
+        alert("Erro ao excluir plantão.");
+      }
     }
   };
 
@@ -268,14 +283,16 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
     reader.readAsText(file); // Defaults to UTF-8
   };
 
-  const processCSV = (csvText: string) => {
+  const processCSV = async (csvText: string) => {
     try {
         const lines = csvText.split(/\r?\n/);
         let importedCount = 0;
         let errorCount = 0;
         let errorsDetails: string[] = [];
         
-        const currentEmployees = getEmployees(); 
+        // Ensure we have the latest employee list
+        const currentEmployees = await getEmployees(); 
+        const promises = [];
         
         // Expected Format: Matrícula;Data;Inicio;Fim;Observação
         for (let i = 1; i < lines.length; i++) {
@@ -310,7 +327,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
 
                 // 3. Create Shift
                 const newShift: OnCallShift = {
-                    id: Date.now().toString() + Math.random().toString(36).substr(2, 6),
+                    id: '', // Backend generate UUID
                     employeeId: emp.id,
                     date: finalDate,
                     startTime: startTime,
@@ -320,7 +337,8 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                     createdAt: new Date().toISOString()
                 };
                 
-                saveOnCallShift(newShift);
+                // Add to promises array
+                promises.push(saveOnCallShift(newShift));
                 importedCount++;
             } else {
                 errorCount++;
@@ -328,7 +346,12 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
             }
         }
 
-        loadData();
+        // Wait for all saves to complete
+        if (promises.length > 0) {
+            await Promise.all(promises);
+        }
+
+        await loadData();
         setImportFeedback({
             success: importedCount,
             errors: errorCount,

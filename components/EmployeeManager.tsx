@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, User, Upload, AlertCircle, Briefcase, Clock, Filter, ArrowUp, ArrowDown, X, Search, Download, ChevronRight, FileText } from 'lucide-react';
+import { Plus, Trash2, User, Upload, AlertCircle, Briefcase, Clock, Filter, ArrowUp, ArrowDown, X, Search, Download, FileText, Edit2 } from 'lucide-react';
 import { Employee, Role, Squad, SystemUser } from '../types';
 import { getEmployees, saveEmployee, deleteEmployee } from '../services/dbService';
 
@@ -41,8 +40,9 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     loadData();
   }, []);
 
-  const loadData = () => {
-    setEmployees(getEmployees());
+  const loadData = async () => {
+    const data = await getEmployees();
+    setEmployees(data);
   };
 
   // --- Filtering & Sorting Logic ---
@@ -104,7 +104,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAdmin) return;
 
@@ -124,6 +124,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     }
 
     // Check for Duplicate Matricula (Primary Key logic)
+    // Only check locally if we have the list loaded. The DB will also enforce unique constraint.
     const duplicate = employees.find(emp => 
       emp.matricula === targetMatricula && emp.id !== editingId
     );
@@ -139,7 +140,9 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     }
 
     const newEmp: Employee = {
-      id: editingId || Date.now().toString(),
+      // IMPORTANTE: Se for novo (editingId é null), mandamos string vazia ou undefined 
+      // para o backend gerar o UUID. Se for edição, usamos o ID existente.
+      id: editingId || '', 
       matricula: targetMatricula,
       firstName: formData.firstName || '',
       lastName: formData.lastName || '',
@@ -150,11 +153,15 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
       shiftEnd: formData.shiftEnd || '18:00'
     };
     
-    saveEmployee(newEmp, currentUser.name);
-    loadData();
-    setIsModalOpen(false);
-    setEditingId(null);
-    setFormData({ role: Role.INFRA_ANALYST, squad: Squad.LAKERS, shiftStart: '09:00', shiftEnd: '18:00' });
+    try {
+      await saveEmployee(newEmp, currentUser.name);
+      await loadData(); // Recarrega do banco para garantir que temos o ID correto
+      setIsModalOpen(false);
+      setEditingId(null);
+      setFormData({ role: Role.INFRA_ANALYST, squad: Squad.LAKERS, shiftStart: '09:00', shiftEnd: '18:00' });
+    } catch (error) {
+      setFormError("Erro ao salvar no banco de dados. Tente novamente.");
+    }
   };
 
   const requestDelete = (id: string) => {
@@ -162,11 +169,11 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     setDeleteConfirmationId(id);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteConfirmationId && isAdmin) {
       // Passes currentUser.name to log who performed the delete
-      deleteEmployee(deleteConfirmationId, currentUser.name);
-      setEmployees(prev => prev.filter(e => e.id !== deleteConfirmationId));
+      await deleteEmployee(deleteConfirmationId, currentUser.name);
+      await loadData(); // Recarrega a lista do banco
       setDeleteConfirmationId(null);
     }
   };
@@ -272,20 +279,21 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     e.target.value = '';
   };
 
-  const processCSV = (csvText: string) => {
+  const processCSV = async (csvText: string) => {
     const lines = csvText.split('\n');
     let importedCount = 0;
     let errorCount = 0;
     let duplicateCount = 0;
     
-    const currentEmployees = getEmployees(); 
-
     // Helper to normalize strings (remove accents and lowercase) for comparison
     const normalizeStr = (str: string) => {
       return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     };
 
     // Expected Format: matricula, firstName, lastName, email, role, squad, shiftStart, shiftEnd
+    // Start loop
+    const promises = [];
+    
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
@@ -302,7 +310,9 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
              continue;
         }
 
-        if (currentEmployees.some(e => e.matricula === matricula)) {
+        // Check duplicates locally based on current loaded list to avoid basic collisions
+        // The DB will also block unique constraint violations
+        if (employees.some(e => e.matricula === matricula)) {
             duplicateCount++;
             continue;
         }
@@ -317,7 +327,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
         if (role && squad) {
            const newEmp: Employee = {
-             id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+             id: '', // Empty ID tells backend to generate UUID
              matricula,
              firstName,
              lastName,
@@ -327,8 +337,8 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
              shiftStart: shiftStart || '09:00',
              shiftEnd: shiftEnd || '18:00'
            };
-           saveEmployee(newEmp, currentUser.name);
-           currentEmployees.push(newEmp);
+           // Add to promises to run later
+           promises.push(saveEmployee(newEmp, currentUser.name));
            importedCount++;
         } else {
            errorCount++;
@@ -338,12 +348,15 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
       }
     }
 
+    // Wait for all saves to finish
+    await Promise.all(promises);
+
     let msg = `Importação finalizada.\nRegistros importados: ${importedCount}\nErros de formato/dados inválidos: ${errorCount}`;
     if (duplicateCount > 0) {
         msg += `\nDuplicatas ignoradas: ${duplicateCount}`;
     }
     alert(msg);
-    loadData();
+    await loadData(); // Reload list from DB
   };
 
   const getSquadBadgeColor = (squad: Squad) => {

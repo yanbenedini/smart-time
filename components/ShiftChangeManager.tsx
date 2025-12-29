@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Clock, ArrowRight, Calendar, AlertTriangle, CheckCircle, RefreshCw, Trash2, ArrowLeftRight, Edit2, Plus, X, UserCircle, Download, Search, Filter } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeftRight, Plus, Trash2, Edit2, Calendar, Clock, AlertTriangle, X, UserCircle, Download, Upload, Search, Filter, FileText, CheckCircle, FileWarning, ArrowRight, AlertCircle } from 'lucide-react';
 import { Employee, ShiftChange, SystemUser } from '../types';
 import { getEmployees, getShiftChanges, saveShiftChange, deleteShiftChange } from '../services/dbService';
 
@@ -10,6 +10,7 @@ interface ShiftChangeManagerProps {
 const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [changes, setChanges] = useState<ShiftChange[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Filter State
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -21,12 +22,17 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
 
   // UI State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [importFeedback, setImportFeedback] = useState<{ success: number; errors: number; details: string[] } | null>(null);
 
   // Form State
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedEmpId, setSelectedEmpId] = useState('');
+  
+  // Form Fields
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [originalShiftStart, setOriginalShiftStart] = useState('');
+  const [originalShiftEnd, setOriginalShiftEnd] = useState('');
   const [newShiftStart, setNewShiftStart] = useState('');
   const [newShiftEnd, setNewShiftEnd] = useState('');
   const [reason, setReason] = useState('');
@@ -36,25 +42,46 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
   // Delete Confirmation State
   const [deleteConfirmationId, setDeleteConfirmationId] = useState<string | null>(null);
 
+  // --- DATA LOADING ---
   useEffect(() => {
-    setEmployees(getEmployees());
-    setChanges(getShiftChanges());
+    loadData();
   }, []);
 
+  const loadData = async () => {
+    try {
+      const [emps, shiftData] = await Promise.all([getEmployees(), getShiftChanges()]);
+      setEmployees(emps);
+      setChanges(shiftData);
+    } catch (err) {
+      console.error("Erro ao carregar dados:", err);
+    }
+  };
+
+  // Auto-fill original shift when employee is selected
+  useEffect(() => {
+    if (selectedEmpId && !editingId) {
+      const emp = employees.find(e => e.id === selectedEmpId);
+      if (emp) {
+        setOriginalShiftStart(emp.shiftStart);
+        setOriginalShiftEnd(emp.shiftEnd);
+      }
+    }
+  }, [selectedEmpId, employees, editingId]);
+
   // Filtering Logic
-  const filteredChanges = changes.filter(ch => {
-    const emp = employees.find(e => e.id === ch.employeeId);
+  const filteredChanges = changes.filter(c => {
+    const emp = employees.find(e => e.id === c.employeeId);
     
     // 1. Employee Name
     const nameMatch = emp ? (emp.firstName + ' ' + emp.lastName).toLowerCase().includes(filters.employeeName.toLowerCase()) : false;
     
-    // 2. Date Range Overlap
+    // 2. Date Range
     let dateMatch = true;
     if (filters.startDate) {
-        dateMatch = dateMatch && ch.endDate >= filters.startDate;
+        dateMatch = dateMatch && c.endDate >= filters.startDate;
     }
     if (filters.endDate) {
-        dateMatch = dateMatch && ch.startDate <= filters.endDate;
+        dateMatch = dateMatch && c.startDate <= filters.endDate;
     }
 
     return nameMatch && dateMatch;
@@ -63,13 +90,13 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
   const clearFilters = () => setFilters({ employeeName: '', startDate: '', endDate: '' });
 
-  const selectedEmployee = employees.find(e => e.id === selectedEmpId);
-
   const openNewModal = () => {
     setEditingId(null);
     setSelectedEmpId('');
     setStartDate('');
     setEndDate('');
+    setOriginalShiftStart('');
+    setOriginalShiftEnd('');
     setNewShiftStart('');
     setNewShiftEnd('');
     setReason('');
@@ -88,6 +115,8 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
     setSelectedEmpId(change.employeeId);
     setStartDate(change.startDate);
     setEndDate(change.endDate);
+    setOriginalShiftStart(change.originalShiftStart);
+    setOriginalShiftEnd(change.originalShiftEnd);
     setNewShiftStart(change.newShiftStart);
     setNewShiftEnd(change.newShiftEnd);
     setReason(change.reason);
@@ -95,29 +124,29 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    const emp = employees.find(e => e.id === selectedEmpId);
-    if (!emp) return;
-
-    if (newShiftStart >= newShiftEnd) {
-      setError('A hora de fim deve ser posterior à hora de início.');
+    // Validation
+    if (!selectedEmpId || !startDate || !endDate || !newShiftStart || !newShiftEnd || !reason) {
+      setError("Todos os campos obrigatórios devem ser preenchidos.");
       return;
     }
+
     if (startDate > endDate) {
-      setError('A data de início deve ser anterior ou igual à data fim.');
+      setError("A data final deve ser igual ou posterior à data inicial.");
       return;
     }
 
     const existing = editingId ? changes.find(c => c.id === editingId) : null;
 
     const newChange: ShiftChange = {
-      id: editingId || Date.now().toString(),
+      // Se for edição, mantém ID. Se novo, envia vazio para backend criar UUID.
+      id: editingId || '',
       employeeId: selectedEmpId,
-      originalShiftStart: emp.shiftStart,
-      originalShiftEnd: emp.shiftEnd,
+      originalShiftStart,
+      originalShiftEnd,
       newShiftStart,
       newShiftEnd,
       startDate,
@@ -130,21 +159,30 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
       updatedAt: existing ? new Date().toISOString() : undefined
     };
 
-    saveShiftChange(newChange);
-    setChanges(getShiftChanges());
-    closeModal();
+    try {
+      await saveShiftChange(newChange);
+      await loadData(); // Recarrega dados atualizados
+      closeModal();
+    } catch (err) {
+      console.error(err);
+      setError("Erro ao salvar troca de turno. Tente novamente.");
+    }
   };
 
   const requestDelete = (id: string) => {
     setDeleteConfirmationId(id);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteConfirmationId) {
-      deleteShiftChange(deleteConfirmationId);
-      setChanges(getShiftChanges());
-      if (editingId === deleteConfirmationId) closeModal();
-      setDeleteConfirmationId(null);
+      try {
+        await deleteShiftChange(deleteConfirmationId);
+        await loadData();
+        if (editingId === deleteConfirmationId) closeModal();
+        setDeleteConfirmationId(null);
+      } catch (err) {
+        alert("Erro ao excluir troca de turno.");
+      }
     }
   };
 
@@ -159,7 +197,6 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
   const escapeCsv = (str: string | undefined | null) => {
     if (!str) return '""';
     const stringValue = String(str);
-    // Include semicolon
     if (stringValue.includes(';') || stringValue.includes('"') || stringValue.includes('\n')) {
         return `"${stringValue.replace(/"/g, '""')}"`;
     }
@@ -173,27 +210,28 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
     }
 
     const headers = [
-      'Funcionário', 'Motivo', 'Data Início', 'Data Fim', 
-      'Turno Original Início', 'Turno Original Fim', 
-      'Novo Turno Início', 'Novo Turno Fim',
+      'Funcionário', 'Matrícula', 'Data Início', 'Data Fim', 
+      'Turno Original Início', 'Turno Original Fim',
+      'Novo Turno Início', 'Novo Turno Fim', 'Motivo',
       'Registrado Por', 'Data Registro', 'Atualizado Por', 'Data Atualização'
     ];
     
-    const rows = filteredChanges.map(ch => {
-      const emp = employees.find(e => e.id === ch.employeeId);
+    const rows = filteredChanges.map(c => {
+      const emp = employees.find(e => e.id === c.employeeId);
       return [
         escapeCsv(emp ? `${emp.firstName} ${emp.lastName}` : 'Desconhecido'),
-        escapeCsv(ch.reason),
-        escapeCsv(ch.startDate),
-        escapeCsv(ch.endDate),
-        escapeCsv(ch.originalShiftStart),
-        escapeCsv(ch.originalShiftEnd),
-        escapeCsv(ch.newShiftStart),
-        escapeCsv(ch.newShiftEnd),
-        escapeCsv(ch.createdBy),
-        escapeCsv(ch.createdAt),
-        escapeCsv(ch.updatedBy),
-        escapeCsv(ch.updatedAt)
+        escapeCsv(emp ? emp.matricula : ''),
+        escapeCsv(c.startDate),
+        escapeCsv(c.endDate),
+        escapeCsv(c.originalShiftStart),
+        escapeCsv(c.originalShiftEnd),
+        escapeCsv(c.newShiftStart),
+        escapeCsv(c.newShiftEnd),
+        escapeCsv(c.reason),
+        escapeCsv(c.createdBy),
+        escapeCsv(c.createdAt),
+        escapeCsv(c.updatedBy),
+        escapeCsv(c.updatedAt)
       ];
     });
 
@@ -206,10 +244,146 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `trocas_smarttime_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `trocas_turno_smarttime_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // CSV Template Download
+  const handleDownloadTemplate = () => {
+    const headers = ['Matrícula', 'DataInicio', 'DataFim', 'NovoInicio', 'NovoFim', 'Motivo'];
+    const exampleRow1 = ['1001', '2023-12-25', '2023-12-25', '14:00', '22:00', 'Troca com colega'];
+    const exampleRow2 = ['1002', '2023-12-31', '2024-01-01', '18:00', '02:00', 'Necessidade pessoal'];
+    
+    const csvContent = [
+      headers.join(';'),
+      exampleRow1.join(';'),
+      exampleRow2.join(';')
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `template_importacao_trocas.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // --- CSV Import Logic Refactored ---
+  const handleImportClick = () => {
+    setImportFeedback(null);
+    if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+        fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    
+    reader.onload = (evt) => {
+      const csvText = evt.target?.result as string;
+      if (csvText) {
+        if (csvText.includes('\uFFFD')) {
+             console.log("Encoding: Problema detectado com UTF-8. Tentando ISO-8859-1 (ANSI)...");
+             const retryReader = new FileReader();
+             retryReader.onload = (retryEvt) => {
+                 const retryText = retryEvt.target?.result as string;
+                 processCSV(retryText);
+             };
+             retryReader.readAsText(file, 'ISO-8859-1');
+        } else {
+             processCSV(csvText);
+        }
+      }
+    };
+    
+    reader.onerror = () => {
+        alert("Erro ao ler o arquivo.");
+    };
+
+    reader.readAsText(file);
+  };
+
+  const processCSV = async (csvText: string) => {
+    try {
+        const lines = csvText.split(/\r?\n/);
+        let importedCount = 0;
+        let errorCount = 0;
+        let errorsDetails: string[] = [];
+        
+        // Ensure latest employee data
+        const currentEmployees = await getEmployees();
+        const promises = [];
+        
+        // Expected Format: Matrícula;DataInicio;DataFim;NovoInicio;NovoFim;Motivo
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+
+            const cols = line.split(';').map(c => c.trim().replace(/^"|"$/g, ''));
+            
+            if (cols.length >= 6) { 
+                const [matricula, dStart, dEnd, nStart, nEnd, reasonImport] = cols;
+                
+                // 1. Find Employee
+                const emp = currentEmployees.find(e => e.matricula === matricula);
+                if (!emp) {
+                    errorCount++;
+                    errorsDetails.push(`Linha ${i+1}: Matrícula '${matricula}' não encontrada.`);
+                    continue;
+                }
+
+                // 3. Create Object
+                const newChange: ShiftChange = {
+                    id: '', // Backend generate UUID
+                    employeeId: emp.id,
+                    originalShiftStart: emp.shiftStart, // Default from employee profile
+                    originalShiftEnd: emp.shiftEnd,     // Default from employee profile
+                    startDate: dStart, // Assumes correct YYYY-MM-DD format from template
+                    endDate: dEnd,     // Assumes correct YYYY-MM-DD format from template
+                    newShiftStart: nStart,
+                    newShiftEnd: nEnd,
+                    reason: reasonImport || 'Importado via CSV',
+                    createdBy: currentUser.name + ' (Import)',
+                    createdAt: new Date().toISOString()
+                };
+                
+                // Add to batch
+                promises.push(saveShiftChange(newChange));
+                importedCount++;
+            } else {
+                errorCount++;
+                errorsDetails.push(`Linha ${i+1}: Colunas insuficientes.`);
+            }
+        }
+
+        // Execute all saves
+        if (promises.length > 0) {
+            await Promise.all(promises);
+        }
+
+        await loadData();
+        setImportFeedback({
+            success: importedCount,
+            errors: errorCount,
+            details: errorsDetails
+        });
+
+    } catch (err) {
+        console.error("Critical CSV processing error:", err);
+        setImportFeedback({
+            success: 0,
+            errors: 1,
+            details: ["Erro crítico no processamento do CSV."]
+        });
+    }
   };
 
   return (
@@ -217,11 +391,22 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#1E1E1E]">Trocas de Horário</h1>
-          <p className="text-slate-500">Registre alterações temporárias na jornada de trabalho.</p>
+          <h1 className="text-2xl font-bold text-[#1E1E1E]">Trocas de Turno</h1>
+          <p className="text-slate-500">Gerencie alterações temporárias de horário.</p>
+          <div className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 p-2 rounded-md inline-flex items-center gap-2 max-w-sm">
+            <AlertCircle size={16} className="flex-shrink-0" />
+            <span className="leading-tight">Dica: Utilize o modelo CSV para importações em lote.</span>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2 relative w-full md:w-auto">
-             
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+              accept=".csv" 
+              className="hidden" 
+            />
+            
             <button 
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
                 className={`flex-1 md:flex-none px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm border ${isFilterOpen || activeFilterCount > 0 ? 'bg-[#204294]/10 border-[#204294]/20 text-[#204294]' : 'bg-white border-slate-200 text-[#3F3F3F] hover:bg-slate-50'}`}
@@ -235,7 +420,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
                 )}
             </button>
 
-             <button 
+            <button 
                 onClick={handleExportCSV}
                 className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
                 title="Exportar para CSV"
@@ -243,12 +428,31 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
                 <Download size={18} />
                 <span className="hidden sm:inline">Exportar</span>
             </button>
+            
             <button 
-            onClick={openNewModal}
-            className="flex-1 md:flex-none bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-bold"
+                onClick={handleDownloadTemplate}
+                className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+                title="Baixar Modelo de Importação"
             >
-            <Plus size={18} />
-            <span className="hidden sm:inline">Nova Troca</span>
+                <FileText size={18} />
+                <span className="hidden sm:inline">Modelo</span>
+            </button>
+
+            <button 
+                onClick={handleImportClick}
+                className="flex-1 md:flex-none bg-[#01B8A1] hover:bg-[#019f8b] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+                title="Importar CSV"
+            >
+                <Upload size={18} />
+                <span className="hidden sm:inline">Importar</span>
+            </button>
+
+            <button 
+                onClick={openNewModal}
+                className="flex-1 md:flex-none bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-bold"
+            >
+                <Plus size={18} />
+                <span className="hidden sm:inline">Nova Troca</span>
             </button>
 
             {/* Filter Dropdown Panel */}
@@ -310,8 +514,8 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
         </div>
       </div>
 
-      {/* List Section - Full Width */}
-      <div className="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden">
+      {/* List Section */}
+      <div className="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden mb-20">
         <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
             <h3 className="font-semibold text-slate-700">Histórico de Trocas</h3>
             <span className="text-xs text-slate-500 bg-white px-2 py-1 rounded border border-slate-200">
@@ -333,7 +537,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
-            {filteredChanges.slice().reverse().map(change => {
+            {filteredChanges.slice().sort((a,b) => b.startDate.localeCompare(a.startDate)).map(change => {
                 const emp = employees.find(e => e.id === change.employeeId);
                 
                 // Determine Audit Info
@@ -362,29 +566,26 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
                         </div>
 
                         {/* Middle: Details */}
-                        <div className="flex-1 space-y-1">
-                             <div className="text-sm font-medium text-slate-700 flex items-center gap-2">
-                                {change.reason}
+                        <div className="flex-1 space-y-2">
+                             <div className="flex items-center gap-3">
+                                 <div className="flex items-center gap-1 bg-[#204294]/10 px-2 py-0.5 rounded border border-[#204294]/20 text-[#204294] text-sm font-medium">
+                                    <Calendar size={14} />
+                                    {change.startDate === change.endDate ? change.startDate : `${change.startDate} até ${change.endDate}`}
+                                 </div>
                              </div>
                              
-                             <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mt-1">
-                                <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                                  <Calendar size={12} />
-                                  {change.startDate === change.endDate 
-                                    ? change.startDate 
-                                    : `${change.startDate} até ${change.endDate}`
-                                  }
-                                </div>
+                             <div className="flex items-center gap-3 text-sm">
+                                <span className="text-slate-400 line-through flex items-center gap-1">
+                                    <Clock size={12} /> {change.originalShiftStart} - {change.originalShiftEnd}
+                                </span>
+                                <ArrowRight size={14} className="text-[#204294]" />
+                                <span className="text-slate-700 font-bold flex items-center gap-1">
+                                    <Clock size={12} /> {change.newShiftStart} - {change.newShiftEnd}
+                                </span>
+                             </div>
 
-                                <div className="flex items-center gap-2">
-                                    <span className="text-slate-400 line-through decoration-rose-300 decoration-2">
-                                        {change.originalShiftStart} - {change.originalShiftEnd}
-                                    </span>
-                                    <ArrowRight size={10} className="text-slate-300" />
-                                    <span className="font-bold text-[#204294] bg-[#204294]/10 px-1 rounded">
-                                        {change.newShiftStart} - {change.newShiftEnd}
-                                    </span>
-                                </div>
+                             <div className="text-xs text-slate-500 italic">
+                                "{change.reason}"
                              </div>
 
                              {/* Audit Info */}
@@ -419,28 +620,75 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
         )}
       </div>
 
+      {/* --- Import Feedback Popup (Bottom) --- */}
+      {importFeedback && (
+        <div className="fixed bottom-4 right-4 z-50 max-w-md w-full bg-white shadow-2xl rounded-xl border border-slate-200 overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
+          <div className={`p-4 flex items-start justify-between ${importFeedback.errors > 0 ? 'bg-rose-50 border-l-4 border-l-rose-500' : 'bg-emerald-50 border-l-4 border-l-emerald-500'}`}>
+            <div className="flex gap-3">
+              <div className={`mt-0.5 ${importFeedback.errors > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                {importFeedback.errors > 0 ? <FileWarning size={20} /> : <CheckCircle size={20} />}
+              </div>
+              <div>
+                <h4 className={`font-bold text-sm ${importFeedback.errors > 0 ? 'text-rose-800' : 'text-emerald-800'}`}>
+                  Relatório de Importação
+                </h4>
+                <p className="text-xs text-slate-600 mt-1">
+                  Processamento finalizado com os seguintes resultados:
+                </p>
+                <div className="flex gap-4 mt-2">
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
+                        {importFeedback.success} Sucessos
+                    </span>
+                    {importFeedback.errors > 0 && (
+                         <span className="text-xs font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded">
+                            {importFeedback.errors} Erros
+                        </span>
+                    )}
+                </div>
+              </div>
+            </div>
+            <button 
+                onClick={() => setImportFeedback(null)} 
+                className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-200/50 rounded"
+            >
+                <X size={16} />
+            </button>
+          </div>
+          
+          {/* Scrollable Error List */}
+          {importFeedback.errors > 0 && importFeedback.details.length > 0 && (
+              <div className="max-h-48 overflow-y-auto bg-white border-t border-slate-100 p-3">
+                  <p className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Detalhes dos Erros:</p>
+                  <ul className="space-y-1.5">
+                      {importFeedback.details.map((detail, idx) => (
+                          <li key={idx} className="text-xs text-rose-600 flex items-start gap-2 bg-rose-50/50 p-1.5 rounded">
+                              <span className="mt-0.5 block min-w-[4px] h-[4px] rounded-full bg-rose-400" />
+                              <span className="leading-tight">{detail}</span>
+                          </li>
+                      ))}
+                  </ul>
+              </div>
+          )}
+        </div>
+      )}
+
       {/* Main Form Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-200">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col animate-in fade-in zoom-in duration-200">
             
-            {/* Modal Header */}
             <div className="flex justify-between items-center p-6 border-b border-slate-100">
-                <div>
-                    <h3 className="text-lg font-bold text-[#1E1E1E] flex items-center gap-2">
-                        {editingId ? <Edit2 size={18} className="text-[#204294]" /> : <Plus size={18} className="text-[#204294]" />}
-                        {editingId ? 'Editar Troca de Horário' : 'Nova Troca de Horário'}
-                    </h3>
-                    <p className="text-sm text-slate-500">Defina o novo horário temporário.</p>
-                </div>
+                <h3 className="text-lg font-bold text-[#1E1E1E] flex items-center gap-2">
+                    {editingId ? <Edit2 size={18} className="text-[#204294]" /> : <Plus size={18} className="text-[#204294]" />}
+                    {editingId ? 'Editar Troca' : 'Nova Troca de Turno'}
+                </h3>
                 <button onClick={closeModal} className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors">
                     <X size={20} />
                 </button>
             </div>
 
-            {/* Modal Body */}
-            <div className="p-6 overflow-y-auto">
-                <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="p-6 overflow-y-auto max-h-[80vh]">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">Funcionário <span className="text-rose-500">*</span></label>
@@ -452,44 +700,10 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
                         >
                             <option value="">Selecione...</option>
                             {employees.map(emp => (
-                            <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
+                            <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName} ({emp.role})</option>
                             ))}
                         </select>
                     </div>
-
-                    {selectedEmployee && (
-                        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-                            <div className="text-center sm:text-left">
-                                <p className="text-xs text-slate-500 font-medium uppercase mb-1">Horário Padrão (Atual)</p>
-                                <p className="text-lg font-bold text-slate-700 font-mono">
-                                    {selectedEmployee.shiftStart} <span className="text-slate-400 mx-1">-</span> {selectedEmployee.shiftEnd}
-                                </p>
-                            </div>
-                            <div className="text-slate-400 rotate-90 sm:rotate-0">
-                                <ArrowRight size={24} />
-                            </div>
-                            <div className="text-center sm:text-right">
-                                <p className="text-xs text-[#204294] font-medium uppercase mb-1">Novo Horário Proposto</p>
-                                <div className="flex items-center justify-center sm:justify-end gap-1">
-                                    <input 
-                                    required 
-                                    type="time" 
-                                    className="bg-white border border-slate-300 rounded px-2 py-1 text-sm w-24 outline-none focus:border-[#204294] text-center"
-                                    value={newShiftStart}
-                                    onChange={e => setNewShiftStart(e.target.value)}
-                                    />
-                                    <span className="text-slate-400">-</span>
-                                    <input 
-                                    required 
-                                    type="time" 
-                                    className="bg-white border border-slate-300 rounded px-2 py-1 text-sm w-24 outline-none focus:border-[#204294] text-center"
-                                    value={newShiftEnd}
-                                    onChange={e => setNewShiftEnd(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -504,9 +718,48 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
                         </div>
                     </div>
 
+                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <Clock size={16} className="text-slate-400" />
+                            <span className="text-sm font-bold text-slate-700">Horários</span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 opacity-70">
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Turno Original (Início)</label>
+                                <input readOnly type="time" className="w-full border border-slate-200 rounded-lg p-2 bg-slate-100 text-slate-500 cursor-not-allowed"
+                                value={originalShiftStart} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Turno Original (Fim)</label>
+                                <input readOnly type="time" className="w-full border border-slate-200 rounded-lg p-2 bg-slate-100 text-slate-500 cursor-not-allowed"
+                                value={originalShiftEnd} />
+                            </div>
+                        </div>
+
+                        <div className="flex justify-center -my-2 relative z-10">
+                            <div className="bg-white border border-slate-200 rounded-full p-1 shadow-sm">
+                                <ArrowRight size={14} className="text-[#204294]" />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-bold text-[#204294] mb-1">Novo Horário (Início) <span className="text-rose-500">*</span></label>
+                                <input required type="time" className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 focus:ring-2 focus:ring-[#204294]"
+                                value={newShiftStart} onChange={e => setNewShiftStart(e.target.value)} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-[#204294] mb-1">Novo Horário (Fim) <span className="text-rose-500">*</span></label>
+                                <input required type="time" className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 focus:ring-2 focus:ring-[#204294]"
+                                value={newShiftEnd} onChange={e => setNewShiftEnd(e.target.value)} />
+                            </div>
+                        </div>
+                    </div>
+
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">Motivo <span className="text-rose-500">*</span></label>
-                        <input required type="text" placeholder="Ex: Cobrir férias, Troca com colega..." 
+                        <input required type="text" placeholder="Ex: Troca com colega, Necessidade pessoal..." 
                             className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900"
                             value={reason} onChange={e => setReason(e.target.value)} />
                     </div>
@@ -517,17 +770,16 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
                             <span>{error}</span>
                         </div>
                     )}
-                </form>
-            </div>
 
-            {/* Modal Footer */}
-            <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50 rounded-b-xl">
-                 <button onClick={closeModal} className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors font-medium">
-                    Cancelar
-                 </button>
-                 <button onClick={handleSubmit} className="px-6 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] transition-colors shadow-sm font-bold">
-                    {editingId ? 'Salvar Alterações' : 'Confirmar Troca'}
-                 </button>
+                    <div className="pt-2 flex justify-end gap-3">
+                        <button type="button" onClick={closeModal} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="submit" className="px-6 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] transition-colors shadow-sm font-bold">
+                            Salvar Alteração
+                        </button>
+                    </div>
+                </form>
             </div>
 
           </div>
@@ -541,9 +793,9 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
             <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-600">
               <Trash2 size={24} />
             </div>
-            <h3 className="text-lg font-bold text-slate-800 mb-2">Cancelar Troca?</h3>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Excluir Troca?</h3>
             <p className="text-slate-500 mb-6 text-sm">
-              Esta ação não pode ser desfeita. O registro da troca será removido permanentemente.
+              Esta ação não pode ser desfeita. O registro será removido permanentemente.
             </p>
             <div className="flex gap-3 justify-center">
               <button 

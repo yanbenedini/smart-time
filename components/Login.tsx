@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
-import { getSystemUsers } from '../services/dbService';
+import { Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
 import { SystemUser } from '../types';
+import { getSystemUsers } from '../services/dbService';
 
 interface LoginProps {
   onLogin: (user: SystemUser) => void;
@@ -10,108 +10,118 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setError('');
     setIsLoading(true);
 
-    setTimeout(() => {
-      const users = getSystemUsers();
-      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+    try {
+      // Busca os usuários cadastrados no banco de dados
+      const users = await getSystemUsers();
+      
+      // Procura um usuário que corresponda ao email e senha informados
+      // Nota: Em produção, a validação de senha deve ser feita no backend por segurança via endpoint /login
+      const user = users.find(u => 
+        u.email.toLowerCase() === email.toLowerCase() && 
+        u.password === password
+      );
 
       if (user) {
         onLogin(user);
       } else {
-        setError('Email ou senha inválidos.');
-        setIsLoading(false);
+        setError('Email ou senha incorretos.');
       }
-    }, 600);
+    } catch (err) {
+      console.error(err);
+      setError('Erro de conexão com o servidor. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col border border-slate-100">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col md:flex-row">
         
-        {/* Header Section */}
-        <div className="bg-[#204294] p-10 text-center relative overflow-hidden">
-          {/* Decorative Circle */}
-          <div className="absolute top-0 right-0 -mr-10 -mt-10 w-32 h-32 bg-[#00B0EA] rounded-full opacity-20 blur-xl"></div>
-          <div className="absolute bottom-0 left-0 -ml-10 -mb-10 w-32 h-32 bg-[#01B8A1] rounded-full opacity-20 blur-xl"></div>
-          
-          <div className="relative z-10 flex flex-col items-center">
-            <div className="mb-4 flex items-center justify-center w-full">
-              {/* CSS Logo Representation for CCM */}
-              <div className="flex items-center gap-3 bg-white/10 p-3 rounded-lg backdrop-blur-sm">
-                 <span className="text-3xl font-extrabold text-white tracking-tight">CCM</span>
-                 <div className="h-8 w-px bg-white/30"></div>
-                 <span className="text-lg font-light text-white tracking-wide">Smart Time</span>
-              </div>
-            </div>
-            <p className="text-blue-100 text-sm font-medium">Gestão de Escalas e Ausências</p>
-          </div>
-        </div>
-
         {/* Form Section */}
-        <div className="p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="w-full p-8 md:p-10">
+          <div className="mb-8 text-center">
+            <div className="w-12 h-12 bg-[#204294] rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-900/20">
+              <Lock className="text-white w-6 h-6" />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-800">Smart Time</h1>
+            <p className="text-slate-500 text-sm mt-1">Acesse sua conta para continuar</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-xs font-bold text-[#3F3F3F] uppercase tracking-wider mb-2">Email Corporativo</label>
-              <div className="relative group">
-                <Mail size={18} className="absolute left-3 top-3 text-slate-400 group-focus-within:text-[#204294] transition-colors" />
-                <input 
-                  type="email" 
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-slate-400" />
+                </div>
+                <input
+                  type="email"
                   required
-                  placeholder=""
-                  className="w-full border border-slate-200 rounded-lg pl-10 p-2.5 outline-none focus:border-[#204294] focus:ring-1 focus:ring-[#204294] transition-all text-[#1E1E1E] bg-slate-50 focus:bg-white"
+                  className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#204294] focus:border-transparent transition-all"
+                  placeholder="seu@email.com"
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#3F3F3F] uppercase tracking-wider mb-2">Senha</label>
-              <div className="relative group">
-                <Lock size={18} className="absolute left-3 top-3 text-slate-400 group-focus-within:text-[#204294] transition-colors" />
-                <input 
-                  type="password" 
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Senha</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-slate-400" />
+                </div>
+                <input
+                  type="password"
                   required
+                  className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#204294] focus:border-transparent transition-all"
                   placeholder="••••••••"
-                  className="w-full border border-slate-200 rounded-lg pl-10 p-2.5 outline-none focus:border-[#204294] focus:ring-1 focus:ring-[#204294] transition-all text-[#1E1E1E] bg-slate-50 focus:bg-white"
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
             </div>
 
             {error && (
-              <div className="bg-rose-50 border-l-4 border-rose-500 text-rose-700 p-3 rounded-r-lg text-sm flex items-center gap-2 animate-in fade-in">
-                <AlertCircle size={18} />
+              <div className="bg-rose-50 border border-rose-100 text-rose-600 text-sm px-4 py-3 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                 {error}
               </div>
             )}
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isLoading}
-              className={`w-full bg-[#204294] hover:bg-[#1a367a] text-white p-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/10 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+              className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-[#204294] hover:bg-[#1a367a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#204294] transition-all disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isLoading ? (
-                'Autenticando...'
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Entrando...
+                </>
               ) : (
                 <>
-                  ACESSAR SISTEMA <ArrowRight size={18} />
+                  Entrar
+                  <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-8 text-center border-t border-slate-100 pt-6">
-            <p className="text-xs text-slate-400 font-medium">
-              CCM Tecnologia &copy; {new Date().getFullYear()}
+          <div className="mt-8 text-center">
+            <p className="text-xs text-slate-400">
+              © {new Date().getFullYear()} CCM Tecnologia. Todos os direitos reservados.
             </p>
           </div>
         </div>

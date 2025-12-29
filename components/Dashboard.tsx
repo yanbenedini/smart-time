@@ -10,10 +10,26 @@ const Dashboard: React.FC = () => {
   const [onCallShifts, setOnCallShifts] = useState<OnCallShift[]>([]);
   
   useEffect(() => {
-    setEmployees(getEmployees());
-    setAbsences(getAbsences());
-    setShiftChanges(getShiftChanges());
-    setOnCallShifts(getOnCallShifts());
+    const loadDashboardData = async () => {
+      try {
+        // Busca todos os dados em paralelo para ser mais rápido
+        const [emps, abs, shifts, onCalls] = await Promise.all([
+          getEmployees(),
+          getAbsences(),
+          getShiftChanges(),
+          getOnCallShifts()
+        ]);
+
+        setEmployees(emps);
+        setAbsences(abs);
+        setShiftChanges(shifts);
+        setOnCallShifts(onCalls);
+      } catch (error) {
+        console.error("Erro ao carregar dados do dashboard:", error);
+      }
+    };
+
+    loadDashboardData();
   }, []);
 
   // Helper to get today's date in YYYY-MM-DD local time
