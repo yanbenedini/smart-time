@@ -1,42 +1,43 @@
-import React, { useState } from 'react';
-import { Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
-import { SystemUser } from '../types';
-import { getSystemUsers } from '../services/dbService';
+import React, { useState } from "react";
+import { Lock, Mail, ArrowRight, Loader2 } from "lucide-react";
+import { SystemUser } from "../types";
+import { getSystemUsers } from "../services/dbService";
 
 interface LoginProps {
   onLogin: (user: SystemUser) => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
     try {
       // Busca os usuários cadastrados no banco de dados
       const users = await getSystemUsers();
-      
+
       // Procura um usuário que corresponda ao email e senha informados
       // Nota: Em produção, a validação de senha deve ser feita no backend por segurança via endpoint /login
-      const user = users.find(u => 
-        u.email.toLowerCase() === email.toLowerCase() && 
-        u.password === password
+      const user = users.find(
+        (u) =>
+          u.email.toLowerCase() === email.toLowerCase() &&
+          u.password === password
       );
 
       if (user) {
         onLogin(user);
       } else {
-        setError('Email ou senha incorretos.');
+        setError("Email ou senha incorretos.");
       }
     } catch (err) {
       console.error(err);
-      setError('Erro de conexão com o servidor. Tente novamente.');
+      setError("Erro de conexão com o servidor. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -45,20 +46,20 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col md:flex-row">
-        
         {/* Form Section */}
         <div className="w-full p-8 md:p-10">
           <div className="mb-8 text-center">
-            <div className="w-12 h-12 bg-[#204294] rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-900/20">
-              <Lock className="text-white w-6 h-6" />
-            </div>
             <h1 className="text-2xl font-bold text-slate-800">Smart Time</h1>
-            <p className="text-slate-500 text-sm mt-1">Acesse sua conta para continuar</p>
+            <p className="text-slate-500 text-sm mt-1">
+              Acesse sua conta para continuar
+            </p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                Email
+              </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-slate-400" />
@@ -76,7 +77,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Senha</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                Senha
+              </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-slate-400" />
@@ -121,7 +124,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
           <div className="mt-8 text-center">
             <p className="text-xs text-slate-400">
-              © {new Date().getFullYear()} CCM Tecnologia. Todos os direitos reservados.
+              Desenvolvido por Yan Haefeli Benedini Moura
             </p>
           </div>
         </div>

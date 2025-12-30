@@ -458,7 +458,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     if (duplicateCount > 0) {
       msg += `\nDuplicatas ignoradas: ${duplicateCount}`;
     }
-    toast.success("importação Concluída!", {
+    toast.success("Importação Concluída!", {
       position: "top-right",
       autoClose: 3000,
       hideProgressBar: false,

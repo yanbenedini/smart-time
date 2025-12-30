@@ -79,8 +79,8 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
     setEditingId(null);
     setSelectedEmpId('');
     setDate('');
-    setStartTime('');
-    setEndTime('');
+    setStartTime('07:00');
+    setEndTime('17:00');
     setObservation('');
     setError(null);
     setIsModalOpen(true);
