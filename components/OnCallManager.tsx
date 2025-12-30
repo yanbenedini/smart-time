@@ -135,7 +135,8 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
     };
 
     try {
-      await saveOnCallShift(newShift);
+      // Passando currentUser.name para auditoria correta no backend
+      await saveOnCallShift(newShift, currentUser.name);
       await loadData(); // Recarrega lista atualizada
       closeModal();
     } catch (err) {
@@ -151,7 +152,8 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
   const confirmDelete = async () => {
     if (deleteConfirmationId) {
       try {
-        await deleteOnCallShift(deleteConfirmationId);
+        // Passando currentUser.name para auditoria correta no backend
+        await deleteOnCallShift(deleteConfirmationId, currentUser.name);
         await loadData();
         if (editingId === deleteConfirmationId) closeModal();
         setDeleteConfirmationId(null);
@@ -337,8 +339,8 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                     createdAt: new Date().toISOString()
                 };
                 
-                // Add to promises array
-                promises.push(saveOnCallShift(newShift));
+                // Add to promises array, passing currentUser.name for log
+                promises.push(saveOnCallShift(newShift, currentUser.name));
                 importedCount++;
             } else {
                 errorCount++;

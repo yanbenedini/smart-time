@@ -27,11 +27,18 @@ AppDataSource.initialize()
     const userRepo = AppDataSource.getRepository(SystemUser);
     const logRepo = AppDataSource.getRepository(SystemLog);
 
+    // --- HELPER: Pega o nome do header enviado pelo Frontend ---
+    const getUserName = (req: express.Request): string => {
+      const headerUser = req.headers["x-user-name"];
+      if (Array.isArray(headerUser)) return headerUser[0];
+      return headerUser || "Sistema";
+    };
+
     // --- FUNÇÃO AUXILIAR PARA LOGAR ---
     const registerLog = async (
       action: string,
       description: string,
-      userName: string = "Sistema"
+      userName: string
     ) => {
       try {
         const newLog = logRepo.create({
@@ -41,7 +48,8 @@ AppDataSource.initialize()
           createdAt: new Date(),
         });
         await logRepo.save(newLog);
-        console.log(`[LOG] ${action}: ${description}`);
+        // Log no terminal também mostra quem fez a ação
+        console.log(`[LOG] ${userName} - ${action}: ${description}`);
       } catch (error) {
         console.error("Falha ao salvar log:", error);
       }
@@ -74,13 +82,13 @@ AppDataSource.initialize()
       try {
         if (req.body.id === "") delete req.body.id;
 
-        const employee = employeeRepo.create(req.body as Employee); // Forçando tipo
+        const employee = employeeRepo.create(req.body as Employee);
         const result = await employeeRepo.save(employee);
 
         await registerLog(
           "CREATE",
           `Funcionário criado: ${result.firstName} ${result.lastName}`,
-          "Admin"
+          getUserName(req)
         );
 
         res.json(result);
@@ -98,7 +106,7 @@ AppDataSource.initialize()
         await registerLog(
           "UPDATE",
           `Funcionário atualizado: ${result.firstName} ${result.lastName}`,
-          "Admin"
+          getUserName(req)
         );
 
         res.json(result);
@@ -115,7 +123,7 @@ AppDataSource.initialize()
         await registerLog(
           "DELETE",
           `Funcionário removido: ${employee.firstName} ${employee.lastName}`,
-          "Admin"
+          getUserName(req)
         );
 
         res.json({ message: "Deleted" });
@@ -134,13 +142,13 @@ AppDataSource.initialize()
       try {
         if (req.body.id === "") delete req.body.id;
 
-        const absence = absenceRepo.create(req.body as Absence); // Forçando tipo
+        const absence = absenceRepo.create(req.body as Absence);
         const result = await absenceRepo.save(absence);
 
         await registerLog(
           "CREATE",
           `Ausência registrada: ${result.reason}`,
-          result.createdBy || "Sistema"
+          getUserName(req)
         );
 
         res.json(result);
@@ -165,11 +173,10 @@ AppDataSource.initialize()
           }
         }
 
-        // Log com o nome legível
         await registerLog(
           "UPDATE",
           `Ausência atualizada para: ${employeeName} - Motivo: ${result.reason}`,
-          "Admin"
+          getUserName(req)
         );
 
         res.json(result);
@@ -185,7 +192,7 @@ AppDataSource.initialize()
         await registerLog(
           "DELETE",
           `Ausência removida ID: ${req.params.id}`,
-          "Admin"
+          getUserName(req)
         );
         res.json("Deleted");
       } else {
@@ -205,13 +212,13 @@ AppDataSource.initialize()
       try {
         if (req.body.id === "") delete req.body.id;
 
-        const change = shiftChangeRepo.create(req.body as ShiftChange); // Forçando tipo
+        const change = shiftChangeRepo.create(req.body as ShiftChange);
         const result = await shiftChangeRepo.save(change);
 
         await registerLog(
           "CREATE",
           `Troca de turno criada: ${result.reason}`,
-          result.createdBy || "Sistema"
+          getUserName(req)
         );
 
         res.json(result);
@@ -225,7 +232,7 @@ AppDataSource.initialize()
       await registerLog(
         "DELETE",
         `Troca de turno removida ID: ${req.params.id}`,
-        "Admin"
+        getUserName(req)
       );
       res.json("Deleted");
     });
@@ -240,15 +247,13 @@ AppDataSource.initialize()
       try {
         if (req.body.id === "") delete req.body.id;
 
-        // AQUI ESTAVA O ERRO: Forçamos o tipo 'as OnCallShift' para garantir que é um objeto único
         const shift = onCallRepo.create(req.body as OnCallShift);
         const result = await onCallRepo.save(shift);
 
-        // Agora 'result' é tratado como objeto único, então .date e .createdBy funcionam
         await registerLog(
           "CREATE",
-          `Sobreaviso criado para data: ${result.date}`,
-          result.createdBy || "Sistema"
+          `Plantão criado para data: ${result.date}`,
+          getUserName(req)
         );
 
         res.json(result);
@@ -262,8 +267,8 @@ AppDataSource.initialize()
       await onCallRepo.delete(req.params.id);
       await registerLog(
         "DELETE",
-        `Sobreaviso removido ID: ${req.params.id}`,
-        "Admin"
+        `Plantão removido ID: ${req.params.id}`,
+        getUserName(req)
       );
       res.json("Deleted");
     });
@@ -278,10 +283,14 @@ AppDataSource.initialize()
       try {
         if (req.body.id === "") delete req.body.id;
 
-        const user = userRepo.create(req.body as SystemUser); // Forçando tipo
+        const user = userRepo.create(req.body as SystemUser);
         const result = await userRepo.save(user);
 
-        await registerLog("CREATE", `Usuário criado: ${result.email}`, "Admin");
+        await registerLog(
+          "CREATE",
+          `Usuário criado: ${result.email}`,
+          getUserName(req)
+        );
 
         res.json(result);
       } catch (error) {
@@ -290,18 +299,15 @@ AppDataSource.initialize()
     });
 
     app.delete("/users/:id", async (req, res) => {
-      // 1. Buscamos o usuário ANTES de excluir para salvar o nome na memória
       const userToRemove = await userRepo.findOneBy({ id: req.params.id });
 
       if (userToRemove) {
-        // 2. Removemos o usuário encontrado
         await userRepo.remove(userToRemove);
 
-        // 3. Registramos o log usando o NOME (userToRemove.name) em vez do ID
         await registerLog(
           "DELETE",
           `Usuário removido: ${userToRemove.name}`,
-          "Admin"
+          getUserName(req)
         );
 
         res.json("Deleted");

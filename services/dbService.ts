@@ -23,7 +23,7 @@ export const getSystemLogs = async (): Promise<SystemLog[]> => {
   }
 };
 
-// Função auxiliar para gravar logs (se quiser usar nos outros componentes)
+// Função auxiliar para gravar logs manuais (se necessário)
 export const createLog = async (
   action: string,
   description: string,
@@ -32,7 +32,10 @@ export const createLog = async (
   try {
     await fetch(`${API_URL}/logs`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-name": userName,
+      },
       body: JSON.stringify({ action, description, userName }),
     });
   } catch (error) {
@@ -55,10 +58,9 @@ export const getEmployees = async (): Promise<Employee[]> => {
 
 export const saveEmployee = async (
   employee: Employee,
-  user?: string
+  userName: string
 ): Promise<Employee | null> => {
   try {
-    // Se tiver ID longo (UUID), é edição (PUT). Senão, é criação (POST).
     const isEditing = employee.id && employee.id.length > 10;
     const method = isEditing ? "PUT" : "POST";
     const url = isEditing
@@ -67,7 +69,10 @@ export const saveEmployee = async (
 
     const response = await fetch(url, {
       method: method,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-name": userName,
+      },
       body: JSON.stringify(employee),
     });
 
@@ -81,10 +86,13 @@ export const saveEmployee = async (
 
 export const deleteEmployee = async (
   id: string,
-  adminName: string
+  userName: string
 ): Promise<void> => {
   try {
-    await fetch(`${API_URL}/employees/${id}`, { method: "DELETE" });
+    await fetch(`${API_URL}/employees/${id}`, {
+      method: "DELETE",
+      headers: { "x-user-name": userName },
+    });
   } catch (error) {
     console.error("Erro deleteEmployee:", error);
   }
@@ -103,9 +111,11 @@ export const getAbsences = async (): Promise<Absence[]> => {
   }
 };
 
-export const saveAbsence = async (absence: Absence): Promise<void> => {
+export const saveAbsence = async (
+  absence: Absence,
+  userName: string
+): Promise<void> => {
   try {
-    // Ajuste similar para diferenciar POST/PUT se necessário, ou usar sempre POST para novos
     const method = absence.id && absence.id.length > 10 ? "PUT" : "POST";
     const url =
       method === "PUT"
@@ -114,7 +124,10 @@ export const saveAbsence = async (absence: Absence): Promise<void> => {
 
     await fetch(url, {
       method: method,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-name": userName,
+      },
       body: JSON.stringify(absence),
     });
   } catch (error) {
@@ -123,9 +136,15 @@ export const saveAbsence = async (absence: Absence): Promise<void> => {
   }
 };
 
-export const deleteAbsence = async (id: string): Promise<void> => {
+export const deleteAbsence = async (
+  id: string,
+  userName: string
+): Promise<void> => {
   try {
-    await fetch(`${API_URL}/absences/${id}`, { method: "DELETE" });
+    await fetch(`${API_URL}/absences/${id}`, {
+      method: "DELETE",
+      headers: { "x-user-name": userName },
+    });
   } catch (error) {
     console.error("Erro deleteAbsence:", error);
   }
@@ -145,12 +164,16 @@ export const getShiftChanges = async (): Promise<ShiftChange[]> => {
 };
 
 export const saveShiftChange = async (
-  shiftChange: ShiftChange
+  shiftChange: ShiftChange,
+  userName: string
 ): Promise<void> => {
   try {
     await fetch(`${API_URL}/shift-changes`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-name": userName,
+      },
       body: JSON.stringify(shiftChange),
     });
   } catch (error) {
@@ -159,9 +182,15 @@ export const saveShiftChange = async (
   }
 };
 
-export const deleteShiftChange = async (id: string): Promise<void> => {
+export const deleteShiftChange = async (
+  id: string,
+  userName: string
+): Promise<void> => {
   try {
-    await fetch(`${API_URL}/shift-changes/${id}`, { method: "DELETE" });
+    await fetch(`${API_URL}/shift-changes/${id}`, {
+      method: "DELETE",
+      headers: { "x-user-name": userName },
+    });
   } catch (error) {
     console.error("Erro deleteShiftChange:", error);
   }
@@ -180,11 +209,17 @@ export const getOnCallShifts = async (): Promise<OnCallShift[]> => {
   }
 };
 
-export const saveOnCallShift = async (shift: OnCallShift): Promise<void> => {
+export const saveOnCallShift = async (
+  shift: OnCallShift,
+  userName: string
+): Promise<void> => {
   try {
     await fetch(`${API_URL}/on-call`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-name": userName,
+      },
       body: JSON.stringify(shift),
     });
   } catch (error) {
@@ -193,9 +228,15 @@ export const saveOnCallShift = async (shift: OnCallShift): Promise<void> => {
   }
 };
 
-export const deleteOnCallShift = async (id: string): Promise<void> => {
+export const deleteOnCallShift = async (
+  id: string,
+  userName: string
+): Promise<void> => {
   try {
-    await fetch(`${API_URL}/on-call/${id}`, { method: "DELETE" });
+    await fetch(`${API_URL}/on-call/${id}`, {
+      method: "DELETE",
+      headers: { "x-user-name": userName },
+    });
   } catch (error) {
     console.error("Erro deleteOnCallShift:", error);
   }
@@ -214,11 +255,17 @@ export const getSystemUsers = async (): Promise<SystemUser[]> => {
   }
 };
 
-export const saveSystemUser = async (user: SystemUser): Promise<void> => {
+export const saveSystemUser = async (
+  user: SystemUser,
+  userName: string = "Sistema"
+): Promise<void> => {
   try {
     await fetch(`${API_URL}/users`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-name": userName,
+      },
       body: JSON.stringify(user),
     });
   } catch (error) {
@@ -227,21 +274,25 @@ export const saveSystemUser = async (user: SystemUser): Promise<void> => {
   }
 };
 
-export const deleteSystemUser = async (id: string): Promise<void> => {
+export const deleteSystemUser = async (
+  id: string,
+  userName: string = "Sistema"
+): Promise<void> => {
   try {
-    await fetch(`${API_URL}/users/${id}`, { method: "DELETE" });
+    await fetch(`${API_URL}/users/${id}`, {
+      method: "DELETE",
+      headers: { "x-user-name": userName },
+    });
   } catch (error) {
     console.error("Erro deleteSystemUser:", error);
   }
 };
 
-// --- LOGS E OUTROS (PLACEHOLDERS) ---
-// Estas funções mantêm a compatibilidade com o resto do sistema
-// enquanto a API para logs não é implementada.
+// --- LOGS E OUTROS ---
 
 export const addSystemLog = async (log: SystemLog): Promise<void> => {
-  // Apenas imprime no console por enquanto
-  console.log("Log do Sistema:", log);
+  // Mantido para compatibilidade, mas o ideal é usar createLog ou deixar o backend gerenciar
+  console.log("Log do Sistema (Frontend):", log);
 };
 
 export const checkCoverage = (
@@ -252,10 +303,5 @@ export const checkCoverage = (
   startTime: string,
   endTime: string
 ): boolean => {
-  // Lógica de cobertura (Placeholder)
-  // No futuro, aqui você fará um fetch para o backend validar se existe backup
-  // Ex: await fetch(`${API_URL}/coverage/check`, ...)
-
-  // Por enquanto retorna true (coberto) para não bloquear o uso
   return true;
 };

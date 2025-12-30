@@ -160,7 +160,8 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
     };
 
     try {
-      await saveShiftChange(newChange);
+      // Passando currentUser.name para auditoria correta no backend
+      await saveShiftChange(newChange, currentUser.name);
       await loadData(); // Recarrega dados atualizados
       closeModal();
     } catch (err) {
@@ -176,7 +177,8 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
   const confirmDelete = async () => {
     if (deleteConfirmationId) {
       try {
-        await deleteShiftChange(deleteConfirmationId);
+        // Passando currentUser.name para auditoria correta no backend
+        await deleteShiftChange(deleteConfirmationId, currentUser.name);
         await loadData();
         if (editingId === deleteConfirmationId) closeModal();
         setDeleteConfirmationId(null);
@@ -346,17 +348,17 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({ currentUser }) 
                     employeeId: emp.id,
                     originalShiftStart: emp.shiftStart, // Default from employee profile
                     originalShiftEnd: emp.shiftEnd,     // Default from employee profile
-                    startDate: dStart, // Assumes correct YYYY-MM-DD format from template
-                    endDate: dEnd,     // Assumes correct YYYY-MM-DD format from template
                     newShiftStart: nStart,
                     newShiftEnd: nEnd,
+                    startDate: dStart, // Assumes correct YYYY-MM-DD format from template
+                    endDate: dEnd,     // Assumes correct YYYY-MM-DD format from template
                     reason: reasonImport || 'Importado via CSV',
                     createdBy: currentUser.name + ' (Import)',
                     createdAt: new Date().toISOString()
                 };
                 
-                // Add to batch
-                promises.push(saveShiftChange(newChange));
+                // Add to batch, passing currentUser.name for log
+                promises.push(saveShiftChange(newChange, currentUser.name));
                 importedCount++;
             } else {
                 errorCount++;

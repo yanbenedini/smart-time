@@ -40,9 +40,6 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
   >(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Lógica original: Admin-1 é super admin (mantido, mas adaptado caso o ID venha do banco diferente)
-  // Se o seu banco gerar UUIDs, essa checagem pode precisar de ajuste futuro,
-  // mas mantive a lógica visual do seu código original.
   const isSuperAdmin = currentUser.isAdmin;
 
   // --- DATA LOADING (ASYNC) ---
@@ -96,7 +93,7 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
       return;
     }
 
-    // Validação local de duplicidade (para feedback rápido)
+    // Validação local de duplicidade
     const duplicate = users.find(
       (u) => u.email === email && u.id !== editingId
     );
@@ -106,12 +103,10 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
     }
 
     const newUser: SystemUser = {
-      // Se novo, ID vazio para o backend gerar UUID
       id: editingId || "",
       name,
       email,
       password,
-      // Lógica original de permissão
       isAdmin: isSuperAdmin
         ? isAdmin
         : editingId
@@ -123,9 +118,9 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
     };
 
     try {
-      // Async Save
-      await saveSystemUser(newUser);
-      await loadData(); // Reload list
+      // CORREÇÃO AQUI: Passando currentUser.name para o log funcionar
+      await saveSystemUser(newUser, currentUser.name);
+      await loadData();
       closeModal();
     } catch (err) {
       setError("Erro ao salvar usuário. Tente novamente.");
@@ -139,8 +134,8 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
   const confirmDelete = async () => {
     if (deleteConfirmationId) {
       try {
-        // Async Delete
-        await deleteSystemUser(deleteConfirmationId);
+        // CORREÇÃO AQUI: Passando currentUser.name para o log funcionar
+        await deleteSystemUser(deleteConfirmationId, currentUser.name);
         await loadData();
         setDeleteConfirmationId(null);
       } catch (err) {
@@ -149,11 +144,8 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
     }
   };
 
-  // Lógica original de filtro: Remove o próprio usuário da lista
   const filteredUsers = users.filter((user) => {
     if (user.id === currentUser.id) return false;
-    // Se quiser manter a lógica de que apenas super admin vê outros admins:
-    // if (!isSuperAdmin && user.isAdmin) return false;
     return true;
   });
 
@@ -215,7 +207,6 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* Botão de delete só aparece se não for o admin principal (lógica visual) */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -359,7 +350,6 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
         </div>
       )}
 
-      {/* Modal de Confirmação de Exclusão */}
       {deleteConfirmationId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 text-center">

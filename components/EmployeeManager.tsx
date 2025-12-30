@@ -1,7 +1,29 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, User, Upload, AlertCircle, Briefcase, Clock, Filter, ArrowUp, ArrowDown, X, Search, Download, FileText, Edit2 } from 'lucide-react';
-import { Employee, Role, Squad, SystemUser } from '../types';
-import { getEmployees, saveEmployee, deleteEmployee } from '../services/dbService';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Plus,
+  Trash2,
+  User,
+  Upload,
+  AlertCircle,
+  Briefcase,
+  Clock,
+  Filter,
+  ArrowUp,
+  ArrowDown,
+  X,
+  Search,
+  Download,
+  FileText,
+  Edit2,
+} from "lucide-react";
+import { Employee, Role, Squad, SystemUser } from "../types";
+import {
+  getEmployees,
+  saveEmployee,
+  deleteEmployee,
+} from "../services/dbService";
+import { ToastContainer, toast, Bounce } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface EmployeeManagerProps {
   currentUser: SystemUser;
@@ -10,7 +32,9 @@ interface EmployeeManagerProps {
 const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [deleteConfirmationId, setDeleteConfirmationId] = useState<string | null>(null);
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState<
+    string | null
+  >(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -19,21 +43,21 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
   // Filter & Sort State
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [filters, setFilters] = useState({
-    name: '',
-    matricula: '',
-    role: '',
-    squad: '',
-    shiftStart: ''
+    name: "",
+    matricula: "",
+    role: "",
+    squad: "",
+    shiftStart: "",
   });
 
   // Form State
   const [formData, setFormData] = useState<Partial<Employee>>({
     role: Role.INFRA_ANALYST,
     squad: Squad.LAKERS,
-    shiftStart: '09:00',
-    shiftEnd: '18:00'
+    shiftStart: "09:00",
+    shiftEnd: "18:00",
   });
 
   useEffect(() => {
@@ -48,37 +72,49 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
   // --- Filtering & Sorting Logic ---
 
   const toggleSort = () => {
-    setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
   };
 
   const clearFilters = () => {
     setFilters({
-      name: '',
-      matricula: '',
-      role: '',
-      squad: '',
-      shiftStart: ''
+      name: "",
+      matricula: "",
+      role: "",
+      squad: "",
+      shiftStart: "",
     });
   };
 
-  const filteredEmployees = employees.filter(emp => {
-    const matchesName = (emp.firstName + ' ' + emp.lastName).toLowerCase().includes(filters.name.toLowerCase());
-    const matchesMatricula = emp.matricula.includes(filters.matricula);
-    const matchesRole = filters.role ? emp.role === filters.role : true;
-    const matchesSquad = filters.squad ? emp.squad === filters.squad : true;
-    const matchesShift = filters.shiftStart ? emp.shiftStart === filters.shiftStart : true;
+  const filteredEmployees = employees
+    .filter((emp) => {
+      const matchesName = (emp.firstName + " " + emp.lastName)
+        .toLowerCase()
+        .includes(filters.name.toLowerCase());
+      const matchesMatricula = emp.matricula.includes(filters.matricula);
+      const matchesRole = filters.role ? emp.role === filters.role : true;
+      const matchesSquad = filters.squad ? emp.squad === filters.squad : true;
+      const matchesShift = filters.shiftStart
+        ? emp.shiftStart === filters.shiftStart
+        : true;
 
-    return matchesName && matchesMatricula && matchesRole && matchesSquad && matchesShift;
-  }).sort((a, b) => {
-    const nameA = (a.firstName + ' ' + a.lastName).toLowerCase();
-    const nameB = (b.firstName + ' ' + b.lastName).toLowerCase();
-    
-    if (sortOrder === 'asc') {
-      return nameA.localeCompare(nameB);
-    } else {
-      return nameB.localeCompare(nameA);
-    }
-  });
+      return (
+        matchesName &&
+        matchesMatricula &&
+        matchesRole &&
+        matchesSquad &&
+        matchesShift
+      );
+    })
+    .sort((a, b) => {
+      const nameA = (a.firstName + " " + a.lastName).toLowerCase();
+      const nameB = (b.firstName + " " + b.lastName).toLowerCase();
+
+      if (sortOrder === "asc") {
+        return nameA.localeCompare(nameB);
+      } else {
+        return nameB.localeCompare(nameA);
+      }
+    });
 
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
@@ -94,11 +130,11 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
       setEditingId(employee.id);
     } else {
       setEditingId(null);
-      setFormData({ 
-        role: Role.INFRA_ANALYST, 
+      setFormData({
+        role: Role.INFRA_ANALYST,
         squad: Squad.LAKERS,
-        shiftStart: '09:00', 
-        shiftEnd: '18:00' 
+        shiftStart: "09:00",
+        shiftEnd: "18:00",
       });
     }
     setIsModalOpen(true);
@@ -117,7 +153,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
       setFormError("A matrícula é obrigatória.");
       return;
     }
-    
+
     if (!/^\d+$/.test(targetMatricula)) {
       setFormError("A matrícula deve conter apenas números.");
       return;
@@ -125,12 +161,14 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
     // Check for Duplicate Matricula (Primary Key logic)
     // Only check locally if we have the list loaded. The DB will also enforce unique constraint.
-    const duplicate = employees.find(emp => 
-      emp.matricula === targetMatricula && emp.id !== editingId
+    const duplicate = employees.find(
+      (emp) => emp.matricula === targetMatricula && emp.id !== editingId
     );
 
     if (duplicate) {
-      setFormError(`Erro: A matrícula "${targetMatricula}" já está cadastrada para o funcionário ${duplicate.firstName} ${duplicate.lastName}.`);
+      setFormError(
+        `Erro: A matrícula "${targetMatricula}" já está cadastrada para o funcionário ${duplicate.firstName} ${duplicate.lastName}.`
+      );
       return;
     }
 
@@ -140,25 +178,30 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     }
 
     const newEmp: Employee = {
-      // IMPORTANTE: Se for novo (editingId é null), mandamos string vazia ou undefined 
+      // IMPORTANTE: Se for novo (editingId é null), mandamos string vazia ou undefined
       // para o backend gerar o UUID. Se for edição, usamos o ID existente.
-      id: editingId || '', 
+      id: editingId || "",
       matricula: targetMatricula,
-      firstName: formData.firstName || '',
-      lastName: formData.lastName || '',
-      email: formData.email || '',
+      firstName: formData.firstName || "",
+      lastName: formData.lastName || "",
+      email: formData.email || "",
       role: formData.role as Role,
       squad: formData.squad as Squad,
-      shiftStart: formData.shiftStart || '09:00',
-      shiftEnd: formData.shiftEnd || '18:00'
+      shiftStart: formData.shiftStart || "09:00",
+      shiftEnd: formData.shiftEnd || "18:00",
     };
-    
+
     try {
       await saveEmployee(newEmp, currentUser.name);
       await loadData(); // Recarrega do banco para garantir que temos o ID correto
       setIsModalOpen(false);
       setEditingId(null);
-      setFormData({ role: Role.INFRA_ANALYST, squad: Squad.LAKERS, shiftStart: '09:00', shiftEnd: '18:00' });
+      setFormData({
+        role: Role.INFRA_ANALYST,
+        squad: Squad.LAKERS,
+        shiftStart: "09:00",
+        shiftEnd: "18:00",
+      });
     } catch (error) {
       setFormError("Erro ao salvar no banco de dados. Tente novamente.");
     }
@@ -183,21 +226,34 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     if (!str) return '""';
     const stringValue = String(str);
     // Check for semicolon as well
-    if (stringValue.includes(';') || stringValue.includes('"') || stringValue.includes('\n')) {
-        return `"${stringValue.replace(/"/g, '""')}"`;
+    if (
+      stringValue.includes(";") ||
+      stringValue.includes('"') ||
+      stringValue.includes("\n")
+    ) {
+      return `"${stringValue.replace(/"/g, '""')}"`;
     }
     return stringValue;
   };
 
   const handleExportCSV = () => {
     if (filteredEmployees.length === 0) {
-      alert("Não há dados para exportar.");
+      toast("Não há dados para exportar.");
       return;
     }
 
-    const headers = ['Matrícula', 'Nome', 'Sobrenome', 'Email', 'Cargo', 'Squad', 'Início Expediente', 'Fim Expediente'];
-    
-    const rows = filteredEmployees.map(emp => [
+    const headers = [
+      "Matrícula",
+      "Nome",
+      "Sobrenome",
+      "Email",
+      "Cargo",
+      "Squad",
+      "Início Expediente",
+      "Fim Expediente",
+    ];
+
+    const rows = filteredEmployees.map((emp) => [
       escapeCsv(emp.matricula),
       escapeCsv(emp.firstName),
       escapeCsv(emp.lastName),
@@ -205,19 +261,22 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
       escapeCsv(emp.role),
       escapeCsv(emp.squad),
       escapeCsv(emp.shiftStart),
-      escapeCsv(emp.shiftEnd)
+      escapeCsv(emp.shiftEnd),
     ]);
 
     const csvContent = [
-      headers.join(';'),
-      ...rows.map(r => r.join(';'))
-    ].join('\n');
+      headers.join(";"),
+      ...rows.map((r) => r.join(";")),
+    ].join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
-    link.setAttribute('download', `funcionarios_smarttime_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute(
+      "download",
+      `funcionarios_smarttime_${new Date().toISOString().split("T")[0]}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -225,21 +284,48 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
   // CSV Template Download
   const handleDownloadTemplate = () => {
-    const headers = ['Matricula', 'Nome', 'Sobrenome', 'Email', 'Cargo', 'Squad', 'InicioExpediente', 'FimExpediente'];
-    const exampleRow1 = ['1001', 'João', 'Silva', 'joao.silva@exemplo.com', 'Analista de Infraestrutura', 'Lakers', '09:00', '18:00'];
-    const exampleRow2 = ['1002', 'Maria', 'Santos', 'maria.santos@exemplo.com', 'DBA', 'Bulls', '08:00', '17:00'];
-    
-    const csvContent = [
-      headers.join(';'),
-      exampleRow1.join(';'),
-      exampleRow2.join(';')
-    ].join('\n');
+    const headers = [
+      "Matricula",
+      "Nome",
+      "Sobrenome",
+      "Email",
+      "Cargo",
+      "Squad",
+      "InicioExpediente",
+      "FimExpediente",
+    ];
+    const exampleRow1 = [
+      "1001",
+      "João",
+      "Silva",
+      "joao.silva@exemplo.com",
+      "Analista de Infraestrutura",
+      "Lakers",
+      "09:00",
+      "18:00",
+    ];
+    const exampleRow2 = [
+      "1002",
+      "Maria",
+      "Santos",
+      "maria.santos@exemplo.com",
+      "DBA",
+      "Bulls",
+      "08:00",
+      "17:00",
+    ];
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const csvContent = [
+      headers.join(";"),
+      exampleRow1.join(";"),
+      exampleRow2.join(";"),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
-    link.setAttribute('download', `template_importacao_funcionarios.csv`);
+    link.setAttribute("download", `template_importacao_funcionarios.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -256,92 +342,109 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     if (!file) return;
 
     const reader = new FileReader();
-    
+
     reader.onload = (evt) => {
       const csvText = evt.target?.result as string;
       if (csvText) {
         // Encoding Check: If replacement character exists, it likely failed UTF-8 decode of ANSI file
-        if (csvText.includes('\uFFFD')) {
-             console.log("Detected encoding issue (UTF-8 failed). Retrying with ISO-8859-1...");
-             const retryReader = new FileReader();
-             retryReader.onload = (retryEvt) => {
-                 const retryText = retryEvt.target?.result as string;
-                 processCSV(retryText);
-             };
-             retryReader.readAsText(file, 'ISO-8859-1');
+        if (csvText.includes("\uFFFD")) {
+          console.log(
+            "Detected encoding issue (UTF-8 failed). Retrying with ISO-8859-1..."
+          );
+          const retryReader = new FileReader();
+          retryReader.onload = (retryEvt) => {
+            const retryText = retryEvt.target?.result as string;
+            processCSV(retryText);
+          };
+          retryReader.readAsText(file, "ISO-8859-1");
         } else {
-             processCSV(csvText);
+          processCSV(csvText);
         }
       }
     };
-    
+
     reader.readAsText(file); // Defaults to UTF-8
-    e.target.value = '';
+    e.target.value = "";
   };
 
   const processCSV = async (csvText: string) => {
-    const lines = csvText.split('\n');
+    const lines = csvText.split("\n");
     let importedCount = 0;
     let errorCount = 0;
     let duplicateCount = 0;
-    
+
     // Helper to normalize strings (remove accents and lowercase) for comparison
     const normalizeStr = (str: string) => {
-      return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
     };
 
     // Expected Format: matricula, firstName, lastName, email, role, squad, shiftStart, shiftEnd
     // Start loop
     const promises = [];
-    
+
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
 
       // Use semicolon splitter
-      const cols = line.split(';').map(c => c.trim().replace(/^"|"$/g, ''));
-      
-      if (cols.length >= 7) { 
-        const [matricula, firstName, lastName, email, roleRaw, squadRaw, shiftStart, shiftEnd] = cols;
-        
+      const cols = line.split(";").map((c) => c.trim().replace(/^"|"$/g, ""));
+
+      if (cols.length >= 7) {
+        const [
+          matricula,
+          firstName,
+          lastName,
+          email,
+          roleRaw,
+          squadRaw,
+          shiftStart,
+          shiftEnd,
+        ] = cols;
+
         // CSV Validation
         if (!/^\d+$/.test(matricula)) {
-             errorCount++; // Invalid matricula format in CSV
-             continue;
+          errorCount++; // Invalid matricula format in CSV
+          continue;
         }
 
         // Check duplicates locally based on current loaded list to avoid basic collisions
         // The DB will also block unique constraint violations
-        if (employees.some(e => e.matricula === matricula)) {
-            duplicateCount++;
-            continue;
+        if (employees.some((e) => e.matricula === matricula)) {
+          duplicateCount++;
+          continue;
         }
 
         // Helpers to match enums case-insensitively AND ignoring accents
-        const findEnum = (enumObj: any, val: string) => Object.entries(enumObj).find(([k, v]) => 
-          normalizeStr(v as string) === normalizeStr(val) || normalizeStr(k) === normalizeStr(val)
-        )?.[1];
+        const findEnum = (enumObj: any, val: string) =>
+          Object.entries(enumObj).find(
+            ([k, v]) =>
+              normalizeStr(v as string) === normalizeStr(val) ||
+              normalizeStr(k) === normalizeStr(val)
+          )?.[1];
 
         const role = findEnum(Role, roleRaw) as Role;
         const squad = findEnum(Squad, squadRaw) as Squad;
 
         if (role && squad) {
-           const newEmp: Employee = {
-             id: '', // Empty ID tells backend to generate UUID
-             matricula,
-             firstName,
-             lastName,
-             email,
-             role,
-             squad,
-             shiftStart: shiftStart || '09:00',
-             shiftEnd: shiftEnd || '18:00'
-           };
-           // Add to promises to run later
-           promises.push(saveEmployee(newEmp, currentUser.name));
-           importedCount++;
+          const newEmp: Employee = {
+            id: "", // Empty ID tells backend to generate UUID
+            matricula,
+            firstName,
+            lastName,
+            email,
+            role,
+            squad,
+            shiftStart: shiftStart || "09:00",
+            shiftEnd: shiftEnd || "18:00",
+          };
+          // Add to promises to run later
+          promises.push(saveEmployee(newEmp, currentUser.name));
+          importedCount++;
         } else {
-           errorCount++;
+          errorCount++;
         }
       } else {
         errorCount++;
@@ -353,24 +456,38 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
     let msg = `Importação finalizada.\nRegistros importados: ${importedCount}\nErros de formato/dados inválidos: ${errorCount}`;
     if (duplicateCount > 0) {
-        msg += `\nDuplicatas ignoradas: ${duplicateCount}`;
+      msg += `\nDuplicatas ignoradas: ${duplicateCount}`;
     }
-    alert(msg);
+    toast.success("importação Concluída!", {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+      transition: Bounce,
+    });
+    if (errorCount > 0) {
+      toast(`Erros: ${errorCount}`);
+    }
+    // alert(msg);
     await loadData(); // Reload list from DB
   };
 
   const getSquadBadgeColor = (squad: Squad) => {
     switch (squad) {
       case Squad.LAKERS:
-        return 'bg-yellow-50 text-yellow-700 border-yellow-100';
+        return "bg-yellow-50 text-yellow-700 border-yellow-100";
       case Squad.BULLS:
-        return 'bg-red-50 text-red-700 border-red-100';
+        return "bg-red-50 text-red-700 border-red-100";
       case Squad.WARRIORS:
-        return 'bg-blue-50 text-blue-700 border-blue-100';
+        return "bg-blue-50 text-blue-700 border-blue-100";
       case Squad.ROCKETS:
-        return 'bg-purple-50 text-purple-700 border-purple-100';
+        return "bg-purple-50 text-purple-700 border-purple-100";
       default:
-        return 'bg-slate-50 text-slate-700 border-slate-100';
+        return "bg-slate-50 text-slate-700 border-slate-100";
     }
   };
 
@@ -380,24 +497,33 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[#1E1E1E]">Funcionários</h1>
-          <p className="text-slate-500">Gerencie o quadro de colaboradores CX.</p>
+          <p className="text-slate-500">
+            Gerencie o quadro de colaboradores CX.
+          </p>
           <div className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 p-2 rounded-md inline-flex items-center gap-2 max-w-sm">
             <AlertCircle size={16} className="flex-shrink-0" />
-            <span className="leading-tight">Dica: Se houver problemas com acentos, verifique se o CSV está em formato UTF-8 ou ANSI.</span>
+            <span className="leading-tight">
+              Dica: Se houver problemas com acentos, verifique se o CSV está em
+              formato UTF-8 ou ANSI.
+            </span>
           </div>
         </div>
         <div className="flex flex-wrap gap-2 relative w-full md:w-auto">
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleFileChange} 
-            accept=".csv" 
-            className="hidden" 
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept=".csv"
+            className="hidden"
           />
-          
-          <button 
+
+          <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className={`flex-1 md:flex-none px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm border ${isFilterOpen || activeFilterCount > 0 ? 'bg-[#204294]/10 border-[#204294]/20 text-[#204294]' : 'bg-white border-slate-200 text-[#3F3F3F] hover:bg-slate-50'}`}
+            className={`flex-1 md:flex-none px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm border ${
+              isFilterOpen || activeFilterCount > 0
+                ? "bg-[#204294]/10 border-[#204294]/20 text-[#204294]"
+                : "bg-white border-slate-200 text-[#3F3F3F] hover:bg-slate-50"
+            }`}
           >
             <Filter size={18} />
             <span className="hidden sm:inline">Filtrar</span>
@@ -407,8 +533,8 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
               </span>
             )}
           </button>
-          
-          <button 
+
+          <button
             onClick={handleExportCSV}
             className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
             title="Exportar para CSV"
@@ -419,7 +545,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
           {isAdmin && (
             <>
-              <button 
+              <button
                 onClick={handleDownloadTemplate}
                 className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
                 title="Baixar Modelo de Importação"
@@ -427,14 +553,14 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                 <FileText size={18} />
                 <span className="hidden sm:inline">Modelo</span>
               </button>
-              <button 
+              <button
                 onClick={handleImportClick}
                 className="flex-1 md:flex-none bg-[#01B8A1] hover:bg-[#019f8b] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
               >
                 <Upload size={18} />
                 <span className="hidden sm:inline">Importar</span>
               </button>
-              <button 
+              <button
                 onClick={() => openModal()}
                 className="flex-1 md:flex-none bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
               >
@@ -451,75 +577,102 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                 <h3 className="font-semibold text-[#1E1E1E] flex items-center gap-2">
                   <Search size={16} /> Filtros
                 </h3>
-                <button onClick={() => setIsFilterOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <button
+                  onClick={() => setIsFilterOpen(false)}
+                  className="text-slate-400 hover:text-slate-600"
+                >
                   <X size={16} />
                 </button>
               </div>
-              
+
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">Nome do Funcionário</label>
-                  <input 
-                    type="text" 
-                    placeholder="Buscar por nome..." 
+                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    Nome do Funcionário
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Buscar por nome..."
                     className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
                     value={filters.name}
-                    onChange={(e) => setFilters({...filters, name: e.target.value})}
+                    onChange={(e) =>
+                      setFilters({ ...filters, name: e.target.value })
+                    }
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">Matrícula</label>
-                    <input 
-                      type="text" 
-                      placeholder="000" 
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                      Matrícula
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="000"
                       className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
                       value={filters.matricula}
-                      onChange={(e) => setFilters({...filters, matricula: e.target.value})}
+                      onChange={(e) =>
+                        setFilters({ ...filters, matricula: e.target.value })
+                      }
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">Horário Início</label>
-                    <input 
-                      type="time" 
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                      Horário Início
+                    </label>
+                    <input
+                      type="time"
                       className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
                       value={filters.shiftStart}
-                      onChange={(e) => setFilters({...filters, shiftStart: e.target.value})}
+                      onChange={(e) =>
+                        setFilters({ ...filters, shiftStart: e.target.value })
+                      }
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">Squad</label>
-                  <select 
+                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    Squad
+                  </label>
+                  <select
                     className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
                     value={filters.squad}
-                    onChange={(e) => setFilters({...filters, squad: e.target.value as Squad})}
+                    onChange={(e) =>
+                      setFilters({ ...filters, squad: e.target.value as Squad })
+                    }
                   >
                     <option value="">Todas as Squads</option>
-                    {Object.values(Squad).map(s => (
-                      <option key={s} value={s}>{s}</option>
+                    {Object.values(Squad).map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">Cargo</label>
-                  <select 
+                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    Cargo
+                  </label>
+                  <select
                     className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
                     value={filters.role}
-                    onChange={(e) => setFilters({...filters, role: e.target.value as Role})}
+                    onChange={(e) =>
+                      setFilters({ ...filters, role: e.target.value as Role })
+                    }
                   >
                     <option value="">Todos os Cargos</option>
-                    {Object.values(Role).map(r => (
-                      <option key={r} value={r}>{r}</option>
+                    {Object.values(Role).map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="pt-2 flex justify-end">
-                  <button 
+                  <button
                     onClick={clearFilters}
                     className="text-xs text-rose-600 hover:text-rose-700 font-medium px-2 py-1"
                   >
@@ -534,11 +687,13 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
       {/* MOBILE LIST VIEW (Cards) - Visible only on small screens */}
       <div className="md:hidden space-y-3">
-        {filteredEmployees.map(emp => (
-          <div 
+        {filteredEmployees.map((emp) => (
+          <div
             key={emp.id}
             onClick={() => isAdmin && openModal(emp)}
-            className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative ${isAdmin ? 'active:bg-slate-50' : ''}`}
+            className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative ${
+              isAdmin ? "active:bg-slate-50" : ""
+            }`}
           >
             {/* Header: Name & Avatar */}
             <div className="flex items-start justify-between mb-3">
@@ -547,12 +702,14 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                   <User size={18} />
                 </div>
                 <div>
-                   <h3 className="font-bold text-[#1E1E1E] text-sm">{emp.firstName} {emp.lastName}</h3>
-                   <p className="text-xs text-slate-500">{emp.email}</p>
+                  <h3 className="font-bold text-[#1E1E1E] text-sm">
+                    {emp.firstName} {emp.lastName}
+                  </h3>
+                  <p className="text-xs text-slate-500">{emp.email}</p>
                 </div>
               </div>
               {isAdmin && (
-                <button 
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
                     requestDelete(emp.id);
@@ -567,21 +724,29 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
             {/* Details */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
-                 <span className="text-slate-500 font-medium">Cargo</span>
-                 <span className="text-slate-700 font-semibold text-right max-w-[60%] truncate">{emp.role}</span>
+                <span className="text-slate-500 font-medium">Cargo</span>
+                <span className="text-slate-700 font-semibold text-right max-w-[60%] truncate">
+                  {emp.role}
+                </span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                 <span className="text-slate-500 font-medium">Matrícula</span>
-                 <span className="font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">{emp.matricula}</span>
+                <span className="text-slate-500 font-medium">Matrícula</span>
+                <span className="font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                  {emp.matricula}
+                </span>
               </div>
               <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-50 mt-2">
-                 <span className={`px-2 py-0.5 rounded-md font-medium border ${getSquadBadgeColor(emp.squad)}`}>
-                    {emp.squad}
-                 </span>
-                 <div className="flex items-center gap-1 text-slate-600 font-medium">
-                    <Clock size={12} />
-                    {emp.shiftStart} - {emp.shiftEnd}
-                 </div>
+                <span
+                  className={`px-2 py-0.5 rounded-md font-medium border ${getSquadBadgeColor(
+                    emp.squad
+                  )}`}
+                >
+                  {emp.squad}
+                </span>
+                <div className="flex items-center gap-1 text-slate-600 font-medium">
+                  <Clock size={12} />
+                  {emp.shiftStart} - {emp.shiftEnd}
+                </div>
               </div>
             </div>
           </div>
@@ -598,14 +763,22 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
         <table className="w-full text-left border-collapse">
           <thead className="bg-slate-50 text-[#3F3F3F] border-b border-slate-200">
             <tr>
-              <th 
+              <th
                 className="p-4 font-bold text-sm cursor-pointer hover:bg-slate-100 transition-colors select-none group"
                 onClick={toggleSort}
               >
                 <div className="flex items-center gap-1">
                   Funcionário
-                  <span className={`text-slate-400 group-hover:text-[#204294] transition-colors ${sortOrder === 'asc' ? 'text-[#204294]' : ''}`}>
-                    {sortOrder === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
+                  <span
+                    className={`text-slate-400 group-hover:text-[#204294] transition-colors ${
+                      sortOrder === "asc" ? "text-[#204294]" : ""
+                    }`}
+                  >
+                    {sortOrder === "asc" ? (
+                      <ArrowUp size={14} />
+                    ) : (
+                      <ArrowDown size={14} />
+                    )}
                   </span>
                 </div>
               </th>
@@ -613,34 +786,62 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
               <th className="p-4 font-bold text-sm">Cargo</th>
               <th className="p-4 font-bold text-sm">Squad</th>
               <th className="p-4 font-bold text-sm">Horário</th>
-              {isAdmin && <th className="p-4 font-bold text-sm text-right">Ações</th>}
+              {isAdmin && (
+                <th className="p-4 font-bold text-sm text-right">Ações</th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {filteredEmployees.map(emp => {
-               return (
-                <tr 
-                  key={emp.id} 
+            {filteredEmployees.map((emp) => {
+              return (
+                <tr
+                  key={emp.id}
                   onClick={() => isAdmin && openModal(emp)}
-                  className={`group transition-all duration-200 ${isAdmin ? 'hover:bg-[#204294]/5 cursor-pointer hover:shadow-sm' : 'cursor-default'}`}
+                  className={`group transition-all duration-200 ${
+                    isAdmin
+                      ? "hover:bg-[#204294]/5 cursor-pointer hover:shadow-sm"
+                      : "cursor-default"
+                  }`}
                 >
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] transition-colors ${isAdmin ? 'group-hover:bg-[#204294] group-hover:text-white' : ''}`}>
+                      <div
+                        className={`w-8 h-8 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] transition-colors ${
+                          isAdmin
+                            ? "group-hover:bg-[#204294] group-hover:text-white"
+                            : ""
+                        }`}
+                      >
                         <User size={16} />
                       </div>
                       <div>
-                        <div className={`font-bold text-[#1E1E1E] transition-colors ${isAdmin ? 'group-hover:text-[#204294]' : ''}`}>{emp.firstName} {emp.lastName}</div>
-                        <div className="text-xs text-slate-500">{emp.email}</div>
+                        <div
+                          className={`font-bold text-[#1E1E1E] transition-colors ${
+                            isAdmin ? "group-hover:text-[#204294]" : ""
+                          }`}
+                        >
+                          {emp.firstName} {emp.lastName}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {emp.email}
+                        </div>
                       </div>
                     </div>
                   </td>
-                  <td className="p-4 text-sm text-slate-600 font-mono">{emp.matricula}</td>
+                  <td className="p-4 text-sm text-slate-600 font-mono">
+                    {emp.matricula}
+                  </td>
                   <td className="p-4">
-                    <span className="font-medium text-slate-700 text-sm">{emp.role}</span>
+                    <span className="font-medium text-slate-700 text-sm">
+                      {emp.role}
+                    </span>
                   </td>
                   <td className="p-4 text-sm text-slate-600">
-                    <span className={`px-2 py-1 rounded-md font-medium text-xs border ${getSquadBadgeColor(emp.squad)}`}>
+                    <span
+                      className={`px-2 py-1 rounded-md font-medium text-xs border ${getSquadBadgeColor(
+                        emp.squad
+                      )}`}
+                    >
                       {emp.squad}
                     </span>
                   </td>
@@ -650,13 +851,13 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                   {isAdmin && (
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <button 
+                        <button
                           type="button"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             requestDelete(emp.id);
-                          }} 
+                          }}
                           className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-lg transition-colors z-10"
                           title="Excluir funcionário"
                         >
@@ -666,11 +867,17 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                     </td>
                   )}
                 </tr>
-            )})}
+              );
+            })}
             {filteredEmployees.length === 0 && (
               <tr>
-                <td colSpan={isAdmin ? 6 : 5} className="p-8 text-center text-slate-500">
-                  {employees.length === 0 ? "Nenhum funcionário cadastrado." : "Nenhum funcionário encontrado com os filtros selecionados."}
+                <td
+                  colSpan={isAdmin ? 6 : 5}
+                  className="p-8 text-center text-slate-500"
+                >
+                  {employees.length === 0
+                    ? "Nenhum funcionário cadastrado."
+                    : "Nenhum funcionário encontrado com os filtros selecionados."}
                 </td>
               </tr>
             )}
@@ -684,19 +891,21 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
               <h3 className="text-lg font-bold text-[#1E1E1E]">
-                {editingId ? 'Editar Funcionário' : 'Novo Funcionário'}
+                {editingId ? "Editar Funcionário" : "Novo Funcionário"}
               </h3>
-              <button 
-                onClick={() => setIsModalOpen(false)} 
+              <button
+                onClick={() => setIsModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors"
                 title="Fechar"
               >
                 <X size={24} />
               </button>
             </div>
-            
-            <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto">
-              
+
+            <form
+              onSubmit={handleSubmit}
+              className="p-6 space-y-5 overflow-y-auto"
+            >
               {formError && (
                 <div className="bg-rose-50 border border-rose-200 text-rose-700 p-3 rounded-lg text-sm flex items-start gap-2">
                   <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
@@ -711,26 +920,67 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Nome</label>
-                    <input required type="text" className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900" 
-                      value={formData.firstName || ''} onChange={e => setFormData({...formData, firstName: e.target.value})} />
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Nome
+                    </label>
+                    <input
+                      required
+                      type="text"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
+                      value={formData.firstName || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, firstName: e.target.value })
+                      }
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Sobrenome</label>
-                    <input required type="text" className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900" 
-                      value={formData.lastName || ''} onChange={e => setFormData({...formData, lastName: e.target.value})} />
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Sobrenome
+                    </label>
+                    <input
+                      required
+                      type="text"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
+                      value={formData.lastName || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, lastName: e.target.value })
+                      }
+                    />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Email Corporativo</label>
-                    <input required type="email" className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900" 
-                      value={formData.email || ''} onChange={e => setFormData({...formData, email: e.target.value})} />
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Email Corporativo
+                    </label>
+                    <input
+                      required
+                      type="email"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
+                      value={formData.email || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Matrícula</label>
-                    <input required type="text" className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900" 
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Matrícula
+                    </label>
+                    <input
+                      required
+                      type="text"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
                       placeholder="Ex: 123"
-                      value={formData.matricula || ''} onChange={e => setFormData({...formData, matricula: e.target.value.replace(/\D/g,'')})} />
-                     <span className="text-xs text-slate-400">Somente números.</span>
+                      value={formData.matricula || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          matricula: e.target.value.replace(/\D/g, ""),
+                        })
+                      }
+                    />
+                    <span className="text-xs text-slate-400">
+                      Somente números.
+                    </span>
                   </div>
                 </div>
               </div>
@@ -741,23 +991,49 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Cargo</label>
-                    <select required className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
-                      value={formData.role} onChange={e => setFormData({...formData, role: e.target.value as Role})}>
-                      {Object.values(Role).map(role => (
-                        <option key={role} value={role}>{role}</option>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Cargo
+                    </label>
+                    <select
+                      required
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
+                      value={formData.role}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          role: e.target.value as Role,
+                        })
+                      }
+                    >
+                      {Object.values(Role).map((role) => (
+                        <option key={role} value={role}>
+                          {role}
+                        </option>
                       ))}
                     </select>
                   </div>
-                  
+
                   {/* Squad always visible */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Squad</label>
-                    <select required className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
-                      value={formData.squad || ''} onChange={e => setFormData({...formData, squad: e.target.value as Squad})}>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Squad
+                    </label>
+                    <select
+                      required
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
+                      value={formData.squad || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          squad: e.target.value as Squad,
+                        })
+                      }
+                    >
                       <option value="">Selecione uma Squad...</option>
-                      {Object.values(Squad).map(s => (
-                        <option key={s} value={s}>{s}</option>
+                      {Object.values(Squad).map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -770,23 +1046,48 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Início Expediente</label>
-                    <input required type="time" className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900" 
-                      value={formData.shiftStart} onChange={e => setFormData({...formData, shiftStart: e.target.value})} />
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Início Expediente
+                    </label>
+                    <input
+                      required
+                      type="time"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
+                      value={formData.shiftStart}
+                      onChange={(e) =>
+                        setFormData({ ...formData, shiftStart: e.target.value })
+                      }
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Fim Expediente</label>
-                    <input required type="time" className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900" 
-                      value={formData.shiftEnd} onChange={e => setFormData({...formData, shiftEnd: e.target.value})} />
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Fim Expediente
+                    </label>
+                    <input
+                      required
+                      type="time"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
+                      value={formData.shiftEnd}
+                      onChange={(e) =>
+                        setFormData({ ...formData, shiftEnd: e.target.value })
+                      }
+                    />
                   </div>
                 </div>
               </div>
 
               <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium"
+                >
                   Cancelar
                 </button>
-                <button type="submit" className="px-4 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] transition-colors shadow-sm font-bold">
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] transition-colors shadow-sm font-bold"
+                >
                   Salvar Funcionário
                 </button>
               </div>
@@ -802,18 +1103,21 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
             <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-600">
               <Trash2 size={24} />
             </div>
-            <h3 className="text-lg font-bold text-slate-800 mb-2">Excluir Funcionário?</h3>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">
+              Excluir Funcionário?
+            </h3>
             <p className="text-slate-500 mb-6 text-sm">
-              Esta ação não pode ser desfeita. Todos os registros relacionados (ausências, plantões, trocas) serão removidos permanentemente.
+              Esta ação não pode ser desfeita. Todos os registros relacionados
+              (ausências, plantões, trocas) serão removidos permanentemente.
             </p>
             <div className="flex gap-3 justify-center">
-              <button 
+              <button
                 onClick={() => setDeleteConfirmationId(null)}
                 className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium"
               >
                 Cancelar
               </button>
-              <button 
+              <button
                 onClick={confirmDelete}
                 className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors shadow-sm font-medium"
               >
@@ -823,6 +1127,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
           </div>
         </div>
       )}
+      <ToastContainer aria-label="Notificações do Sistema" />
     </div>
   );
 };

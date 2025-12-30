@@ -212,7 +212,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
   const confirmDelete = async () => {
     if (deleteConfirmationId) {
       try {
-        await deleteAbsence(deleteConfirmationId);
+        await deleteAbsence(deleteConfirmationId, currentUser.name);
         await loadData(); // Reload from DB
         if (editingId === deleteConfirmationId) closeModal();
         setDeleteConfirmationId(null);
@@ -271,7 +271,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
               updatedAt: new Date().toISOString()
           };
           
-          await saveAbsence(updatedAbsence);
+          await saveAbsence(updatedAbsence, currentUser.name);
       } else {
           // Creating new record(s)
           // We pass ID as empty string so backend generates UUID
@@ -310,8 +310,8 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
               });
           }
           
-          // Save all concurrently
-          await Promise.all(newAbsences.map(abs => saveAbsence(abs)));
+          // Save all concurrently passing current user name for logging
+          await Promise.all(newAbsences.map(abs => saveAbsence(abs, currentUser.name)));
       }
 
       await loadData(); // Refresh list
