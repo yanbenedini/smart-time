@@ -391,9 +391,9 @@ AppDataSource.initialize()
         const { email, password } = req.body;
 
         // Logs de Debug (para vermos no terminal o que está chegando)
-        console.log("--- TENTATIVA DE LOGIN ---");
-        console.log("Email recebido:", email);
-        console.log("Senha digitada:", password);
+        // console.log("--- TENTATIVA DE LOGIN ---");
+        // console.log("Email recebido:", email);
+        // console.log("Senha digitada:", password);
 
         // 1. Busca o usuário trazendo explicitamente a senha (que está oculta por padrão)
         const user = await userRepo
@@ -407,13 +407,13 @@ AppDataSource.initialize()
           return res.status(401).json({ message: "Email ou senha inválidos" });
         }
 
-        console.log("Usuário encontrado:", user.name);
-        console.log("Hash salvo no banco:", user.password);
+        // console.log("Usuário encontrado:", user.name);
+        // console.log("Hash salvo no banco:", user.password);
 
         // 2. Compara a senha digitada com o Hash do banco usando bcrypt
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
-        console.log("A senha bate com o hash?", isPasswordValid);
+        // console.log("A senha bate com o hash?", isPasswordValid);
 
         if (!isPasswordValid) {
           console.log("ERRO: Senha incorreta.");
@@ -430,7 +430,7 @@ AppDataSource.initialize()
           userSafe.name
         );
 
-        console.log("SUCESSO: Login aprovado.");
+        // console.log("SUCESSO: Login aprovado.");
         return res.json(userSafe);
       } catch (error) {
         console.error("Erro interno no login:", error);
@@ -444,25 +444,31 @@ AppDataSource.initialize()
         const { userId, currentPassword, newPassword } = req.body;
 
         if (!userId || !currentPassword || !newPassword) {
-            return res.status(400).json({ message: "Dados incompletos." });
+          return res.status(400).json({ message: "Dados incompletos." });
         }
 
         // 1. Busca o usuário trazendo a senha (que é oculta)
-        const user = await userRepo.createQueryBuilder("user")
-            .addSelect("user.password")
-            .where("user.id = :id", { id: userId })
-            .getOne();
+        const user = await userRepo
+          .createQueryBuilder("user")
+          .addSelect("user.password")
+          .where("user.id = :id", { id: userId })
+          .getOne();
 
         if (!user) {
-            return res.status(404).json({ message: "Usuário não encontrado." });
+          return res.status(404).json({ message: "Usuário não encontrado." });
         }
 
         // 2. Verifica se a senha ATUAL informada bate com o Hash do banco
-        const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+        const isPasswordValid = await bcrypt.compare(
+          currentPassword,
+          user.password
+        );
 
         if (!isPasswordValid) {
-            // Se falhar aqui, é porque o usuário digitou a senha atual errada
-            return res.status(401).json({ message: "A senha atual está incorreta." });
+          // Se falhar aqui, é porque o usuário digitou a senha atual errada
+          return res
+            .status(401)
+            .json({ message: "A senha atual está incorreta." });
         }
 
         // 3. Gera o Hash da NOVA senha
@@ -475,16 +481,17 @@ AppDataSource.initialize()
         await userRepo.save(user);
 
         await registerLog(
-            "UPDATE",
-            `Senha alterada pelo próprio usuário`,
-            user.name
+          "UPDATE",
+          `Senha alterada pelo próprio usuário`,
+          user.name
         );
 
         return res.json({ message: "Senha alterada com sucesso!" });
-
       } catch (error) {
         console.error("Erro ao trocar senha:", error);
-        return res.status(500).json({ message: "Erro interno ao trocar senha." });
+        return res
+          .status(500)
+          .json({ message: "Erro interno ao trocar senha." });
       }
     });
 

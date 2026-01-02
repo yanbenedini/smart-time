@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Lock, Mail, ArrowRight, Loader2 } from "lucide-react";
 import { SystemUser } from "../types";
-import { getSystemUsers } from "../services/dbService";
 import { loginUser } from "../services/dbService";
 
 interface LoginProps {
@@ -58,7 +57,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   type="email"
                   required
                   className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#204294] focus:border-transparent transition-all"
-                  placeholder="seu@email.com"
+                  placeholder=""
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
