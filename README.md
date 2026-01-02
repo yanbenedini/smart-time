@@ -10,11 +10,26 @@ View your app in AI Studio: https://ai.studio/apps/drive/1lyZdrwGh4YQqji04lpjtFb
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
-
+**Prerequisites:** Node.js
 
 1. Install dependencies:
    `npm install`
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+# PRODUÇÃO:
+
+/services/dbService.ts
+const API_URL = "http://163.176.231.117:5000";
+host: process.env.DB_HOST || "db",
+port: Number(process.env.DB_PORT) || 5432,
+password: process.env.DB_PASSWORD || "postgres",
+
+# DESENVOLVIMENTO:
+
+/services/dbService.ts
+const API_URL = "http://localhost:5000";
+host: "localhost",
+port: 5433,
+password: "password123",

@@ -11,9 +11,12 @@ export class SystemUser {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ select: false })
   password: string;
 
   @Column({ name: "is_admin", default: false })
   isAdmin: boolean;
+
+  @Column({ default: true, name: "must_change_password" })
+  mustChangePassword: boolean;
 }

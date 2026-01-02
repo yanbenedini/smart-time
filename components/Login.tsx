@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Lock, Mail, ArrowRight, Loader2 } from "lucide-react";
 import { SystemUser } from "../types";
 import { getSystemUsers } from "../services/dbService";
+import { loginUser } from "../services/dbService";
 
 interface LoginProps {
   onLogin: (user: SystemUser) => void;
@@ -13,33 +14,22 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Exemplo dentro do componente Login.tsx
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setIsLoading(true);
+    setIsLoading(true); // <--- Ativa o spinner
+    setError(null); // <--- Limpa erros anteriores
 
     try {
-      // Busca os usuários cadastrados no banco de dados
-      const users = await getSystemUsers();
-
-      // Procura um usuário que corresponda ao email e senha informados
-      // Nota: Em produção, a validação de senha deve ser feita no backend por segurança via endpoint /login
-      const user = users.find(
-        (u) =>
-          u.email.toLowerCase() === email.toLowerCase() &&
-          u.password === password
-      );
-
-      if (user) {
-        onLogin(user);
-      } else {
-        setError("Email ou senha incorretos.");
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Erro de conexão com o servidor. Tente novamente.");
+      // A chamada "suja" do fetch fica escondida aqui dentro
+      const user = await loginUser(email, password);
+      onLogin(user);
+    } catch (err: any) {
+      // Mostra o erro na tela (div vermelha) em vez de alert
+      setError(err.message);
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // <--- Desativa o spinner
     }
   };
 

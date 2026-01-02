@@ -24,7 +24,7 @@ import OnCallManager from "./components/OnCallManager";
 import LogManager from "./components/LogManager";
 import Login from "./components/Login";
 import { SystemUser } from "./types";
-import { saveSystemUser } from "./services/dbService";
+import { saveSystemUser, changePassword } from "./services/dbService";
 
 enum View {
   DASHBOARD,
@@ -83,19 +83,11 @@ const App: React.FC = () => {
     setIsPasswordModalOpen(true);
   };
 
-  // Adicionado 'async' aqui
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordFeedback(null);
 
-    if (passwordForm.currentPassword !== currentUser.password) {
-      setPasswordFeedback({
-        type: "error",
-        message: "A senha atual está incorreta.",
-      });
-      return;
-    }
-
+    // 1. Validações básicas de formulário (Frontend)
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       setPasswordFeedback({
         type: "error",
@@ -112,29 +104,47 @@ const App: React.FC = () => {
       return;
     }
 
-    const updatedUser: SystemUser = {
-      ...currentUser,
-      password: passwordForm.newPassword,
-      mustChangePassword: false,
-    };
+    // OBS: Removemos a checagem local da senha antiga.
+    // Quem vai dizer se a senha antiga está certa é o Backend.
 
     try {
-      // CORREÇÃO: Removido o segundo argumento e adicionado 'await'
-      await saveSystemUser(updatedUser);
+      if (!currentUser?.id) return;
 
-      setCurrentUser(updatedUser);
+      // 2. Chama a rota segura que valida o Hash no servidor
+      await changePassword(
+        currentUser.id,
+        passwordForm.currentPassword,
+        passwordForm.newPassword
+      );
+
+      // 3. Atualiza o estado local apenas para liberar a tela (sem expor a senha)
+      setCurrentUser({
+        ...currentUser,
+        mustChangePassword: false,
+      });
+
       setPasswordFeedback({
         type: "success",
         message: "Senha alterada com sucesso!",
       });
+
       setTimeout(() => {
         setIsPasswordModalOpen(false);
         setPasswordFeedback(null);
+        // Opcional: Limpar o form
+        setPasswordForm({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
       }, 1500);
-    } catch (err) {
+    } catch (err: any) {
+      // 4. Se a senha antiga estiver errada, o backend retorna erro 401
+      // e cai aqui. Mostramos a mensagem do servidor.
       setPasswordFeedback({
         type: "error",
-        message: "Erro ao salvar nova senha.",
+        message:
+          err.message || "Erro ao alterar a senha. Verifique a senha atual.",
       });
     }
   };

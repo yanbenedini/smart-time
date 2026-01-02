@@ -10,7 +10,11 @@ import {
 // --- CONFIGURAÇÃO DA API ---
 // Substitua SEU_IP_DA_ORACLE pelo IP público do seu servidor na Oracle.
 // Se estiver testando no seu próprio computador, use 'http://localhost:5000'
-const API_URL = "http://163.176.231.117:5000";
+
+// const API_URL = "http://163.176.231.117:5000"; -- PRODUÇÃO
+const API_URL = "http://localhost:5000";
+
+// --- LOGS DO SISTEMA ---
 
 export const getSystemLogs = async (): Promise<SystemLog[]> => {
   try {
@@ -40,6 +44,52 @@ export const createLog = async (
     });
   } catch (error) {
     console.error("Erro ao salvar log", error);
+  }
+};
+
+// --- AUTENTICAÇÃO (LOGIN) ---
+// Adicione esta função para corrigir o erro no Login.tsx
+
+export const loginUser = async (email: string, password: string): Promise<SystemUser> => {
+  try {
+    const response = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!response.ok) {
+      // Tenta pegar a mensagem de erro do backend (ex: "Email ou senha inválidos")
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Falha na autenticação');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Erro no login:", error);
+    throw error;
+  }
+};
+
+export const changePassword = async (userId: string, currentPassword: string, newPassword: string): Promise<void> => {
+  try {
+    const response = await fetch(`${API_URL}/change-password`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({ userId, currentPassword, newPassword })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Erro ao alterar a senha.');
+    }
+  } catch (error) {
+    console.error("Erro changePassword:", error);
+    throw error;
   }
 };
 
@@ -260,17 +310,29 @@ export const saveSystemUser = async (
   userName: string = "Sistema"
 ): Promise<void> => {
   try {
-    await fetch(`${API_URL}/users`, {
-      method: "POST",
+    // Se tem ID, é edição (PUT). Se não tem (string vazia), é criação (POST).
+    const isEditing = user.id && user.id.length > 5; // Verificação simples de ID válido
+
+    const method = isEditing ? "PUT" : "POST";
+    const url = isEditing ? `${API_URL}/users/${user.id}` : `${API_URL}/users`;
+
+    const response = await fetch(url, {
+      method: method,
       headers: {
         "Content-Type": "application/json",
         "x-user-name": userName,
       },
       body: JSON.stringify(user),
     });
+
+    if (!response.ok) {
+      // Tenta ler a mensagem de erro do backend (ex: "Email já existe")
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Erro ao salvar usuário");
+    }
   } catch (error) {
     console.error("Erro saveSystemUser:", error);
-    throw error;
+    throw error; // Repassa o erro para o componente mostrar o alerta vermelho
   }
 };
 
