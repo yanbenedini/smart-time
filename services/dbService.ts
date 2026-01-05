@@ -11,7 +11,9 @@ import {
 // Substitua SEU_IP_DA_ORACLE pelo IP público do seu servidor na Oracle.
 // Se estiver testando no seu próprio computador, use 'http://localhost:5000'
 
-// const API_URL = "http://163.176.231.117:5000"; -- PRODUÇÃO
+// PROD:
+// const API_URL = "http://163.176.231.117:5000";
+// DEV:
 const API_URL = "http://localhost:5000";
 
 // --- LOGS DO SISTEMA ---
@@ -50,20 +52,23 @@ export const createLog = async (
 // --- AUTENTICAÇÃO (LOGIN) ---
 // Adicione esta função para corrigir o erro no Login.tsx
 
-export const loginUser = async (email: string, password: string): Promise<SystemUser> => {
+export const loginUser = async (
+  email: string,
+  password: string
+): Promise<SystemUser> => {
   try {
     const response = await fetch(`${API_URL}/login`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json' 
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password }),
     });
 
     if (!response.ok) {
       // Tenta pegar a mensagem de erro do backend (ex: "Email ou senha inválidos")
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Falha na autenticação');
+      throw new Error(errorData.message || "Falha na autenticação");
     }
 
     return await response.json();
@@ -73,19 +78,23 @@ export const loginUser = async (email: string, password: string): Promise<System
   }
 };
 
-export const changePassword = async (userId: string, currentPassword: string, newPassword: string): Promise<void> => {
+export const changePassword = async (
+  userId: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<void> => {
   try {
     const response = await fetch(`${API_URL}/change-password`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json' 
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ userId, currentPassword, newPassword })
+      body: JSON.stringify({ userId, currentPassword, newPassword }),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Erro ao alterar a senha.');
+      throw new Error(errorData.message || "Erro ao alterar a senha.");
     }
   } catch (error) {
     console.error("Erro changePassword:", error);

@@ -22,6 +22,8 @@ View your app in AI Studio: https://ai.studio/apps/drive/1lyZdrwGh4YQqji04lpjtFb
 
 /services/dbService.ts
 const API_URL = "http://163.176.231.117:5000";
+
+/server/src/data-source.tsx
 host: process.env.DB_HOST || "db",
 port: Number(process.env.DB_PORT) || 5432,
 password: process.env.DB_PASSWORD || "postgres",
@@ -30,6 +32,8 @@ password: process.env.DB_PASSWORD || "postgres",
 
 /services/dbService.ts
 const API_URL = "http://localhost:5000";
+
+/server/src/data-source.tsx
 host: "localhost",
 port: 5433,
 password: "password123",
