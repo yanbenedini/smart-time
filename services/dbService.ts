@@ -366,13 +366,34 @@ export const addSystemLog = async (log: SystemLog): Promise<void> => {
   console.log("Log do Sistema (Frontend):", log);
 };
 
-export const checkCoverage = (
+export const checkCoverage = async (
   employeeId: string,
   role: string,
   squad: string,
   date: string,
   startTime: string,
   endTime: string
-): boolean => {
-  return true;
+): Promise<boolean> => {
+  try {
+    const response = await fetch(`${API_URL}/check-coverage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        employeeId,
+        role,
+        squad,
+        date,
+        startTime,
+        endTime,
+      }),
+    });
+
+    if (!response.ok) return true; // Fallback: se a API falhar, libera
+
+    const data = await response.json();
+    return data.hasCoverage;
+  } catch (error) {
+    console.error("Erro ao verificar cobertura:", error);
+    return true;
+  }
 };

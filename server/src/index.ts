@@ -495,6 +495,55 @@ AppDataSource.initialize()
       }
     });
 
+    // --- ROTA DE VERIFICAÇÃO DE COBERTURA (SQUAD) ---
+    app.post("/check-coverage", async (req, res) => {
+      try {
+        const { employeeId, role, squad, date, startTime, endTime } = req.body;
+
+        // 1. Busca colegas da mesma squad e cargo
+        const peers = await employeeRepo.find({
+          where: { role: role, squad: squad }
+        });
+        
+        // Remove o próprio funcionário da lista
+        const potentialCovers = peers.filter(p => p.id !== employeeId);
+
+        // 2. Filtra quem trabalha no horário solicitado
+        const shiftCoveringPeers = potentialCovers.filter(peer => 
+          peer.shiftStart <= startTime && peer.shiftEnd >= endTime
+        );
+
+        if (shiftCoveringPeers.length === 0) {
+          // Caminho 1: Retorno explícito com return
+          return res.json({ hasCoverage: false }); 
+        }
+
+        // 3. Verifica se esses colegas têm ausência marcada no mesmo dia/hora
+        let availablePeerFound = false;
+
+        for (const peer of shiftCoveringPeers) {
+          const conflict = await absenceRepo.createQueryBuilder("absence")
+            .where("absence.employeeId = :peerId", { peerId: peer.id })
+            .andWhere("absence.date <= :date", { date })
+            .andWhere("absence.endDate >= :date", { date })
+            .andWhere("absence.startTime < :endTime", { endTime })
+            .andWhere("absence.endTime > :startTime", { startTime })
+            .getOne();
+
+          if (!conflict) {
+            availablePeerFound = true;
+            break; 
+          }
+        }
+
+        return res.json({ hasCoverage: availablePeerFound });
+
+      } catch (error) {
+        console.error("Erro check-coverage:", error);
+        return res.status(500).json({ hasCoverage: false });
+      }
+    });
+
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
