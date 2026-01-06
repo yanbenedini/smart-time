@@ -18,6 +18,7 @@ import {
   getOnCallShifts,
 } from "../services/dbService";
 import { Employee, Absence, ShiftChange, OnCallShift } from "../types";
+import { IonSkeletonText } from "@ionic/react";
 
 const Dashboard: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -25,10 +26,12 @@ const Dashboard: React.FC = () => {
   const [shiftChanges, setShiftChanges] = useState<ShiftChange[]>([]);
   const [onCallShifts, setOnCallShifts] = useState<OnCallShift[]>([]);
 
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     const loadDashboardData = async () => {
+      setIsLoading(true);
       try {
-        // Busca todos os dados em paralelo para ser mais rápido
         const [emps, abs, shifts, onCalls] = await Promise.all([
           getEmployees(),
           getAbsences(),
@@ -42,6 +45,9 @@ const Dashboard: React.FC = () => {
         setOnCallShifts(onCalls);
       } catch (error) {
         console.error("Erro ao carregar dados do dashboard:", error);
+      } finally {
+        // Delay para transição suave
+        setTimeout(() => setIsLoading(false), 500);
       }
     };
 
@@ -100,65 +106,97 @@ const Dashboard: React.FC = () => {
 
       {/* TOP SECTION: Stats in Single Line (4 Columns) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 flex-shrink-0">
+        {/* Card 1: Funcionários */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full">
             <div className="p-2.5 bg-[#204294]/10 rounded-lg text-[#204294]">
               <Users size={20} />
             </div>
-            <div>
+            <div className="flex-1">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">
                 Funcionários
               </p>
               <h3 className="text-xl font-bold text-[#1E1E1E]">
-                {employees.length}
+                {isLoading ? (
+                  <IonSkeletonText
+                    animated
+                    style={{ width: "40px", height: "20px" }}
+                  />
+                ) : (
+                  employees.length
+                )}
               </h3>
             </div>
           </div>
         </div>
 
+        {/* Card 2: Ausências Totais */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full">
             <div className="p-2.5 bg-rose-50 rounded-lg text-rose-600">
               <CalendarOff size={20} />
             </div>
-            <div>
+            <div className="flex-1">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">
                 Ausências Totais
               </p>
               <h3 className="text-xl font-bold text-[#1E1E1E]">
-                {absences.length}
+                {isLoading ? (
+                  <IonSkeletonText
+                    animated
+                    style={{ width: "40px", height: "20px" }}
+                  />
+                ) : (
+                  absences.length
+                )}
               </h3>
             </div>
           </div>
         </div>
 
+        {/* Card 3: Ausentes Hoje */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full">
             <div className="p-2.5 bg-orange-50 rounded-lg text-orange-600">
               <UserMinus size={20} />
             </div>
-            <div>
+            <div className="flex-1">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">
                 Ausentes Hoje
               </p>
               <h3 className="text-xl font-bold text-[#1E1E1E]">
-                {todaysAbsences.length}
+                {isLoading ? (
+                  <IonSkeletonText
+                    animated
+                    style={{ width: "40px", height: "20px" }}
+                  />
+                ) : (
+                  todaysAbsences.length
+                )}
               </h3>
             </div>
           </div>
         </div>
 
+        {/* Card 4: Trocas Hoje */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full">
             <div className="p-2.5 bg-[#00B0EA]/10 rounded-lg text-[#00B0EA]">
               <ArrowLeftRight size={20} />
             </div>
-            <div>
+            <div className="flex-1">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">
                 Trocas Hoje
               </p>
               <h3 className="text-xl font-bold text-[#1E1E1E]">
-                {todaysShiftChanges.length}
+                {isLoading ? (
+                  <IonSkeletonText
+                    animated
+                    style={{ width: "40px", height: "20px" }}
+                  />
+                ) : (
+                  todaysShiftChanges.length
+                )}
               </h3>
             </div>
           </div>
@@ -180,7 +218,30 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto pr-1 space-y-2">
-            {todaysAbsences.length > 0 ? (
+            {isLoading ? (
+              // Skeletons para Ausentes Hoje
+              Array.from({ length: 2 }).map((_, i) => (
+                <div
+                  key={`sk-abs-${i}`}
+                  className="p-2 border border-slate-100 rounded-lg bg-slate-50"
+                >
+                  <div className="flex justify-between mb-1">
+                    <IonSkeletonText
+                      animated
+                      style={{ width: "60%", height: "10px" }}
+                    />
+                    <IonSkeletonText
+                      animated
+                      style={{ width: "20%", height: "10px" }}
+                    />
+                  </div>
+                  <IonSkeletonText
+                    animated
+                    style={{ width: "40%", height: "8px" }}
+                  />
+                </div>
+              ))
+            ) : todaysAbsences.length > 0 ? (
               todaysAbsences.map((abs) => {
                 const emp = employees.find((e) => e.id === abs.employeeId);
                 return (
@@ -230,7 +291,30 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto pr-1 space-y-2">
-            {vacationAbsences.length > 0 ? (
+            {isLoading ? (
+              // Skeletons para Em Férias
+              Array.from({ length: 2 }).map((_, i) => (
+                <div
+                  key={`sk-vac-${i}`}
+                  className="p-2 border border-emerald-100 rounded-lg bg-emerald-50"
+                >
+                  <div className="flex justify-between mb-1">
+                    <IonSkeletonText
+                      animated
+                      style={{ width: "60%", height: "10px" }}
+                    />
+                    <IonSkeletonText
+                      animated
+                      style={{ width: "20%", height: "10px" }}
+                    />
+                  </div>
+                  <IonSkeletonText
+                    animated
+                    style={{ width: "50%", height: "8px" }}
+                  />
+                </div>
+              ))
+            ) : vacationAbsences.length > 0 ? (
               vacationAbsences.map((abs) => {
                 const emp = employees.find((e) => e.id === abs.employeeId);
                 return (
@@ -279,7 +363,24 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto pr-1 space-y-2">
-            {todaysShiftChanges.length > 0 ? (
+            {isLoading ? (
+              // Skeletons para Trocas Hoje
+              Array.from({ length: 2 }).map((_, i) => (
+                <div
+                  key={`sk-shift-${i}`}
+                  className="p-2 border border-slate-100 rounded-lg bg-slate-50"
+                >
+                  <IonSkeletonText
+                    animated
+                    style={{ width: "70%", height: "10px" }}
+                  />
+                  <IonSkeletonText
+                    animated
+                    style={{ width: "90%", height: "14px", marginTop: "8px" }}
+                  />
+                </div>
+              ))
+            ) : todaysShiftChanges.length > 0 ? (
               todaysShiftChanges.map((change) => {
                 const emp = employees.find((e) => e.id === change.employeeId);
                 return (
@@ -298,7 +399,6 @@ const Dashboard: React.FC = () => {
                     <div className="text-[11px] text-slate-500 mb-1 truncate">
                       {change.reason}
                     </div>
-
                     <div className="flex items-center gap-2 text-[10px] bg-white p-1 rounded border border-slate-100">
                       <span className="text-slate-400 line-through decoration-rose-300">
                         {change.originalShiftStart} - {change.originalShiftEnd}
@@ -335,7 +435,28 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto pr-1 space-y-2">
-            {upcomingOnCalls.length > 0 ? (
+            {isLoading ? (
+              // Skeletons para Plantões
+              Array.from({ length: 2 }).map((_, i) => (
+                <div
+                  key={`sk-call-${i}`}
+                  className="p-2 border border-slate-100 rounded-lg bg-slate-50"
+                >
+                  <IonSkeletonText
+                    animated
+                    style={{ width: "60%", height: "10px" }}
+                  />
+                  <IonSkeletonText
+                    animated
+                    style={{ width: "40%", height: "8px", marginTop: "6px" }}
+                  />
+                  <IonSkeletonText
+                    animated
+                    style={{ width: "40%", height: "8px", marginTop: "4px" }}
+                  />
+                </div>
+              ))
+            ) : upcomingOnCalls.length > 0 ? (
               upcomingOnCalls.map((shift) => {
                 const emp = employees.find((e) => e.id === shift.employeeId);
                 const isToday = shift.date === todayStr;
