@@ -18,6 +18,7 @@ import {
   saveSystemUser,
   deleteSystemUser,
 } from "../services/dbService";
+import { IonSkeletonText } from "@ionic/react";
 
 interface UserManagerProps {
   currentUser: SystemUser;
@@ -42,17 +43,23 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
 
   const isSuperAdmin = currentUser.isAdmin;
 
+  const [isLoading, setIsLoading] = useState(true);
+
   // --- DATA LOADING (ASYNC) ---
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
+    setIsLoading(true);
     try {
       const data = await getSystemUsers();
       setUsers(data);
     } catch (err) {
       console.error("Erro ao carregar usuários:", err);
+    } finally {
+      // Pequeno atraso para suavizar a transição visual
+      setTimeout(() => setIsLoading(false), 500);
     }
   };
 
@@ -178,7 +185,34 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
         </div>
 
         <div className="divide-y divide-slate-100">
-          {filteredUsers.length > 0 ? (
+          {isLoading ? (
+            // --- ESTADO CARREGANDO (SKELETONS) ---
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={`sk-user-${i}`} className="p-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    {/* Avatar Skeleton */}
+                    <div className="w-10 h-10 rounded-full bg-slate-100 animate-pulse" />
+                    <div className="space-y-2">
+                      {/* Name Skeleton */}
+                      <IonSkeletonText
+                        animated
+                        style={{ width: "120px", height: "12px" }}
+                      />
+                      {/* Email Skeleton */}
+                      <IonSkeletonText
+                        animated
+                        style={{ width: "180px", height: "10px" }}
+                      />
+                    </div>
+                  </div>
+                  {/* Action Button Skeleton */}
+                  <div className="w-8 h-8 rounded bg-slate-100 animate-pulse" />
+                </div>
+              </div>
+            ))
+          ) : filteredUsers.length > 0 ? (
+            // --- LISTA REAL DE DADOS ---
             filteredUsers.map((user) => (
               <div
                 key={user.id}
@@ -221,6 +255,7 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
               </div>
             ))
           ) : (
+            // --- ESTADO VAZIO ---
             <div className="p-8 text-center text-slate-500">
               Nenhum outro usuário encontrado.
             </div>
