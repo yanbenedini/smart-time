@@ -24,6 +24,7 @@ import {
 } from "../services/dbService";
 import { ToastContainer, toast, Bounce } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { IonSkeletonText } from "@ionic/react";
 
 interface EmployeeManagerProps {
   currentUser: SystemUser;
@@ -52,6 +53,8 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     shiftStart: "",
   });
 
+  const [isLoading, setIsLoading] = useState(true);
+
   // Form State
   const [formData, setFormData] = useState<Partial<Employee>>({
     role: Role.INFRA_ANALYST,
@@ -65,8 +68,16 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
   }, []);
 
   const loadData = async () => {
-    const data = await getEmployees();
-    setEmployees(data);
+    setIsLoading(true);
+    try {
+      const data = await getEmployees();
+      setEmployees(data);
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+    } finally {
+      // Timeout opcional de 500ms apenas para o skeleton não "piscar" muito rápido
+      setTimeout(() => setIsLoading(false), 500);
+    }
   };
 
   // --- Filtering & Sorting Logic ---
@@ -687,74 +698,97 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
       {/* MOBILE LIST VIEW (Cards) - Visible only on small screens */}
       <div className="md:hidden space-y-3">
-        {filteredEmployees.map((emp) => (
-          <div
-            key={emp.id}
-            onClick={() => isAdmin && openModal(emp)}
-            className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative ${
-              isAdmin ? "active:bg-slate-50" : ""
-            }`}
-          >
-            {/* Header: Name & Avatar */}
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold text-sm">
-                  <User size={18} />
-                </div>
+        {isLoading ? (
+          // Skeletons para Mobile
+          Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={`sk-card-${i}`}
+              className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-slate-100 animate-pulse" />
                 <div>
-                  <h3 className="font-bold text-[#1E1E1E] text-sm">
-                    {emp.firstName} {emp.lastName}
-                  </h3>
-                  <p className="text-xs text-slate-500">{emp.email}</p>
+                  <IonSkeletonText
+                    animated
+                    style={{ width: "120px", height: "14px" }}
+                  />
+                  <IonSkeletonText
+                    animated
+                    style={{ width: "160px", height: "10px", marginTop: "4px" }}
+                  />
                 </div>
               </div>
-              {isAdmin && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    requestDelete(emp.id);
-                  }}
-                  className="p-2 text-slate-400 text-rose-500 hover:bg-rose-50 rounded-lg"
-                >
-                  <Trash2 size={18} />
-                </button>
-              )}
-            </div>
-
-            {/* Details */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-500 font-medium">Cargo</span>
-                <span className="text-slate-700 font-semibold text-right max-w-[60%] truncate">
-                  {emp.role}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-500 font-medium">Matrícula</span>
-                <span className="font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
-                  {emp.matricula}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-50 mt-2">
-                <span
-                  className={`px-2 py-0.5 rounded-md font-medium border ${getSquadBadgeColor(
-                    emp.squad
-                  )}`}
-                >
-                  {emp.squad}
-                </span>
-                <div className="flex items-center gap-1 text-slate-600 font-medium">
-                  <Clock size={12} />
-                  {emp.shiftStart} - {emp.shiftEnd}
-                </div>
+              <div className="space-y-2">
+                <IonSkeletonText animated style={{ width: "100%" }} />
+                <IonSkeletonText animated style={{ width: "80%" }} />
               </div>
             </div>
-          </div>
-        ))}
-        {filteredEmployees.length === 0 && (
+          ))
+        ) : filteredEmployees.length === 0 ? (
           <div className="text-center p-8 text-slate-500 bg-white rounded-xl border border-slate-200">
             Nenhum funcionário encontrado.
           </div>
+        ) : (
+          filteredEmployees.map((emp) => (
+            <div
+              key={emp.id}
+              onClick={() => isAdmin && openModal(emp)}
+              className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative ${
+                isAdmin ? "active:bg-slate-50" : ""
+              }`}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold text-sm">
+                    <User size={18} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-[#1E1E1E] text-sm">
+                      {emp.firstName} {emp.lastName}
+                    </h3>
+                    <p className="text-xs text-slate-500">{emp.email}</p>
+                  </div>
+                </div>
+                {isAdmin && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      requestDelete(emp.id);
+                    }}
+                    className="p-2 text-slate-400 text-rose-500 hover:bg-rose-50 rounded-lg"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                )}
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500 font-medium">Cargo</span>
+                  <span className="text-slate-700 font-semibold text-right max-w-[60%] truncate">
+                    {emp.role}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500 font-medium">Matrícula</span>
+                  <span className="font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                    {emp.matricula}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-50 mt-2">
+                  <span
+                    className={`px-2 py-0.5 rounded-md font-medium border ${getSquadBadgeColor(
+                      emp.squad
+                    )}`}
+                  >
+                    {emp.squad}
+                  </span>
+                  <div className="flex items-center gap-1 text-slate-600 font-medium">
+                    <Clock size={12} /> {emp.shiftStart} - {emp.shiftEnd}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
         )}
       </div>
 
@@ -792,8 +826,64 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {filteredEmployees.map((emp) => {
-              return (
+            {isLoading ? (
+              // Skeletons para Tabela Desktop
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={`sk-row-${i}`}>
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-slate-100 animate-pulse" />
+                      <div className="flex-1">
+                        <IonSkeletonText
+                          animated
+                          style={{ width: "150px", height: "12px" }}
+                        />
+                        <IonSkeletonText
+                          animated
+                          style={{
+                            width: "100px",
+                            height: "10px",
+                            marginTop: "4px",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <IonSkeletonText animated style={{ width: "40px" }} />
+                  </td>
+                  <td className="p-4">
+                    <IonSkeletonText animated style={{ width: "120px" }} />
+                  </td>
+                  <td className="p-4">
+                    <IonSkeletonText animated style={{ width: "80px" }} />
+                  </td>
+                  <td className="p-4">
+                    <IonSkeletonText animated style={{ width: "100px" }} />
+                  </td>
+                  {isAdmin && (
+                    <td className="p-4 text-right">
+                      <IonSkeletonText
+                        animated
+                        style={{ width: "20px", marginLeft: "auto" }}
+                      />
+                    </td>
+                  )}
+                </tr>
+              ))
+            ) : filteredEmployees.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={isAdmin ? 6 : 5}
+                  className="p-8 text-center text-slate-500"
+                >
+                  {employees.length === 0
+                    ? "Nenhum funcionário cadastrado."
+                    : "Nenhum funcionário encontrado."}
+                </td>
+              </tr>
+            ) : (
+              filteredEmployees.map((emp) => (
                 <tr
                   key={emp.id}
                   onClick={() => isAdmin && openModal(emp)}
@@ -859,7 +949,6 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                             requestDelete(emp.id);
                           }}
                           className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-lg transition-colors z-10"
-                          title="Excluir funcionário"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -867,19 +956,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                     </td>
                   )}
                 </tr>
-              );
-            })}
-            {filteredEmployees.length === 0 && (
-              <tr>
-                <td
-                  colSpan={isAdmin ? 6 : 5}
-                  className="p-8 text-center text-slate-500"
-                >
-                  {employees.length === 0
-                    ? "Nenhum funcionário cadastrado."
-                    : "Nenhum funcionário encontrado com os filtros selecionados."}
-                </td>
-              </tr>
+              ))
             )}
           </tbody>
         </table>
