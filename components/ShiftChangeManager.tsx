@@ -95,7 +95,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
       console.error("Erro ao carregar dados:", err);
     } finally {
       // Delay suave para a transição visual
-      setTimeout(() => setIsLoading(false), 600);
+      setTimeout(() => setIsLoading(false), 500);
     }
   };
 

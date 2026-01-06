@@ -109,7 +109,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
       console.error("Erro ao carregar dados:", err);
     } finally {
       // Pequeno atraso para suavizar a transição visual
-      setTimeout(() => setIsLoading(false), 600);
+      setTimeout(() => setIsLoading(false), 500);
     }
   };
 
