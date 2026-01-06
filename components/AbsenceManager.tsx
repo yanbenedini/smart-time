@@ -15,7 +15,7 @@ import {
   UserCircle,
   Download,
 } from "lucide-react";
-import { Employee, Absence, SystemUser } from "../types";
+import { Employee, Absence, SystemUser, Role, Squad } from "../types";
 import {
   getEmployees,
   getAbsences,
@@ -40,6 +40,21 @@ const REASON_OPTIONS = [
   "Imprevisto pessoal",
 ];
 
+const getSquadBadgeColor = (squad: Squad) => {
+  switch (squad) {
+    case Squad.LAKERS:
+      return "bg-yellow-50 text-yellow-700 border-yellow-100";
+    case Squad.BULLS:
+      return "bg-red-50 text-red-700 border-red-100";
+    case Squad.WARRIORS:
+      return "bg-blue-50 text-blue-700 border-blue-100";
+    case Squad.ROCKETS:
+      return "bg-purple-50 text-purple-700 border-purple-100";
+    default:
+      return "bg-slate-50 text-slate-700 border-slate-100";
+  }
+};
+
 const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [absences, setAbsences] = useState<Absence[]>([]);
@@ -53,6 +68,8 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
     startDate: "",
     endDate: "",
     reason: "",
+    squad: "",
+    role: "",
   });
 
   // UI State
@@ -117,33 +134,36 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
   const filteredAbsences = absences.filter((abs) => {
     const emp = employees.find((e) => e.id === abs.employeeId);
 
-    // 1. Employee Name
     const nameMatch = emp
       ? (emp.firstName + " " + emp.lastName)
           .toLowerCase()
           .includes(filters.employeeName.toLowerCase())
       : false;
 
-    // 2. Reason
     const reasonMatch = abs.reason
       .toLowerCase()
       .includes(filters.reason.toLowerCase());
+    const squadMatch = filters.squad ? emp?.squad === filters.squad : true;
+    const roleMatch = filters.role ? emp?.role === filters.role : true;
 
-    // 3. Date Range
     let dateMatch = true;
-    if (filters.startDate) {
+    if (filters.startDate)
       dateMatch = dateMatch && abs.endDate >= filters.startDate;
-    }
-    if (filters.endDate) {
-      dateMatch = dateMatch && abs.date <= filters.endDate;
-    }
+    if (filters.endDate) dateMatch = dateMatch && abs.date <= filters.endDate;
 
-    return nameMatch && reasonMatch && dateMatch;
+    return nameMatch && reasonMatch && dateMatch && squadMatch && roleMatch;
   });
 
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
   const clearFilters = () =>
-    setFilters({ employeeName: "", startDate: "", endDate: "", reason: "" });
+    setFilters({
+      employeeName: "",
+      startDate: "",
+      endDate: "",
+      reason: "",
+      squad: "",
+      role: "",
+    });
 
   // Reset times when employee changes (only if not editing)
   useEffect(() => {
@@ -712,7 +732,46 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                     />
                   </div>
                 </div>
-
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                      Squad
+                    </label>
+                    <select
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      value={filters.squad}
+                      onChange={(e) =>
+                        setFilters({ ...filters, squad: e.target.value })
+                      }
+                    >
+                      <option value="">Todas</option>
+                      {Object.values(Squad).map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                      Cargo
+                    </label>
+                    <select
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      value={filters.role}
+                      onChange={(e) =>
+                        setFilters({ ...filters, role: e.target.value })
+                      }
+                    >
+                      <option value="">Todos</option>
+                      {Object.values(Role).map((r) => (
+                        <option key={r} value={r}>
+                          {r}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
                 <div className="pt-2 flex justify-end">
                   <button
                     onClick={clearFilters}
@@ -830,14 +889,37 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                           {emp ? emp.firstName.charAt(0) : "?"}
                         </div>
                         <div>
-                          <div className="font-bold text-[#1E1E1E]">
+                          <div className="font-bold text-[#1E1E1E] flex items-center gap-2">
                             {emp
                               ? `${emp.firstName} ${emp.lastName}`
                               : "Funcionário removido"}
+
+                            {/* SQUAD BADGE - Visível no Desktop ao lado do nome */}
+                            {emp && (
+                              <span
+                                className={`hidden sm:inline-block px-1.5 py-0.5 rounded text-[9px] font-bold border ${getSquadBadgeColor(
+                                  emp.squad
+                                )}`}
+                              >
+                                {emp.squad}
+                              </span>
+                            )}
                           </div>
+
                           <div className="text-xs text-slate-500">
                             {emp?.role}
                           </div>
+
+                          {/* SQUAD BADGE - Visível no Mobile abaixo do cargo */}
+                          {emp && (
+                            <span
+                              className={`sm:hidden inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold border ${getSquadBadgeColor(
+                                emp.squad
+                              )}`}
+                            >
+                              {emp.squad}
+                            </span>
+                          )}
                         </div>
                       </div>
 
