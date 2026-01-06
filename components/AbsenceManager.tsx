@@ -23,6 +23,7 @@ import {
   deleteAbsence,
   checkCoverage,
 } from "../services/dbService";
+import { IonSkeletonText } from "@ionic/react";
 
 type AbsenceType = "single" | "range" | "multi";
 
@@ -42,6 +43,8 @@ const REASON_OPTIONS = [
 const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [absences, setAbsences] = useState<Absence[]>([]);
+
+  const [isLoading, setIsLoading] = useState(true);
 
   // Filter State
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -97,12 +100,16 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
   }, []);
 
   const loadData = async () => {
+    setIsLoading(true);
     try {
       const [emps, abs] = await Promise.all([getEmployees(), getAbsences()]);
       setEmployees(emps);
       setAbsences(abs);
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
+    } finally {
+      // Pequeno atraso para suavizar a transição visual
+      setTimeout(() => setIsLoading(false), 600);
     }
   };
 
@@ -731,7 +738,57 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
           </span>
         </div>
 
-        {filteredAbsences.length === 0 ? (
+        {isLoading ? (
+          // --- ESTADO CARREGANDO (SKELETONS) ---
+          <div className="divide-y divide-slate-100">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={`sk-abs-${i}`} className="p-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  {/* Left: Avatar & Name */}
+                  <div className="flex items-center gap-3 md:w-1/3">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 animate-pulse" />
+                    <div className="flex-1">
+                      <IonSkeletonText
+                        animated
+                        style={{ width: "120px", height: "12px" }}
+                      />
+                      <IonSkeletonText
+                        animated
+                        style={{
+                          width: "180px",
+                          height: "10px",
+                          marginTop: "6px",
+                        }}
+                      />
+                    </div>
+                  </div>
+                  {/* Middle: Details */}
+                  <div className="flex-1 space-y-2">
+                    <IonSkeletonText
+                      animated
+                      style={{ width: "150px", height: "14px" }}
+                    />
+                    <div className="flex gap-2">
+                      <IonSkeletonText
+                        animated
+                        style={{ width: "80px", height: "18px" }}
+                      />
+                      <IonSkeletonText
+                        animated
+                        style={{ width: "100px", height: "18px" }}
+                      />
+                    </div>
+                  </div>
+                  {/* Right: Action button */}
+                  <div className="md:justify-end">
+                    <div className="w-8 h-8 rounded bg-slate-100 animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredAbsences.length === 0 ? (
+          // --- ESTADO VAZIO ---
           <div className="text-center p-12 text-slate-400">
             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
               <Calendar size={32} />
@@ -747,6 +804,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
             )}
           </div>
         ) : (
+          // --- LISTA REAL DE DADOS ---
           <div className="divide-y divide-slate-100">
             {filteredAbsences
               .slice()
@@ -754,8 +812,6 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
               .map((abs) => {
                 const emp = employees.find((e) => e.id === abs.employeeId);
                 const isRange = abs.date !== abs.endDate;
-
-                // Determine Audit Info
                 const auditUser = abs.updatedBy || abs.createdBy || "Sistema";
                 const auditDate = abs.updatedAt || abs.createdAt;
                 const auditLabel = abs.updatedBy
@@ -769,7 +825,6 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                     className="p-4 hover:bg-[#204294]/5 transition-all duration-200 cursor-pointer group hover:shadow-sm"
                   >
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      {/* Left: Employee Info */}
                       <div className="flex items-center gap-3 md:w-1/3">
                         <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold group-hover:bg-[#204294] group-hover:text-white transition-colors">
                           {emp ? emp.firstName.charAt(0) : "?"}
@@ -786,7 +841,6 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                         </div>
                       </div>
 
-                      {/* Middle: Details */}
                       <div className="flex-1 space-y-1">
                         <div className="text-sm font-medium text-slate-700">
                           {abs.reason}
@@ -813,8 +867,6 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                             </span>
                           )}
                         </div>
-
-                        {/* Audit Info */}
                         {auditDate && (
                           <div className="text-[10px] text-slate-400 mt-2 flex items-center gap-1 border-t border-slate-100 pt-1 w-full md:w-auto">
                             <UserCircle size={10} />
@@ -826,7 +878,6 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                         )}
                       </div>
 
-                      {/* Right: Actions */}
                       <div className="flex items-center gap-2 md:justify-end">
                         <button
                           onClick={(e) => {
@@ -834,7 +885,6 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                             requestDelete(abs.id);
                           }}
                           className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                          title="Excluir"
                         >
                           <Trash2 size={16} />
                         </button>
