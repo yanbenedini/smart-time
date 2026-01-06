@@ -1,0 +1,12 @@
+/* index.css */
+html {
+  overflow-y: scroll;
+}
+
+/* Você também pode adicionar resets globais aqui, se desejar */
+body {
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
