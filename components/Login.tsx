@@ -40,7 +40,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <div className="mb-8 text-center">
             <h1 className="text-2xl font-bold text-slate-800">Smart Time</h1>
             <p className="text-slate-500 text-sm mt-1">
-              Acesse sua conta para continuar
+              Gestão de Escalas Eficiente
             </p>
           </div>
 
