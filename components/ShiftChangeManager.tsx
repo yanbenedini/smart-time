@@ -19,7 +19,7 @@ import {
   ArrowRight,
   AlertCircle,
 } from "lucide-react";
-import { Employee, ShiftChange, SystemUser } from "../types";
+import { Employee, ShiftChange, SystemUser, Role, Squad } from "../types";
 import {
   getEmployees,
   getShiftChanges,
@@ -31,6 +31,21 @@ import { IonSkeletonText } from "@ionic/react";
 interface ShiftChangeManagerProps {
   currentUser: SystemUser;
 }
+
+const getSquadBadgeColor = (squad: Squad) => {
+  switch (squad) {
+    case Squad.LAKERS:
+      return "bg-yellow-50 text-yellow-700 border-yellow-100";
+    case Squad.BULLS:
+      return "bg-red-50 text-red-700 border-red-100";
+    case Squad.WARRIORS:
+      return "bg-blue-50 text-blue-700 border-blue-100";
+    case Squad.ROCKETS:
+      return "bg-purple-50 text-purple-700 border-purple-100";
+    default:
+      return "bg-slate-50 text-slate-700 border-slate-100";
+  }
+};
 
 const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
   currentUser,
@@ -45,6 +60,10 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
     employeeName: "",
     startDate: "",
     endDate: "",
+    squad: "",
+    role: "",
+    newShiftStart: "",
+    newShiftEnd: "",
   });
 
   // UI State
@@ -114,28 +133,50 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
   const filteredChanges = changes.filter((c) => {
     const emp = employees.find((e) => e.id === c.employeeId);
 
-    // 1. Employee Name
     const nameMatch = emp
       ? (emp.firstName + " " + emp.lastName)
           .toLowerCase()
           .includes(filters.employeeName.toLowerCase())
       : false;
 
-    // 2. Date Range
-    let dateMatch = true;
-    if (filters.startDate) {
-      dateMatch = dateMatch && c.endDate >= filters.startDate;
-    }
-    if (filters.endDate) {
-      dateMatch = dateMatch && c.startDate <= filters.endDate;
-    }
+    const squadMatch = filters.squad ? emp?.squad === filters.squad : true;
+    const roleMatch = filters.role ? emp?.role === filters.role : true;
 
-    return nameMatch && dateMatch;
+    // Filtro por Novo Horário (Início e Fim)
+    const startTimeMatch = filters.newShiftStart
+      ? c.newShiftStart === filters.newShiftStart
+      : true;
+    const endTimeMatch = filters.newShiftEnd
+      ? c.newShiftEnd === filters.newShiftEnd
+      : true;
+
+    let dateMatch = true;
+    if (filters.startDate)
+      dateMatch = dateMatch && c.endDate >= filters.startDate;
+    if (filters.endDate)
+      dateMatch = dateMatch && c.startDate <= filters.endDate;
+
+    return (
+      nameMatch &&
+      dateMatch &&
+      squadMatch &&
+      roleMatch &&
+      startTimeMatch &&
+      endTimeMatch
+    );
   });
 
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
   const clearFilters = () =>
-    setFilters({ employeeName: "", startDate: "", endDate: "" });
+    setFilters({
+      employeeName: "",
+      startDate: "",
+      endDate: "",
+      squad: "",
+      role: "",
+      newShiftStart: "",
+      newShiftEnd: "",
+    });
 
   const openNewModal = () => {
     setEditingId(null);
@@ -623,6 +664,82 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                       }
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                        Squad
+                      </label>
+                      <select
+                        className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                        value={filters.squad}
+                        onChange={(e) =>
+                          setFilters({ ...filters, squad: e.target.value })
+                        }
+                      >
+                        <option value="">Todas</option>
+                        {Object.values(Squad).map((s) => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                        Cargo
+                      </label>
+                      <select
+                        className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                        value={filters.role}
+                        onChange={(e) =>
+                          setFilters({ ...filters, role: e.target.value })
+                        }
+                      >
+                        <option value="">Todos</option>
+                        {Object.values(Role).map((r) => (
+                          <option key={r} value={r}>
+                            {r}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Novos Filtros: Novo Horário (Início e Fim) */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                        Novo Início
+                      </label>
+                      <input
+                        type="time"
+                        className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                        value={filters.newShiftStart}
+                        onChange={(e) =>
+                          setFilters({
+                            ...filters,
+                            newShiftStart: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                        Novo Fim
+                      </label>
+                      <input
+                        type="time"
+                        className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                        value={filters.newShiftEnd}
+                        onChange={(e) =>
+                          setFilters({
+                            ...filters,
+                            newShiftEnd: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="pt-2 flex justify-end">
@@ -740,14 +857,34 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                           {emp ? emp.firstName.charAt(0) : "?"}
                         </div>
                         <div>
-                          <div className="font-bold text-[#1E1E1E]">
+                          <div className="font-bold text-[#1E1E1E] flex items-center gap-2">
                             {emp
                               ? `${emp.firstName} ${emp.lastName}`
                               : "Funcionário removido"}
+                            {/* Squad Tag - Desktop */}
+                            {emp && (
+                              <span
+                                className={`hidden sm:inline-block px-1.5 py-0.5 rounded text-[9px] font-bold border ${getSquadBadgeColor(
+                                  emp.squad
+                                )}`}
+                              >
+                                {emp.squad}
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-slate-500">
                             {emp?.role}
                           </div>
+                          {/* Squad Tag - Mobile */}
+                          {emp && (
+                            <span
+                              className={`sm:hidden inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold border ${getSquadBadgeColor(
+                                emp.squad
+                              )}`}
+                            >
+                              {emp.squad}
+                            </span>
+                          )}
                         </div>
                       </div>
 
