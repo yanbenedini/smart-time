@@ -12,9 +12,9 @@ import {
 // Se estiver testando no seu próprio computador, use 'http://localhost:5000'
 
 // PROD:
-// const API_URL = "http://163.176.231.117:5000";
+const API_URL = "http://163.176.231.117:5000";
 // DEV:
-const API_URL = "http://localhost:5000";
+// const API_URL = "http://localhost:5000";
 
 // --- LOGS DO SISTEMA ---
 
