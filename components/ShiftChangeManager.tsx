@@ -10,6 +10,7 @@ import {
   X,
   UserCircle,
   Download,
+  User,
   Upload,
   Search,
   Filter,
@@ -854,7 +855,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex items-center gap-3 md:w-1/3">
                         <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold group-hover:bg-[#204294] group-hover:text-white transition-colors">
-                          {emp ? emp.firstName.charAt(0) : "?"}
+                          <User size={18} />
                         </div>
                         <div>
                           <div className="font-bold text-[#1E1E1E] flex items-center gap-2">
