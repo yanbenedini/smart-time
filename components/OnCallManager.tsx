@@ -19,7 +19,7 @@ import {
   CheckCircle,
   FileWarning,
 } from "lucide-react";
-import { Employee, OnCallShift, SystemUser } from "../types";
+import { Employee, OnCallShift, SystemUser, Role, Squad } from "../types";
 import {
   getEmployees,
   getOnCallShifts,
@@ -32,6 +32,21 @@ interface OnCallManagerProps {
   currentUser: SystemUser;
 }
 
+const getSquadBadgeColor = (squad: Squad) => {
+  switch (squad) {
+    case Squad.LAKERS:
+      return "bg-yellow-50 text-yellow-700 border-yellow-100";
+    case Squad.BULLS:
+      return "bg-red-50 text-red-700 border-red-100";
+    case Squad.WARRIORS:
+      return "bg-blue-50 text-blue-700 border-blue-100";
+    case Squad.ROCKETS:
+      return "bg-purple-50 text-purple-700 border-purple-100";
+    default:
+      return "bg-slate-50 text-slate-700 border-slate-100";
+  }
+};
+
 const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [shifts, setShifts] = useState<OnCallShift[]>([]);
@@ -43,6 +58,8 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
     employeeName: "",
     startDate: "",
     endDate: "",
+    squad: "", // Novo
+    role: "", // Novo
   });
 
   // UI State
@@ -96,14 +113,16 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
   const filteredShifts = shifts.filter((s) => {
     const emp = employees.find((e) => e.id === s.employeeId);
 
-    // 1. Employee Name
     const nameMatch = emp
       ? (emp.firstName + " " + emp.lastName)
           .toLowerCase()
           .includes(filters.employeeName.toLowerCase())
       : false;
 
-    // 2. Date Range
+    // Novas condições
+    const squadMatch = filters.squad ? emp?.squad === filters.squad : true;
+    const roleMatch = filters.role ? emp?.role === filters.role : true;
+
     let dateMatch = true;
     if (filters.startDate) {
       dateMatch = dateMatch && s.date >= filters.startDate;
@@ -112,12 +131,18 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
       dateMatch = dateMatch && s.date <= filters.endDate;
     }
 
-    return nameMatch && dateMatch;
+    return nameMatch && dateMatch && squadMatch && roleMatch;
   });
 
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
   const clearFilters = () =>
-    setFilters({ employeeName: "", startDate: "", endDate: "" });
+    setFilters({
+      employeeName: "",
+      startDate: "",
+      endDate: "",
+      squad: "",
+      role: "",
+    });
 
   const openNewModal = () => {
     setEditingId(null);
@@ -474,13 +499,6 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
           <p className="text-slate-500">
             Gerencie os funcionários escalados para plantão.
           </p>
-          <div className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 p-2 rounded-md inline-flex items-center gap-2 max-w-sm">
-            <AlertCircle size={16} className="flex-shrink-0" />
-            <span className="leading-tight">
-              Dica: Se houver problemas com acentos, verifique se o CSV está em
-              formato UTF-8 ou ANSI.
-            </span>
-          </div>
         </div>
         <div className="flex flex-wrap gap-2 relative w-full md:w-auto">
           <input
@@ -540,7 +558,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
             className="flex-1 md:flex-none bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-bold"
           >
             <Plus size={18} />
-            <span className="hidden sm:inline">Novo Plantão</span>
+            <span className="hidden sm:inline">Novo</span>
           </button>
 
           {/* Filter Dropdown Panel */}
@@ -602,7 +620,46 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                     />
                   </div>
                 </div>
-
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                      Squad
+                    </label>
+                    <select
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      value={filters.squad}
+                      onChange={(e) =>
+                        setFilters({ ...filters, squad: e.target.value })
+                      }
+                    >
+                      <option value="">Todas</option>
+                      {Object.values(Squad).map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                      Cargo
+                    </label>
+                    <select
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      value={filters.role}
+                      onChange={(e) =>
+                        setFilters({ ...filters, role: e.target.value })
+                      }
+                    >
+                      <option value="">Todos</option>
+                      {Object.values(Role).map((r) => (
+                        <option key={r} value={r}>
+                          {r}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
                 <div className="pt-2 flex justify-end">
                   <button
                     onClick={clearFilters}
@@ -718,14 +775,34 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                           <User size={18} />
                         </div>
                         <div>
-                          <div className="font-bold text-[#1E1E1E]">
+                          <div className="font-bold text-[#1E1E1E] flex items-center gap-2">
                             {emp
                               ? `${emp.firstName} ${emp.lastName}`
                               : "Funcionário removido"}
+                            {/* Squad Badge - Desktop */}
+                            {emp && (
+                              <span
+                                className={`hidden sm:inline-block px-1.5 py-0.5 rounded text-[9px] font-bold border ${getSquadBadgeColor(
+                                  emp.squad
+                                )}`}
+                              >
+                                {emp.squad}
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-slate-500">
                             {emp?.role}
                           </div>
+                          {/* Squad Badge - Mobile */}
+                          {emp && (
+                            <span
+                              className={`sm:hidden inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold border ${getSquadBadgeColor(
+                                emp.squad
+                              )}`}
+                            >
+                              {emp.squad}
+                            </span>
+                          )}
                         </div>
                       </div>
 
