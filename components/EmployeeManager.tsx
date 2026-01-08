@@ -511,13 +511,6 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
           <p className="text-slate-500">
             Gerencie o quadro de colaboradores CX.
           </p>
-          <div className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 p-2 rounded-md inline-flex items-center gap-2 max-w-sm">
-            <AlertCircle size={16} className="flex-shrink-0" />
-            <span className="leading-tight">
-              Dica: Se houver problemas com acentos, verifique se o CSV está em
-              formato UTF-8 ou ANSI.
-            </span>
-          </div>
         </div>
         <div className="flex flex-wrap gap-2 relative w-full md:w-auto">
           <input
@@ -537,7 +530,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
             }`}
           >
             <Filter size={18} />
-            <span className="hidden sm:inline">Filtrar</span>
+
             {activeFilterCount > 0 && (
               <span className="bg-[#204294] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full ml-1">
                 {activeFilterCount}
@@ -551,7 +544,6 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
             title="Exportar para CSV"
           >
             <Download size={18} />
-            <span className="hidden sm:inline">Exportar</span>
           </button>
 
           {isAdmin && (
@@ -562,21 +554,20 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                 title="Baixar Modelo de Importação"
               >
                 <FileText size={18} />
-                <span className="hidden sm:inline">Modelo</span>
               </button>
               <button
                 onClick={handleImportClick}
                 className="flex-1 md:flex-none bg-[#01B8A1] hover:bg-[#019f8b] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+                title="Importar Funcionário"
               >
                 <Upload size={18} />
-                <span className="hidden sm:inline">Importar</span>
               </button>
               <button
                 onClick={() => openModal()}
                 className="flex-1 md:flex-none bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+                title="Adicionar Funcionário"
               >
                 <Plus size={18} />
-                <span className="hidden sm:inline">Novo</span>
               </button>
             </>
           )}
