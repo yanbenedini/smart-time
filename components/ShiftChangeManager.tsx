@@ -665,84 +665,83 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                       }
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
-                        Squad
-                      </label>
-                      <select
-                        className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
-                        value={filters.squad}
-                        onChange={(e) =>
-                          setFilters({ ...filters, squad: e.target.value })
-                        }
-                      >
-                        <option value="">Todas</option>
-                        {Object.values(Squad).map((s) => (
-                          <option key={s} value={s}>
-                            {s}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
-                        Cargo
-                      </label>
-                      <select
-                        className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
-                        value={filters.role}
-                        onChange={(e) =>
-                          setFilters({ ...filters, role: e.target.value })
-                        }
-                      >
-                        <option value="">Todos</option>
-                        {Object.values(Role).map((r) => (
-                          <option key={r} value={r}>
-                            {r}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                      Squad
+                    </label>
+                    <select
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      value={filters.squad}
+                      onChange={(e) =>
+                        setFilters({ ...filters, squad: e.target.value })
+                      }
+                    >
+                      <option value="">Todas</option>
+                      {Object.values(Squad).map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
-                  {/* Novos Filtros: Novo Horário (Início e Fim) */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
-                        Novo Início
-                      </label>
-                      <input
-                        type="time"
-                        className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
-                        value={filters.newShiftStart}
-                        onChange={(e) =>
-                          setFilters({
-                            ...filters,
-                            newShiftStart: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
-                        Novo Fim
-                      </label>
-                      <input
-                        type="time"
-                        className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
-                        value={filters.newShiftEnd}
-                        onChange={(e) =>
-                          setFilters({
-                            ...filters,
-                            newShiftEnd: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
+                  <div>
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                      Cargo
+                    </label>
+                    <select
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      value={filters.role}
+                      onChange={(e) =>
+                        setFilters({ ...filters, role: e.target.value })
+                      }
+                    >
+                      <option value="">Todos</option>
+                      {Object.values(Role).map((r) => (
+                        <option key={r} value={r}>
+                          {r}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
-
+                {/* Novos Filtros: Novo Horário (Início e Fim) */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                      Novo Início
+                    </label>
+                    <input
+                      type="time"
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      value={filters.newShiftStart}
+                      onChange={(e) =>
+                        setFilters({
+                          ...filters,
+                          newShiftStart: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                      Novo Fim
+                    </label>
+                    <input
+                      type="time"
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      value={filters.newShiftEnd}
+                      onChange={(e) =>
+                        setFilters({
+                          ...filters,
+                          newShiftEnd: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
                 <div className="pt-2 flex justify-end">
                   <button
                     onClick={clearFilters}
