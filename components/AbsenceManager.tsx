@@ -635,7 +635,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
             }`}
           >
             <Filter size={18} />
-            <span className="hidden sm:inline">Filtrar</span>
+
             {activeFilterCount > 0 && (
               <span className="bg-[#204294] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full ml-1">
                 {activeFilterCount}
@@ -649,14 +649,13 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
             title="Exportar para CSV"
           >
             <Download size={18} />
-            <span className="hidden sm:inline">Exportar</span>
           </button>
           <button
             onClick={openNewModal}
             className="flex-1 md:flex-none bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-bold"
+            title="Adicionar Ausência"
           >
             <Plus size={18} />
-            <span className="hidden sm:inline">Nova Ausência</span>
           </button>
 
           {/* Filter Dropdown Panel */}
