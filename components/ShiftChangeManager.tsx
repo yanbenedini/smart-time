@@ -539,12 +539,6 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
           <p className="text-slate-500">
             Gerencie alterações temporárias de horário.
           </p>
-          <div className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 p-2 rounded-md inline-flex items-center gap-2 max-w-sm">
-            <AlertCircle size={16} className="flex-shrink-0" />
-            <span className="leading-tight">
-              Dica: Utilize o modelo CSV para importações em lote.
-            </span>
-          </div>
         </div>
         <div className="flex flex-wrap gap-2 relative w-full md:w-auto">
           <input
@@ -564,7 +558,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
             }`}
           >
             <Filter size={18} />
-            <span className="hidden sm:inline">Filtrar</span>
+
             {activeFilterCount > 0 && (
               <span className="bg-[#204294] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full ml-1">
                 {activeFilterCount}
@@ -578,7 +572,6 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
             title="Exportar para CSV"
           >
             <Download size={18} />
-            <span className="hidden sm:inline">Exportar</span>
           </button>
 
           <button
@@ -587,7 +580,6 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
             title="Baixar Modelo de Importação"
           >
             <FileText size={18} />
-            <span className="hidden sm:inline">Modelo</span>
           </button>
 
           <button
@@ -596,15 +588,14 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
             title="Importar CSV"
           >
             <Upload size={18} />
-            <span className="hidden sm:inline">Importar</span>
           </button>
 
           <button
             onClick={openNewModal}
             className="flex-1 md:flex-none bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-bold"
+            title="Adicionar Troca"
           >
             <Plus size={18} />
-            <span className="hidden sm:inline">Nova Troca</span>
           </button>
 
           {/* Filter Dropdown Panel */}
