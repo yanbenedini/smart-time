@@ -226,7 +226,7 @@ const App: React.FC = () => {
             )}
           </nav>
 
-          <div className="pt-6 border-t border-slate-100 relative">
+          <div className="pt-3 border-t border-slate-100 relative">
             {profileMenuOpen && (
               <div className="absolute bottom-full left-0 w-full mb-2 bg-white rounded-xl shadow-xl border border-slate-100 py-1 animate-in fade-in zoom-in-95 duration-100 overflow-hidden z-50">
                 <button

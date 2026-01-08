@@ -170,9 +170,9 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
         <button
           onClick={openNewModal}
           className="bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm font-bold"
+          title="Adicionar Usuário"
         >
           <Plus size={18} />
-          <span className="hidden sm:inline">Novo Usuário</span>
         </button>
       </div>
 
