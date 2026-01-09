@@ -17,6 +17,9 @@ export class SystemUser {
   @Column({ name: "is_admin", default: false })
   isAdmin: boolean;
 
+  @Column({ name: "is_super_admin", type: "boolean", default: false })
+  isSuperAdmin: boolean;
+
   @Column({ default: true, name: "must_change_password" })
   mustChangePassword: boolean;
 }

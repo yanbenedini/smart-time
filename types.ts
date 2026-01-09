@@ -82,6 +82,7 @@ export interface SystemUser {
   email: string;
   password: string; // Stored as plain text for this demo mock
   isAdmin: boolean;
+  isSuperAdmin?: boolean;
   mustChangePassword?: boolean;
 }
 

@@ -41,7 +41,7 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
   >(null);
   const [error, setError] = useState<string | null>(null);
 
-  const isSuperAdmin = currentUser.isAdmin;
+  const isSuperAdmin = !!currentUser.isSuperAdmin;
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -114,6 +114,7 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
       name,
       email,
       password,
+      // Só o Super Admin pode promover alguém a Admin
       isAdmin: isSuperAdmin
         ? isAdmin
         : editingId
@@ -122,6 +123,10 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
       mustChangePassword: editingId
         ? users.find((u) => u.id === editingId)?.mustChangePassword
         : true,
+      // Segurança máxima: isSuperAdmin só pode ser mantido, nunca criado via formulário
+      isSuperAdmin: editingId
+        ? users.find((u) => u.id === editingId)?.isSuperAdmin
+        : false,
     };
 
     try {
@@ -152,8 +157,21 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
   };
 
   const filteredUsers = users.filter((user) => {
+    // 1. Regra de Ouro: Nunca mostrar o próprio usuário logado
     if (user.id === currentUser.id) return false;
-    return true;
+
+    // 2. Se o logado for Super Admin: Vê todo o resto (Admins e Membros)
+    if (isSuperAdmin) return true;
+
+    // 3. Se o logado for Admin comum:
+    if (currentUser.isAdmin) {
+      // SÓ pode ver quem NÃO é admin e NÃO é super admin (ou seja, apenas Membros)
+      return !user.isAdmin && !user.isSuperAdmin;
+    }
+
+    // 4. Se for um usuário comum (Membro): Não deveria nem acessar esta tela,
+    // mas por segurança, retornamos vazio.
+    return false;
   });
 
   return (

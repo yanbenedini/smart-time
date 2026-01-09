@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS system_user (
     email VARCHAR(150) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     is_admin BOOLEAN DEFAULT FALSE,
+    is_super_admin BOOLEAN DEFAULT FALSE,
     must_change_password BOOLEAN DEFAULT TRUE
 );
 
@@ -88,6 +89,6 @@ CREATE TABLE IF NOT EXISTS system_log (
 -- Criação do usuário Admin inicial (Obrigatório para o primeiro login, conforme lógica do UserManager)
 -- A senha 'admin' deve ser criptografada na aplicação, mas aqui inserimos texto plano para inicialização se seu backend suportar,
 -- ou você pode ajustar conforme a lógica de hash do seu sistema.
-INSERT INTO system_user (name, email, password, is_admin)
-VALUES ('Administrador', 'adm.smarttime@ccmtecnologia.com.br', '$2b$10$f0UwnNzmM8Tl2GyiRHclcuE5MMYT9tllxlGNagxgPu69B/Wg39og.', TRUE)
+INSERT INTO system_user (name, email, password, is_admin, is_super_admin)
+VALUES ('Administrador', 'adm.smarttime@ccmtecnologia.com.br', '$2b$10$f0UwnNzmM8Tl2GyiRHclcuE5MMYT9tllxlGNagxgPu69B/Wg39og.', TRUE, TRUE)
 ON CONFLICT (email) DO NOTHING;
