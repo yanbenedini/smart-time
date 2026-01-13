@@ -253,9 +253,6 @@ const Dashboard: React.FC = () => {
                       <span className="font-bold text-[#1E1E1E] text-xs truncate max-w-[120px]">
                         {emp ? `${emp.firstName} ${emp.lastName}` : "Excluído"}
                       </span>
-                      <span className="text-[9px] uppercase font-bold text-slate-400 bg-white px-1 rounded border border-slate-200">
-                        {emp?.role.substring(0, 3)}
-                      </span>
                     </div>
                     <div className="text-[11px] text-rose-600 font-medium mb-0.5 truncate">
                       {abs.reason}
@@ -326,9 +323,6 @@ const Dashboard: React.FC = () => {
                       <span className="font-bold text-[#1E1E1E] text-xs truncate max-w-[120px]">
                         {emp ? `${emp.firstName} ${emp.lastName}` : "Excluído"}
                       </span>
-                      <span className="text-[9px] uppercase font-bold text-slate-400 bg-white px-1 rounded border border-slate-200">
-                        {emp?.role.substring(0, 3)}
-                      </span>
                     </div>
                     <div className="flex items-center gap-1 text-[10px] text-emerald-700 font-medium">
                       <Calendar size={10} />
@@ -391,9 +385,6 @@ const Dashboard: React.FC = () => {
                     <div className="flex justify-between items-start mb-0.5">
                       <span className="font-bold text-[#1E1E1E] text-xs truncate max-w-[120px]">
                         {emp ? `${emp.firstName} ${emp.lastName}` : "Excluído"}
-                      </span>
-                      <span className="text-[9px] uppercase font-bold text-slate-400 bg-white px-1 rounded border border-slate-200">
-                        {emp?.role.substring(0, 3)}
                       </span>
                     </div>
                     <div className="text-[11px] text-slate-500 mb-1 truncate">
