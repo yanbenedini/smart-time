@@ -759,7 +759,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
               <th className="p-4 font-bold text-sm">Squad</th>
               <th className="p-4 font-bold text-sm">Horário</th>
               {isAdmin && (
-                <th className="p-4 font-bold text-sm text-right">Ações</th>
+                <th className="p-4 font-bold text-sm text-right"></th>
               )}
             </tr>
           </thead>
