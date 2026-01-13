@@ -2,11 +2,12 @@ import React, { useState, useEffect } from "react";
 import {
   ScrollText,
   Search,
-  Filter,
   RefreshCw,
   Clock,
   User,
   Activity,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { getSystemLogs } from "../services/dbService";
 import { SystemLog } from "../types";
@@ -17,6 +18,10 @@ const LogManager: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // --- ESTADOS DE PAGINAÇÃO ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+
   const loadLogs = async () => {
     setIsLoading(true);
     try {
@@ -25,7 +30,6 @@ const LogManager: React.FC = () => {
     } catch (error) {
       console.error("Erro ao carregar logs:", error);
     } finally {
-      // Delay de 600ms para uma transição suave
       setTimeout(() => setIsLoading(false), 500);
     }
   };
@@ -34,11 +38,26 @@ const LogManager: React.FC = () => {
     loadLogs();
   }, []);
 
+  // Resetar para a página 1 sempre que pesquisar algo
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, itemsPerPage]);
+
   const filteredLogs = logs.filter(
     (log) =>
       log.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.action.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // --- LÓGICA DE PAGINAÇÃO ---
+  const totalItems = filteredLogs.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+  const paginatedLogs = filteredLogs.slice(
+    startIndex,
+    startIndex + itemsPerPage
   );
 
   const getActionColor = (action: string) => {
@@ -82,9 +101,9 @@ const LogManager: React.FC = () => {
         </button>
       </div>
 
-      {/* Search */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex gap-3">
-        <div className="relative flex-1">
+      {/* Search & Items Per Page */}
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+        <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
@@ -94,9 +113,24 @@ const LogManager: React.FC = () => {
             className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg outline-none focus:border-[#204294]"
           />
         </div>
+
+        <div className="flex items-center gap-2 text-sm text-slate-600 whitespace-nowrap">
+          <span>Mostrar</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => setItemsPerPage(Number(e.target.value))}
+            className="border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-[#204294] bg-white font-medium text-[#204294]"
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+          <span>por página</span>
+        </div>
       </div>
 
-      {/* Logs List */}
+      {/* Logs Table */}
       <div className="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm table-fixed">
@@ -110,7 +144,6 @@ const LogManager: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
-                // --- ESTADO CARREGANDO (SKELETONS SINCRONIZADOS) ---
                 Array.from({ length: 10 }).map((_, i) => (
                   <tr key={`sk-log-${i}`}>
                     <td className="p-4 w-48">
@@ -149,15 +182,14 @@ const LogManager: React.FC = () => {
                     </td>
                   </tr>
                 ))
-              ) : filteredLogs.length === 0 ? (
+              ) : paginatedLogs.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="p-8 text-center text-slate-400">
                     Nenhuma atividade encontrada.
                   </td>
                 </tr>
               ) : (
-                // --- LISTA REAL DE DADOS SINCRONIZADOS ---
-                filteredLogs.map((log) => (
+                paginatedLogs.map((log) => (
                   <tr
                     key={log.id}
                     className="hover:bg-slate-50 transition-colors"
@@ -205,6 +237,49 @@ const LogManager: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* --- RODAPÉ DE PAGINAÇÃO --- */}
+        {!isLoading && totalItems > 0 && (
+          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-slate-600">
+              Mostrando{" "}
+              <span className="font-bold text-slate-800">
+                {totalItems === 0 ? 0 : startIndex + 1}
+              </span>{" "}
+              a <span className="font-bold text-slate-800">{endIndex}</span> de{" "}
+              <span className="font-bold text-slate-800">{totalItems}</span>{" "}
+              registros
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft size={18} className="text-slate-600" />
+              </button>
+
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-slate-500">Página</span>
+                <span className="text-sm font-bold text-[#204294] bg-[#204294]/10 px-2 py-1 rounded border border-[#204294]/20">
+                  {currentPage}
+                </span>
+                <span className="text-sm text-slate-500">de {totalPages}</span>
+              </div>
+
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight size={18} className="text-slate-600" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
