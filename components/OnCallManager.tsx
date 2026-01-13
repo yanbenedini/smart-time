@@ -18,6 +18,8 @@ import {
   AlertCircle,
   CheckCircle,
   FileWarning,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Employee, OnCallShift, SystemUser, Role, Squad } from "../types";
 import {
@@ -58,12 +60,16 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
     employeeName: "",
     startDate: "",
     endDate: "",
-    squad: "", // Novo
-    role: "", // Novo
+    squad: "",
+    role: "",
   });
 
   // UI State
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // --- ESTADOS DE PAGINAÇÃO ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
 
   // Import Feedback State
   const [importFeedback, setImportFeedback] = useState<{
@@ -105,10 +111,15 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
     } finally {
-      // Delay suave de 600ms para uma transição visual melhor
       setTimeout(() => setIsLoading(false), 500);
     }
   };
+
+  // Resetar para a página 1 sempre que os filtros ou paginação mudarem
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, itemsPerPage]);
+
   // Filtering Logic
   const filteredShifts = shifts.filter((s) => {
     const emp = employees.find((e) => e.id === s.employeeId);
@@ -119,7 +130,6 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
           .includes(filters.employeeName.toLowerCase())
       : false;
 
-    // Novas condições
     const squadMatch = filters.squad ? emp?.squad === filters.squad : true;
     const roleMatch = filters.role ? emp?.role === filters.role : true;
 
@@ -133,6 +143,17 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
 
     return nameMatch && dateMatch && squadMatch && roleMatch;
   });
+
+  // --- LÓGICA DE PAGINAÇÃO ---
+  const totalItems = filteredShifts.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+
+  const paginatedShifts = filteredShifts
+    .slice()
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(startIndex, startIndex + itemsPerPage);
 
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
   const clearFilters = () =>
@@ -189,14 +210,12 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
     const existing = editingId ? shifts.find((s) => s.id === editingId) : null;
 
     const newShift: OnCallShift = {
-      // Se for edição, mantém ID. Se novo, envia vazio para backend criar UUID.
       id: editingId || "",
       employeeId: selectedEmpId,
       date,
       startTime,
       endTime,
       observation,
-      // Audit Logic
       createdBy: existing?.createdBy || currentUser.name,
       createdAt: existing?.createdAt || new Date().toISOString(),
       updatedBy: existing ? currentUser.name : undefined,
@@ -204,9 +223,8 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
     };
 
     try {
-      // Passando currentUser.name para auditoria correta no backend
       await saveOnCallShift(newShift, currentUser.name);
-      await loadData(); // Recarrega lista atualizada
+      await loadData();
       closeModal();
     } catch (err) {
       setError("Erro ao salvar plantão. Tente novamente.");
@@ -221,7 +239,6 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
   const confirmDelete = async () => {
     if (deleteConfirmationId) {
       try {
-        // Passando currentUser.name para auditoria correta no backend
         await deleteOnCallShift(deleteConfirmationId, currentUser.name);
         await loadData();
         if (editingId === deleteConfirmationId) closeModal();
@@ -232,7 +249,6 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
     }
   };
 
-  // Date formatter for audit info
   const formatDateTime = (isoString?: string) => {
     if (!isoString) return "";
     const date = new Date(isoString);
@@ -245,11 +261,9 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
     });
   };
 
-  // CSV Helper
   const escapeCsv = (str: string | undefined | null) => {
     if (!str) return '""';
     const stringValue = String(str);
-    // Check for semicolon
     if (
       stringValue.includes(";") ||
       stringValue.includes('"') ||
@@ -313,7 +327,6 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
     document.body.removeChild(link);
   };
 
-  // CSV Template Download
   const handleDownloadTemplate = () => {
     const headers = ["Matrícula", "Data", "Início", "Fim", "Observação"];
     const exampleRow1 = [
@@ -347,11 +360,10 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
     document.body.removeChild(link);
   };
 
-  // --- CSV Import Logic Refactored ---
   const handleImportClick = () => {
-    setImportFeedback(null); // Clear previous feedback
+    setImportFeedback(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = ""; // Reset input to allow re-selection
+      fileInputRef.current.value = "";
       fileInputRef.current.click();
     }
   };
@@ -365,7 +377,6 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
     reader.onload = (evt) => {
       const csvText = evt.target?.result as string;
       if (csvText) {
-        // Encoding Check
         if (csvText.includes("\uFFFD")) {
           console.log(
             "Encoding: Problema detectado com UTF-8. Tentando ISO-8859-1 (ANSI)..."
@@ -388,7 +399,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
       );
     };
 
-    reader.readAsText(file); // Defaults to UTF-8
+    reader.readAsText(file);
   };
 
   const processCSV = async (csvText: string) => {
@@ -398,11 +409,9 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
       let errorCount = 0;
       let errorsDetails: string[] = [];
 
-      // Ensure we have the latest employee list
       const currentEmployees = await getEmployees();
       const promises = [];
 
-      // Expected Format: Matrícula;Data;Inicio;Fim;Observação
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue;
@@ -412,7 +421,6 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
         if (cols.length >= 4) {
           const [matricula, dateRaw, startTime, endTime, obs] = cols;
 
-          // 1. Find Employee
           const emp = currentEmployees.find((e) => e.matricula === matricula);
           if (!emp) {
             errorCount++;
@@ -424,7 +432,6 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
             continue;
           }
 
-          // 2. Parse Date
           let finalDate = "";
           if (/^\d{4}-\d{2}-\d{2}$/.test(dateRaw)) {
             finalDate = dateRaw;
@@ -441,9 +448,8 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
             continue;
           }
 
-          // 3. Create Shift
           const newShift: OnCallShift = {
-            id: "", // Backend generate UUID
+            id: "",
             employeeId: emp.id,
             date: finalDate,
             startTime: startTime,
@@ -453,7 +459,6 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
             createdAt: new Date().toISOString(),
           };
 
-          // Add to promises array, passing currentUser.name for log
           promises.push(saveOnCallShift(newShift, currentUser.name));
           importedCount++;
         } else {
@@ -464,7 +469,6 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
         }
       }
 
-      // Wait for all saves to complete
       if (promises.length > 0) {
         await Promise.all(promises);
       }
@@ -486,7 +490,6 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
       });
     }
   };
-  // --- End CSV Import Logic ---
 
   return (
     <div>
@@ -671,22 +674,40 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
         </div>
       </div>
 
+      {/* --- SELETOR DE ITENS POR PÁGINA (Abaixo dos botões) --- */}
+      <div className="flex justify-end">
+        <div className="p-2 px-3 rounded-xl flex items-center w-fit">
+          <div className="flex items-center gap-2 text-sm text-slate-600 whitespace-nowrap">
+            <span>Mostrar</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              className="border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-[#204294] bg-white font-medium text-[#204294] cursor-pointer"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+            <span>por página</span>
+          </div>
+        </div>
+      </div>
+
       {/* List Section */}
       <div className="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden mb-20">
         <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
           <h3 className="font-semibold text-slate-700">Plantões Agendados</h3>
           <span className="text-xs text-slate-500 bg-white px-2 py-1 rounded border border-slate-200">
-            Total: {filteredShifts.length}
+            Total: {totalItems}
           </span>
         </div>
 
         {isLoading ? (
-          // --- ESTADO CARREGANDO (SKELETONS) ---
           <div className="divide-y divide-slate-100">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={`sk-oncall-${i}`} className="p-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  {/* Esquerda: Perfil */}
                   <div className="flex items-center gap-3 md:w-1/3">
                     <div className="w-10 h-10 rounded-full bg-slate-100 animate-pulse" />
                     <div className="flex-1">
@@ -704,7 +725,6 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                       />
                     </div>
                   </div>
-                  {/* Meio: Detalhes do Plantão */}
                   <div className="flex-1 space-y-2">
                     <div className="flex gap-4">
                       <IonSkeletonText
@@ -721,7 +741,6 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                       style={{ width: "60%", height: "10px" }}
                     />
                   </div>
-                  {/* Direita: Ação */}
                   <div className="md:justify-end">
                     <div className="w-8 h-8 rounded bg-slate-100 animate-pulse" />
                   </div>
@@ -729,8 +748,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
               </div>
             ))}
           </div>
-        ) : filteredShifts.length === 0 ? (
-          // --- ESTADO VAZIO ---
+        ) : paginatedShifts.length === 0 ? (
           <div className="text-center p-12 text-slate-400">
             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
               <Siren size={32} />
@@ -746,54 +764,34 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
             )}
           </div>
         ) : (
-          // --- LISTA REAL DE DADOS ---
           <div className="divide-y divide-slate-100">
-            {filteredShifts
-              .slice()
-              .sort((a, b) => b.date.localeCompare(a.date))
-              .map((shift) => {
-                const emp = employees.find((e) => e.id === shift.employeeId);
-                const auditUser =
-                  shift.updatedBy || shift.createdBy || "Sistema";
-                const auditDate = shift.updatedAt || shift.createdAt;
-                const auditLabel = shift.updatedBy
-                  ? "Atualizado por"
-                  : "Registrado por";
+            {paginatedShifts.map((shift) => {
+              const emp = employees.find((e) => e.id === shift.employeeId);
+              const auditUser = shift.updatedBy || shift.createdBy || "Sistema";
+              const auditDate = shift.updatedAt || shift.createdAt;
+              const auditLabel = shift.updatedBy
+                ? "Atualizado por"
+                : "Registrado por";
 
-                return (
-                  <div
-                    key={shift.id}
-                    onClick={() => handleEdit(shift)}
-                    className="p-4 hover:bg-[#204294]/5 transition-colors duration-200 cursor-pointer group hover:shadow-sm"
-                  >
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex items-center gap-3 md:w-1/3">
-                        <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold group-hover:bg-[#204294] group-hover:text-white transition-colors">
-                          <User size={18} />
-                        </div>
-                        <div>
-                          <div className="font-bold text-[#1E1E1E] flex items-center gap-2">
-                            {emp
-                              ? `${emp.firstName} ${emp.lastName}`
-                              : "Funcionário removido"}
-                            {/* Squad Badge - Desktop */}
-                            {emp && (
-                              <span
-                                className={`hidden sm:inline-block px-1.5 py-0.5 rounded text-[9px] font-bold border ${getSquadBadgeColor(
-                                  emp.squad
-                                )}`}
-                              >
-                                {emp.squad}
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            {emp?.role}
-                          </div>
-                          {/* Squad Badge - Mobile */}
+              return (
+                <div
+                  key={shift.id}
+                  onClick={() => handleEdit(shift)}
+                  className="p-4 hover:bg-[#204294]/5 transition-colors duration-200 cursor-pointer group hover:shadow-sm"
+                >
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 md:w-1/3">
+                      <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold group-hover:bg-[#204294] group-hover:text-white transition-colors">
+                        <User size={18} />
+                      </div>
+                      <div>
+                        <div className="font-bold text-[#1E1E1E] flex items-center gap-2">
+                          {emp
+                            ? `${emp.firstName} ${emp.lastName}`
+                            : "Funcionário removido"}
                           {emp && (
                             <span
-                              className={`sm:hidden inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold border ${getSquadBadgeColor(
+                              className={`hidden sm:inline-block px-1.5 py-0.5 rounded text-[9px] font-bold border ${getSquadBadgeColor(
                                 emp.squad
                               )}`}
                             >
@@ -801,57 +799,111 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                             </span>
                           )}
                         </div>
-                      </div>
-
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-1 bg-[#204294]/10 px-2 py-0.5 rounded border border-[#204294]/20 text-[#204294] text-sm font-medium">
-                            <Calendar size={14} />
-                            {shift.date}
-                          </div>
-                          <div className="flex items-center gap-1 text-sm text-slate-600">
-                            <Clock size={14} />
-                            {shift.startTime} - {shift.endTime}
-                          </div>
+                        <div className="text-xs text-slate-500">
+                          {emp?.role}
                         </div>
-
-                        {shift.observation && (
-                          <div className="text-xs text-slate-500 mt-1 italic">
-                            "{shift.observation}"
-                          </div>
+                        {emp && (
+                          <span
+                            className={`sm:hidden inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold border ${getSquadBadgeColor(
+                              emp.squad
+                            )}`}
+                          >
+                            {emp.squad}
+                          </span>
                         )}
-
-                        {auditDate && (
-                          <div className="text-[10px] text-slate-400 mt-2 flex items-center gap-1 border-t border-slate-100 pt-1 w-full md:w-auto">
-                            <UserCircle size={10} />
-                            <span>
-                              {auditLabel} <strong>{auditUser}</strong> em{" "}
-                              {formatDateTime(auditDate)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2 md:justify-end">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            requestDelete(shift.id);
-                          }}
-                          className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                        >
-                          <Trash2 size={16} />
-                        </button>
                       </div>
                     </div>
+
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1 bg-[#204294]/10 px-2 py-0.5 rounded border border-[#204294]/20 text-[#204294] text-sm font-medium">
+                          <Calendar size={14} />
+                          {shift.date}
+                        </div>
+                        <div className="flex items-center gap-1 text-sm text-slate-600">
+                          <Clock size={14} />
+                          {shift.startTime} - {shift.endTime}
+                        </div>
+                      </div>
+
+                      {shift.observation && (
+                        <div className="text-xs text-slate-500 mt-1 italic">
+                          "{shift.observation}"
+                        </div>
+                      )}
+
+                      {auditDate && (
+                        <div className="text-[10px] text-slate-400 mt-2 flex items-center gap-1 border-t border-slate-100 pt-1 w-full md:w-auto">
+                          <UserCircle size={10} />
+                          <span>
+                            {auditLabel} <strong>{auditUser}</strong> em{" "}
+                            {formatDateTime(auditDate)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 md:justify-end">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          requestDelete(shift.id);
+                        }}
+                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
-                );
-              })}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* --- RODAPÉ DE PAGINAÇÃO --- */}
+        {!isLoading && totalItems > 0 && (
+          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-slate-600">
+              Mostrando{" "}
+              <span className="font-bold text-slate-800">{startIndex + 1}</span>{" "}
+              a <span className="font-bold text-slate-800">{endIndex}</span> de{" "}
+              <span className="font-bold text-slate-800">{totalItems}</span>{" "}
+              registros
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft size={18} className="text-slate-600" />
+              </button>
+
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-slate-500">Página</span>
+                <span className="text-sm font-bold text-[#204294] bg-[#204294]/10 px-2 py-1 rounded border border-[#204294]/20">
+                  {currentPage}
+                </span>
+                <span className="text-sm text-slate-500">de {totalPages}</span>
+              </div>
+
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight size={18} className="text-slate-600" />
+              </button>
+            </div>
           </div>
         )}
       </div>
 
-      {/* --- Import Feedback Popup (Bottom) --- */}
+      {/* Import Feedback Popup */}
       {importFeedback && (
         <div className="fixed bottom-4 right-4 z-50 max-w-md w-full bg-white shadow-2xl rounded-xl border border-slate-200 overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
           <div
@@ -907,8 +959,6 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
               <X size={16} />
             </button>
           </div>
-
-          {/* Scrollable Error List */}
           {importFeedback.errors > 0 && importFeedback.details.length > 0 && (
             <div className="max-h-48 overflow-y-auto bg-white border-t border-slate-100 p-3">
               <p className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">
