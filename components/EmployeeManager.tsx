@@ -111,7 +111,9 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
       const matchesName = (emp.firstName + " " + emp.lastName)
         .toLowerCase()
         .includes(filters.name.toLowerCase());
-      const matchesMatricula = emp.matricula.includes(filters.matricula);
+      const matchesMatricula = filters.matricula
+        ? emp.matricula === filters.matricula
+        : true;
       const matchesRole = filters.role ? emp.role === filters.role : true;
       const matchesSquad = filters.squad ? emp.squad === filters.squad : true;
       const matchesShift = filters.shiftStart
