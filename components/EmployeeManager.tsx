@@ -15,6 +15,8 @@ import {
   Download,
   FileText,
   Edit2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Employee, Role, Squad, SystemUser } from "../types";
 import {
@@ -55,6 +57,10 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
   const [isLoading, setIsLoading] = useState(true);
 
+  // --- ESTADOS DE PAGINAÇÃO ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+
   // Form State
   const [formData, setFormData] = useState<Partial<Employee>>({
     role: Role.INFRA_ANALYST,
@@ -75,10 +81,14 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
     } finally {
-      // Timeout opcional de 500ms apenas para o skeleton não "piscar" muito rápido
       setTimeout(() => setIsLoading(false), 500);
     }
   };
+
+  // Resetar para a página 1 sempre que os filtros ou paginação mudarem
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, sortOrder, itemsPerPage]);
 
   // --- Filtering & Sorting Logic ---
 
@@ -127,15 +137,24 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
       }
     });
 
+  // --- LÓGICA DE PAGINAÇÃO ---
+  const totalItems = filteredEmployees.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+  const paginatedEmployees = filteredEmployees.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
   // --- Modal & CRUD Logic ---
 
   const openModal = (employee?: Employee) => {
-    // Only allow edit if admin
     if (!isAdmin) return;
 
-    setFormError(null); // Clear previous errors
+    setFormError(null);
     if (employee) {
       setFormData(employee);
       setEditingId(employee.id);
@@ -156,10 +175,8 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     if (!isAdmin) return;
 
     setFormError(null);
-
     const targetMatricula = formData.matricula?.trim();
 
-    // Validate Matricula (Numeric)
     if (!targetMatricula) {
       setFormError("A matrícula é obrigatória.");
       return;
@@ -170,8 +187,6 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
       return;
     }
 
-    // Check for Duplicate Matricula (Primary Key logic)
-    // Only check locally if we have the list loaded. The DB will also enforce unique constraint.
     const duplicate = employees.find(
       (emp) => emp.matricula === targetMatricula && emp.id !== editingId
     );
@@ -189,8 +204,6 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     }
 
     const newEmp: Employee = {
-      // IMPORTANTE: Se for novo (editingId é null), mandamos string vazia ou undefined
-      // para o backend gerar o UUID. Se for edição, usamos o ID existente.
       id: editingId || "",
       matricula: targetMatricula,
       firstName: formData.firstName || "",
@@ -204,7 +217,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
     try {
       await saveEmployee(newEmp, currentUser.name);
-      await loadData(); // Recarrega do banco para garantir que temos o ID correto
+      await loadData();
       setIsModalOpen(false);
       setEditingId(null);
       setFormData({
@@ -225,18 +238,15 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
   const confirmDelete = async () => {
     if (deleteConfirmationId && isAdmin) {
-      // Passes currentUser.name to log who performed the delete
       await deleteEmployee(deleteConfirmationId, currentUser.name);
-      await loadData(); // Recarrega a lista do banco
+      await loadData();
       setDeleteConfirmationId(null);
     }
   };
 
-  // CSV Helper
   const escapeCsv = (str: string | undefined | null) => {
     if (!str) return '""';
     const stringValue = String(str);
-    // Check for semicolon as well
     if (
       stringValue.includes(";") ||
       stringValue.includes('"') ||
@@ -293,7 +303,6 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     document.body.removeChild(link);
   };
 
-  // CSV Template Download
   const handleDownloadTemplate = () => {
     const headers = [
       "Matricula",
@@ -315,22 +324,8 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
       "09:00",
       "18:00",
     ];
-    const exampleRow2 = [
-      "1002",
-      "Maria",
-      "Santos",
-      "maria.santos@exemplo.com",
-      "DBA",
-      "Bulls",
-      "08:00",
-      "17:00",
-    ];
 
-    const csvContent = [
-      headers.join(";"),
-      exampleRow1.join(";"),
-      exampleRow2.join(";"),
-    ].join("\n");
+    const csvContent = [headers.join(";"), exampleRow1.join(";")].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -342,7 +337,6 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     document.body.removeChild(link);
   };
 
-  // CSV Import Logic
   const handleImportClick = () => {
     if (!isAdmin) return;
     fileInputRef.current?.click();
@@ -353,15 +347,10 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     if (!file) return;
 
     const reader = new FileReader();
-
     reader.onload = (evt) => {
       const csvText = evt.target?.result as string;
       if (csvText) {
-        // Encoding Check: If replacement character exists, it likely failed UTF-8 decode of ANSI file
         if (csvText.includes("\uFFFD")) {
-          console.log(
-            "Detected encoding issue (UTF-8 failed). Retrying with ISO-8859-1..."
-          );
           const retryReader = new FileReader();
           retryReader.onload = (retryEvt) => {
             const retryText = retryEvt.target?.result as string;
@@ -373,18 +362,12 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
         }
       }
     };
-
-    reader.readAsText(file); // Defaults to UTF-8
+    reader.readAsText(file);
     e.target.value = "";
   };
 
   const processCSV = async (csvText: string) => {
     const lines = csvText.split("\n");
-    let importedCount = 0;
-    let errorCount = 0;
-    let duplicateCount = 0;
-
-    // Helper to normalize strings (remove accents and lowercase) for comparison
     const normalizeStr = (str: string) => {
       return str
         .normalize("NFD")
@@ -392,15 +375,10 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
         .toLowerCase();
     };
 
-    // Expected Format: matricula, firstName, lastName, email, role, squad, shiftStart, shiftEnd
-    // Start loop
     const promises = [];
-
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
-
-      // Use semicolon splitter
       const cols = line.split(";").map((c) => c.trim().replace(/^"|"$/g, ""));
 
       if (cols.length >= 7) {
@@ -415,20 +393,9 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
           shiftEnd,
         ] = cols;
 
-        // CSV Validation
-        if (!/^\d+$/.test(matricula)) {
-          errorCount++; // Invalid matricula format in CSV
-          continue;
-        }
+        if (!/^\d+$/.test(matricula)) continue;
+        if (employees.some((e) => e.matricula === matricula)) continue;
 
-        // Check duplicates locally based on current loaded list to avoid basic collisions
-        // The DB will also block unique constraint violations
-        if (employees.some((e) => e.matricula === matricula)) {
-          duplicateCount++;
-          continue;
-        }
-
-        // Helpers to match enums case-insensitively AND ignoring accents
         const findEnum = (enumObj: any, val: string) =>
           Object.entries(enumObj).find(
             ([k, v]) =>
@@ -441,7 +408,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
         if (role && squad) {
           const newEmp: Employee = {
-            id: "", // Empty ID tells backend to generate UUID
+            id: "",
             matricula,
             firstName,
             lastName,
@@ -451,40 +418,19 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
             shiftStart: shiftStart || "09:00",
             shiftEnd: shiftEnd || "18:00",
           };
-          // Add to promises to run later
           promises.push(saveEmployee(newEmp, currentUser.name));
-          importedCount++;
-        } else {
-          errorCount++;
         }
-      } else {
-        errorCount++;
       }
     }
 
-    // Wait for all saves to finish
     await Promise.all(promises);
-
-    let msg = `Importação finalizada.\nRegistros importados: ${importedCount}\nErros de formato/dados inválidos: ${errorCount}`;
-    if (duplicateCount > 0) {
-      msg += `\nDuplicatas ignoradas: ${duplicateCount}`;
-    }
     toast.success("Importação Concluída!", {
       position: "top-right",
       autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: false,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
       theme: "light",
       transition: Bounce,
     });
-    if (errorCount > 0) {
-      toast(`Erros: ${errorCount}`);
-    }
-    // alert(msg);
-    await loadData(); // Reload list from DB
+    await loadData();
   };
 
   const getSquadBadgeColor = (squad: Squad) => {
@@ -505,7 +451,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
   return (
     <div>
       {/* Header Responsivo */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[#1E1E1E]">Funcionários</h1>
           <p className="text-slate-500">
@@ -530,7 +476,6 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
             }`}
           >
             <Filter size={18} />
-
             {activeFilterCount > 0 && (
               <span className="bg-[#204294] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full ml-1">
                 {activeFilterCount}
@@ -540,7 +485,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
           <button
             onClick={handleExportCSV}
-            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm font-medium"
             title="Exportar para CSV"
           >
             <Download size={18} />
@@ -550,21 +495,21 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
             <>
               <button
                 onClick={handleDownloadTemplate}
-                className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+                className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm font-medium"
                 title="Baixar Modelo de Importação"
               >
                 <FileText size={18} />
               </button>
               <button
                 onClick={handleImportClick}
-                className="flex-1 md:flex-none bg-[#01B8A1] hover:bg-[#019f8b] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+                className="flex-1 md:flex-none bg-[#01B8A1] hover:bg-[#019f8b] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm font-medium"
                 title="Importar Funcionário"
               >
                 <Upload size={18} />
               </button>
               <button
                 onClick={() => openModal()}
-                className="flex-1 md:flex-none bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+                className="flex-1 md:flex-none bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm font-medium"
                 title="Adicionar Funcionário"
               >
                 <Plus size={18} />
@@ -687,40 +632,42 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
         </div>
       </div>
 
-      {/* MOBILE LIST VIEW (Cards) - Visible only on small screens */}
+      {/* --- SELETOR DE ITENS POR PÁGINA (Abaixo dos botões) --- */}
+      {/* Seletor de Itens por Página Ajustado */}
+      <div className="flex justify-end">
+        <div className=" p-2 px-3 rounded-xl flex items-center w-fit">
+          <div className="flex items-center gap-2 text-sm text-slate-600 whitespace-nowrap">
+            <span>Mostrar</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              className="border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-[#204294] bg-white font-medium text-[#204294] cursor-pointer"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+            <span>por página</span>
+          </div>
+        </div>
+      </div>
+
+      {/* MOBILE LIST VIEW (Cards) */}
       <div className="md:hidden space-y-3">
         {isLoading ? (
-          // Skeletons para Mobile
           Array.from({ length: 3 }).map((_, i) => (
             <div
               key={`sk-card-${i}`}
-              className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-slate-100 animate-pulse" />
-                <div>
-                  <IonSkeletonText
-                    animated
-                    style={{ width: "120px", height: "14px" }}
-                  />
-                  <IonSkeletonText
-                    animated
-                    style={{ width: "160px", height: "10px", marginTop: "4px" }}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <IonSkeletonText animated style={{ width: "100%" }} />
-                <IonSkeletonText animated style={{ width: "80%" }} />
-              </div>
-            </div>
+              className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative h-32 animate-pulse"
+            />
           ))
-        ) : filteredEmployees.length === 0 ? (
+        ) : paginatedEmployees.length === 0 ? (
           <div className="text-center p-8 text-slate-500 bg-white rounded-xl border border-slate-200">
             Nenhum funcionário encontrado.
           </div>
         ) : (
-          filteredEmployees.map((emp) => (
+          paginatedEmployees.map((emp) => (
             <div
               key={emp.id}
               onClick={() => isAdmin && openModal(emp)}
@@ -746,7 +693,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                       e.stopPropagation();
                       requestDelete(emp.id);
                     }}
-                    className="p-2 text-slate-400 text-rose-500 hover:bg-rose-50 rounded-lg"
+                    className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -783,13 +730,13 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
         )}
       </div>
 
-      {/* DESKTOP TABLE VIEW - Hidden on mobile */}
+      {/* DESKTOP TABLE VIEW */}
       <div className="hidden md:block bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse table-fixed">
           <thead className="bg-slate-50 text-[#3F3F3F] border-b border-slate-200">
             <tr>
               <th
-                className="p-4 font-bold text-sm cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                className="p-4 font-bold text-sm cursor-pointer hover:bg-slate-100 transition-colors select-none group w-1/3"
                 onClick={toggleSort}
               >
                 <div className="flex items-center gap-1">
@@ -818,89 +765,43 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {isLoading ? (
-              // Skeletons para Tabela Desktop
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={`sk-row-${i}`}>
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-slate-100 animate-pulse" />
-                      <div className="flex-1">
-                        <IonSkeletonText
-                          animated
-                          style={{ width: "150px", height: "12px" }}
-                        />
-                        <IonSkeletonText
-                          animated
-                          style={{
-                            width: "100px",
-                            height: "10px",
-                            marginTop: "4px",
-                          }}
-                        />
-                      </div>
-                    </div>
+                  <td className="p-4" colSpan={isAdmin ? 6 : 5}>
+                    <IonSkeletonText
+                      animated
+                      style={{ width: "100%", height: "20px" }}
+                    />
                   </td>
-                  <td className="p-4">
-                    <IonSkeletonText animated style={{ width: "40px" }} />
-                  </td>
-                  <td className="p-4">
-                    <IonSkeletonText animated style={{ width: "120px" }} />
-                  </td>
-                  <td className="p-4">
-                    <IonSkeletonText animated style={{ width: "80px" }} />
-                  </td>
-                  <td className="p-4">
-                    <IonSkeletonText animated style={{ width: "100px" }} />
-                  </td>
-                  {isAdmin && (
-                    <td className="p-4 text-right">
-                      <IonSkeletonText
-                        animated
-                        style={{ width: "20px", marginLeft: "auto" }}
-                      />
-                    </td>
-                  )}
                 </tr>
               ))
-            ) : filteredEmployees.length === 0 ? (
+            ) : paginatedEmployees.length === 0 ? (
               <tr>
                 <td
                   colSpan={isAdmin ? 6 : 5}
                   className="p-8 text-center text-slate-500"
                 >
-                  {employees.length === 0
-                    ? "Nenhum funcionário cadastrado."
-                    : "Nenhum funcionário encontrado."}
+                  Nenhum funcionário encontrado.
                 </td>
               </tr>
             ) : (
-              filteredEmployees.map((emp) => (
+              paginatedEmployees.map((emp) => (
                 <tr
                   key={emp.id}
                   onClick={() => isAdmin && openModal(emp)}
                   className={`group transition-all duration-200 ${
                     isAdmin
-                      ? "hover:bg-[#204294]/5 cursor-pointer hover:shadow-sm"
+                      ? "hover:bg-[#204294]/5 cursor-pointer"
                       : "cursor-default"
                   }`}
                 >
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div
-                        className={`w-8 h-8 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] transition-colors ${
-                          isAdmin
-                            ? "group-hover:bg-[#204294] group-hover:text-white"
-                            : ""
-                        }`}
-                      >
+                      <div className="w-8 h-8 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E]">
                         <User size={16} />
                       </div>
                       <div>
-                        <div
-                          className={`font-bold text-[#1E1E1E] transition-colors ${
-                            isAdmin ? "group-hover:text-[#204294]" : ""
-                          }`}
-                        >
+                        <div className="font-bold text-[#1E1E1E] group-hover:text-[#204294]">
                           {emp.firstName} {emp.lastName}
                         </div>
                         <div className="text-xs text-slate-500">
@@ -912,12 +813,8 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                   <td className="p-4 text-sm text-slate-600 font-mono">
                     {emp.matricula}
                   </td>
-                  <td className="p-4">
-                    <span className="font-medium text-slate-700 text-sm">
-                      {emp.role}
-                    </span>
-                  </td>
-                  <td className="p-4 text-sm text-slate-600">
+                  <td className="p-4 text-sm text-slate-700">{emp.role}</td>
+                  <td className="p-4 text-sm">
                     <span
                       className={`px-2 py-1 rounded-md font-medium text-xs border ${getSquadBadgeColor(
                         emp.squad
@@ -931,19 +828,15 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                   </td>
                   {isAdmin && (
                     <td className="p-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            requestDelete(emp.id);
-                          }}
-                          className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-lg transition-colors z-10"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          requestDelete(emp.id);
+                        }}
+                        className="text-slate-400 hover:text-rose-600 p-2 rounded-lg"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </td>
                   )}
                 </tr>
@@ -951,6 +844,49 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
             )}
           </tbody>
         </table>
+
+        {/* --- RODAPÉ DE PAGINAÇÃO --- */}
+        {!isLoading && totalItems > 0 && (
+          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-slate-600">
+              Mostrando{" "}
+              <span className="font-bold text-slate-800">
+                {totalItems === 0 ? 0 : startIndex + 1}
+              </span>{" "}
+              a <span className="font-bold text-slate-800">{endIndex}</span> de{" "}
+              <span className="font-bold text-slate-800">{totalItems}</span>{" "}
+              registros
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft size={18} className="text-slate-600" />
+              </button>
+
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-slate-500">Página</span>
+                <span className="text-sm font-bold text-[#204294] bg-[#204294]/10 px-2 py-1 rounded border border-[#204294]/20">
+                  {currentPage}
+                </span>
+                <span className="text-sm text-slate-500">de {totalPages}</span>
+              </div>
+
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight size={18} className="text-slate-600" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Edit/Create Modal */}
@@ -963,8 +899,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors"
-                title="Fechar"
+                className="text-slate-400 hover:text-slate-600 p-2 rounded-full transition-colors"
               >
                 <X size={24} />
               </button>
@@ -981,7 +916,6 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                 </div>
               )}
 
-              {/* Personal Info */}
               <div>
                 <h4 className="text-sm font-bold text-[#204294] mb-3 flex items-center gap-2">
                   <User size={16} /> Dados Pessoais
@@ -994,7 +928,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                     <input
                       required
                       type="text"
-                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none"
                       value={formData.firstName || ""}
                       onChange={(e) =>
                         setFormData({ ...formData, firstName: e.target.value })
@@ -1008,7 +942,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                     <input
                       required
                       type="text"
-                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none"
                       value={formData.lastName || ""}
                       onChange={(e) =>
                         setFormData({ ...formData, lastName: e.target.value })
@@ -1022,7 +956,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                     <input
                       required
                       type="email"
-                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none"
                       value={formData.email || ""}
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
@@ -1036,8 +970,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                     <input
                       required
                       type="text"
-                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
-                      placeholder="Ex: 123"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none"
                       value={formData.matricula || ""}
                       onChange={(e) =>
                         setFormData({
@@ -1046,9 +979,6 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                         })
                       }
                     />
-                    <span className="text-xs text-slate-400">
-                      Somente números.
-                    </span>
                   </div>
                 </div>
               </div>
@@ -1064,7 +994,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                     </label>
                     <select
                       required
-                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none"
                       value={formData.role}
                       onChange={(e) =>
                         setFormData({
@@ -1080,15 +1010,13 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                       ))}
                     </select>
                   </div>
-
-                  {/* Squad always visible */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Squad
                     </label>
                     <select
                       required
-                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none"
                       value={formData.squad || ""}
                       onChange={(e) =>
                         setFormData({
@@ -1120,7 +1048,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                     <input
                       required
                       type="time"
-                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none"
                       value={formData.shiftStart}
                       onChange={(e) =>
                         setFormData({ ...formData, shiftStart: e.target.value })
@@ -1134,7 +1062,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                     <input
                       required
                       type="time"
-                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none"
                       value={formData.shiftEnd}
                       onChange={(e) =>
                         setFormData({ ...formData, shiftEnd: e.target.value })
@@ -1148,13 +1076,13 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium"
+                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] transition-colors shadow-sm font-bold"
+                  className="px-4 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] font-bold"
                 >
                   Salvar Funcionário
                 </button>
@@ -1176,20 +1104,20 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
             </h3>
             <p className="text-slate-500 mb-6 text-sm">
               Esta ação não pode ser desfeita. Todos os registros relacionados
-              (ausências, plantões, trocas) serão removidos permanentemente.
+              serão removidos.
             </p>
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => setDeleteConfirmationId(null)}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium"
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors shadow-sm font-medium"
+                className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 font-medium"
               >
-                Sim, Excluir e Limpar Dados
+                Confirmar Exclusão
               </button>
             </div>
           </div>
