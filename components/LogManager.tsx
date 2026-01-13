@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from "react";
 import {
   ScrollText,
-  Search,
   RefreshCw,
   Clock,
   User,
   Activity,
   ChevronLeft,
   ChevronRight,
+  Filter,
+  X,
+  Search,
+  Download,
 } from "lucide-react";
 import { getSystemLogs } from "../services/dbService";
 import { SystemLog } from "../types";
@@ -15,8 +18,16 @@ import { IonSkeletonText } from "@ionic/react";
 
 const LogManager: React.FC = () => {
   const [logs, setLogs] = useState<SystemLog[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // --- ESTADOS DE FILTRO ---
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    userName: "",
+    action: "",
+    date: "",
+    description: "",
+  });
 
   // --- ESTADOS DE PAGINAÇÃO ---
   const [currentPage, setCurrentPage] = useState(1);
@@ -38,17 +49,42 @@ const LogManager: React.FC = () => {
     loadLogs();
   }, []);
 
-  // Resetar para a página 1 sempre que pesquisar algo
+  // Resetar para a página 1 sempre que os filtros ou paginação mudarem
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, itemsPerPage]);
+  }, [filters, itemsPerPage]);
 
-  const filteredLogs = logs.filter(
-    (log) =>
-      log.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.action.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const clearFilters = () => {
+    setFilters({
+      userName: "",
+      action: "",
+      date: "",
+      description: "",
+    });
+  };
+
+  // --- LÓGICA DE FILTRAGEM ---
+  const filteredLogs = logs.filter((log) => {
+    const matchesUser = (log.userName || "Sistema")
+      .toLowerCase()
+      .includes(filters.userName.toLowerCase());
+
+    const matchesAction = filters.action
+      ? log.action.toUpperCase() === filters.action.toUpperCase()
+      : true;
+
+    const matchesDescription = log.description
+      .toLowerCase()
+      .includes(filters.description.toLowerCase());
+
+    const matchesDate = filters.date
+      ? log.createdAt.startsWith(filters.date)
+      : true;
+
+    return matchesUser && matchesAction && matchesDescription && matchesDate;
+  });
+
+  const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
   // --- LÓGICA DE PAGINAÇÃO ---
   const totalItems = filteredLogs.length;
@@ -59,6 +95,52 @@ const LogManager: React.FC = () => {
     startIndex,
     startIndex + itemsPerPage
   );
+
+  // --- LÓGICA DE EXPORTAÇÃO CSV ---
+  const escapeCsv = (str: string | undefined | null) => {
+    if (!str) return '""';
+    const stringValue = String(str);
+    if (
+      stringValue.includes(";") ||
+      stringValue.includes('"') ||
+      stringValue.includes("\n")
+    ) {
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    }
+    return stringValue;
+  };
+
+  const handleExportCSV = () => {
+    if (filteredLogs.length === 0) {
+      alert("Não há dados para exportar.");
+      return;
+    }
+
+    const headers = ["Data/Hora", "Ação", "Usuário", "Descrição"];
+    const rows = filteredLogs.map((log) => [
+      new Date(log.createdAt).toLocaleString("pt-BR"),
+      escapeCsv(log.action),
+      escapeCsv(log.userName || "Sistema"),
+      escapeCsv(log.description),
+    ]);
+
+    const csvContent = [
+      headers.join(";"),
+      ...rows.map((r) => r.join(";")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `logs_sistema_${new Date().toISOString().split("T")[0]}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const getActionColor = (action: string) => {
     switch (action.toUpperCase()) {
@@ -80,7 +162,7 @@ const LogManager: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -92,41 +174,150 @@ const LogManager: React.FC = () => {
             Auditoria de ações e eventos importantes.
           </p>
         </div>
-        <button
-          onClick={loadLogs}
-          className="p-2 text-slate-500 hover:text-[#204294] hover:bg-slate-100 rounded-lg transition-colors"
-          title="Atualizar Logs"
-        >
-          <RefreshCw size={20} className={isLoading ? "animate-spin" : ""} />
-        </button>
+
+        <div className="flex items-center gap-2 w-full md:w-auto relative">
+          <button
+            onClick={loadLogs}
+            className="p-2 text-slate-500 hover:text-[#204294] hover:bg-slate-100 rounded-lg transition-colors"
+            title="Atualizar Logs"
+          >
+            <RefreshCw size={20} className={isLoading ? "animate-spin" : ""} />
+          </button>
+
+          <button
+            onClick={handleExportCSV}
+            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+            title="Exportar para CSV"
+          >
+            <Download size={18} />
+          </button>
+
+          <button
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className={`flex-1 md:flex-none px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm border ${
+              isFilterOpen || activeFilterCount > 0
+                ? "bg-[#204294]/10 border-[#204294]/20 text-[#204294]"
+                : "bg-white border-slate-200 text-[#3F3F3F] hover:bg-slate-50"
+            }`}
+          >
+            <Filter size={18} />
+            {activeFilterCount > 0 && (
+              <span className="bg-[#204294] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+
+          {/* Painel de Filtros */}
+          {isFilterOpen && (
+            <div className="absolute top-12 right-0 w-full md:w-80 bg-white rounded-xl shadow-xl border border-slate-200 p-5 z-20">
+              <div className="flex justify-between items-center mb-4 text-[#1E1E1E]">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Search size={16} /> Filtros
+                </h3>
+                <button
+                  onClick={() => setIsFilterOpen(false)}
+                  className="text-slate-400 hover:text-slate-600"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    Usuário
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Quem realizou a ação..."
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                    value={filters.userName}
+                    onChange={(e) =>
+                      setFilters({ ...filters, userName: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    Tipo de Ação
+                  </label>
+                  <select
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] bg-white"
+                    value={filters.action}
+                    onChange={(e) =>
+                      setFilters({ ...filters, action: e.target.value })
+                    }
+                  >
+                    <option value="">Todas as ações</option>
+                    <option value="CREATE">CREATE</option>
+                    <option value="UPDATE">UPDATE</option>
+                    <option value="DELETE">DELETE</option>
+                    <option value="LOGIN">LOGIN</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    Data
+                  </label>
+                  <input
+                    type="date"
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                    value={filters.date}
+                    onChange={(e) =>
+                      setFilters({ ...filters, date: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    Descrição
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Buscar nos detalhes..."
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                    value={filters.description}
+                    onChange={(e) =>
+                      setFilters({ ...filters, description: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button
+                    onClick={clearFilters}
+                    className="text-xs text-rose-600 hover:text-rose-700 font-medium px-2 py-1"
+                  >
+                    Limpar Filtros
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Search & Items Per Page */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Buscar por usuário, ação ou descrição..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg outline-none focus:border-[#204294]"
-          />
-        </div>
-
-        <div className="flex items-center gap-2 text-sm text-slate-600 whitespace-nowrap">
-          <span>Mostrar</span>
-          <select
-            value={itemsPerPage}
-            onChange={(e) => setItemsPerPage(Number(e.target.value))}
-            className="border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-[#204294] bg-white font-medium text-[#204294]"
-          >
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-          </select>
-          <span>por página</span>
+      {/* Itens por Página Alinhado à Direita */}
+      <div className="flex justify-end">
+        <div className="p-2 px-3 flex items-center w-fit">
+          <div className="flex items-center gap-2 text-sm text-slate-600 whitespace-nowrap">
+            <span>Mostrar</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              className="border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-[#204294] bg-white font-medium text-[#204294] cursor-pointer"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+            <span>por página</span>
+          </div>
         </div>
       </div>
 
