@@ -19,6 +19,8 @@ import {
   FileWarning,
   ArrowRight,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Employee, ShiftChange, SystemUser, Role, Squad } from "../types";
 import {
@@ -67,6 +69,10 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
     newShiftEnd: "",
   });
 
+  // --- ESTADOS DE PAGINAÇÃO ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+
   // UI State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [importFeedback, setImportFeedback] = useState<{
@@ -114,10 +120,14 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
     } finally {
-      // Delay suave para a transição visual
       setTimeout(() => setIsLoading(false), 500);
     }
   };
+
+  // Resetar para a página 1 sempre que os filtros ou paginação mudarem
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, itemsPerPage]);
 
   // Auto-fill original shift when employee is selected
   useEffect(() => {
@@ -166,6 +176,17 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
       endTimeMatch
     );
   });
+
+  // --- LÓGICA DE PAGINAÇÃO ---
+  const totalItems = filteredChanges.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+
+  const paginatedChanges = filteredChanges
+    .slice()
+    .sort((a, b) => b.startDate.localeCompare(a.startDate))
+    .slice(startIndex, startIndex + itemsPerPage);
 
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
   const clearFilters = () =>
@@ -238,7 +259,6 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
     const existing = editingId ? changes.find((c) => c.id === editingId) : null;
 
     const newChange: ShiftChange = {
-      // Se for edição, mantém ID. Se novo, envia vazio para backend criar UUID.
       id: editingId || "",
       employeeId: selectedEmpId,
       originalShiftStart,
@@ -248,7 +268,6 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
       startDate,
       endDate,
       reason,
-      // Audit Logic
       createdBy: existing?.createdBy || currentUser.name,
       createdAt: existing?.createdAt || new Date().toISOString(),
       updatedBy: existing ? currentUser.name : undefined,
@@ -256,9 +275,8 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
     };
 
     try {
-      // Passando currentUser.name para auditoria correta no backend
       await saveShiftChange(newChange, currentUser.name);
-      await loadData(); // Recarrega dados atualizados
+      await loadData();
       closeModal();
     } catch (err) {
       console.error(err);
@@ -273,7 +291,6 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
   const confirmDelete = async () => {
     if (deleteConfirmationId) {
       try {
-        // Passando currentUser.name para auditoria correta no backend
         await deleteShiftChange(deleteConfirmationId, currentUser.name);
         await loadData();
         if (editingId === deleteConfirmationId) closeModal();
@@ -284,7 +301,6 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
     }
   };
 
-  // Date formatter for audit info
   const formatDateTime = (isoString?: string) => {
     if (!isoString) return "";
     const date = new Date(isoString);
@@ -297,7 +313,6 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
     });
   };
 
-  // CSV Helper
   const escapeCsv = (str: string | undefined | null) => {
     if (!str) return '""';
     const stringValue = String(str);
@@ -370,7 +385,6 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
     document.body.removeChild(link);
   };
 
-  // CSV Template Download
   const handleDownloadTemplate = () => {
     const headers = [
       "Matrícula",
@@ -413,7 +427,6 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
     document.body.removeChild(link);
   };
 
-  // --- CSV Import Logic Refactored ---
   const handleImportClick = () => {
     setImportFeedback(null);
     if (fileInputRef.current) {
@@ -461,11 +474,9 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
       let errorCount = 0;
       let errorsDetails: string[] = [];
 
-      // Ensure latest employee data
       const currentEmployees = await getEmployees();
       const promises = [];
 
-      // Expected Format: Matrícula;DataInicio;DataFim;NovoInicio;NovoFim;Motivo
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue;
@@ -475,7 +486,6 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
         if (cols.length >= 6) {
           const [matricula, dStart, dEnd, nStart, nEnd, reasonImport] = cols;
 
-          // 1. Find Employee
           const emp = currentEmployees.find((e) => e.matricula === matricula);
           if (!emp) {
             errorCount++;
@@ -485,22 +495,20 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
             continue;
           }
 
-          // 3. Create Object
           const newChange: ShiftChange = {
-            id: "", // Backend generate UUID
+            id: "",
             employeeId: emp.id,
-            originalShiftStart: emp.shiftStart, // Default from employee profile
-            originalShiftEnd: emp.shiftEnd, // Default from employee profile
+            originalShiftStart: emp.shiftStart,
+            originalShiftEnd: emp.shiftEnd,
             newShiftStart: nStart,
             newShiftEnd: nEnd,
-            startDate: dStart, // Assumes correct YYYY-MM-DD format from template
-            endDate: dEnd, // Assumes correct YYYY-MM-DD format from template
+            startDate: dStart,
+            endDate: dEnd,
             reason: reasonImport || "Importado via CSV",
             createdBy: currentUser.name + " (Import)",
             createdAt: new Date().toISOString(),
           };
 
-          // Add to batch, passing currentUser.name for log
           promises.push(saveShiftChange(newChange, currentUser.name));
           importedCount++;
         } else {
@@ -509,7 +517,6 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
         }
       }
 
-      // Execute all saves
       if (promises.length > 0) {
         await Promise.all(promises);
       }
@@ -533,7 +540,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
   return (
     <div>
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[#1E1E1E]">Trocas de Turno</h1>
           <p className="text-slate-500">
@@ -747,22 +754,40 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
         </div>
       </div>
 
+      {/* --- SELETOR DE ITENS POR PÁGINA (Alinhado à direita) --- */}
+      <div className="flex justify-end">
+        <div className="p-2 px-3 rounded-xl flex items-center w-fit">
+          <div className="flex items-center gap-2 text-sm text-slate-600 whitespace-nowrap">
+            <span>Mostrar</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              className="border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-[#204294] bg-white font-medium text-[#204294] cursor-pointer"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+            <span>por página</span>
+          </div>
+        </div>
+      </div>
+
       {/* List Section */}
       <div className="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden mb-20">
         <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
           <h3 className="font-semibold text-slate-700">Histórico de Trocas</h3>
           <span className="text-xs text-slate-500 bg-white px-2 py-1 rounded border border-slate-200">
-            Total: {filteredChanges.length}
+            Total: {totalItems}
           </span>
         </div>
 
         {isLoading ? (
-          // --- ESTADO CARREGANDO (SKELETONS) ---
           <div className="divide-y divide-slate-100">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={`sk-shift-${i}`} className="p-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  {/* Perfil */}
                   <div className="flex items-center gap-3 md:w-1/3">
                     <div className="w-10 h-10 rounded-full bg-slate-100 animate-pulse" />
                     <div className="flex-1">
@@ -780,7 +805,6 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                       />
                     </div>
                   </div>
-                  {/* Detalhes da Troca */}
                   <div className="flex-1 space-y-3">
                     <IonSkeletonText
                       animated
@@ -797,7 +821,6 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                       />
                     </div>
                   </div>
-                  {/* Botão de Ação */}
                   <div className="md:justify-end">
                     <div className="w-8 h-8 rounded bg-slate-100 animate-pulse" />
                   </div>
@@ -805,8 +828,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
               </div>
             ))}
           </div>
-        ) : filteredChanges.length === 0 ? (
-          // --- ESTADO VAZIO ---
+        ) : paginatedChanges.length === 0 ? (
           <div className="text-center p-12 text-slate-400">
             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
               <ArrowLeftRight size={32} />
@@ -822,54 +844,35 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
             )}
           </div>
         ) : (
-          // --- LISTA REAL DE DADOS ---
           <div className="divide-y divide-slate-100">
-            {filteredChanges
-              .slice()
-              .sort((a, b) => b.startDate.localeCompare(a.startDate))
-              .map((change) => {
-                const emp = employees.find((e) => e.id === change.employeeId);
-                const auditUser =
-                  change.updatedBy || change.createdBy || "Sistema";
-                const auditDate = change.updatedAt || change.createdAt;
-                const auditLabel = change.updatedBy
-                  ? "Atualizado por"
-                  : "Registrado por";
+            {paginatedChanges.map((change) => {
+              const emp = employees.find((e) => e.id === change.employeeId);
+              const auditUser =
+                change.updatedBy || change.createdBy || "Sistema";
+              const auditDate = change.updatedAt || change.createdAt;
+              const auditLabel = change.updatedBy
+                ? "Atualizado por"
+                : "Registrado por";
 
-                return (
-                  <div
-                    key={change.id}
-                    onClick={() => handleEdit(change)}
-                    className="p-4 hover:bg-[#204294]/5 transition-colors duration-200 cursor-pointer group hover:shadow-sm"
-                  >
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex items-center gap-3 md:w-1/3">
-                        <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold group-hover:bg-[#204294] group-hover:text-white transition-colors">
-                          <User size={18} />
-                        </div>
-                        <div>
-                          <div className="font-bold text-[#1E1E1E] flex items-center gap-2">
-                            {emp
-                              ? `${emp.firstName} ${emp.lastName}`
-                              : "Funcionário removido"}
-                            {/* Squad Tag - Desktop */}
-                            {emp && (
-                              <span
-                                className={`hidden sm:inline-block px-1.5 py-0.5 rounded text-[9px] font-bold border ${getSquadBadgeColor(
-                                  emp.squad
-                                )}`}
-                              >
-                                {emp.squad}
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            {emp?.role}
-                          </div>
-                          {/* Squad Tag - Mobile */}
+              return (
+                <div
+                  key={change.id}
+                  onClick={() => handleEdit(change)}
+                  className="p-4 hover:bg-[#204294]/5 transition-colors duration-200 cursor-pointer group hover:shadow-sm"
+                >
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 md:w-1/3">
+                      <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold group-hover:bg-[#204294] group-hover:text-white transition-colors">
+                        <User size={18} />
+                      </div>
+                      <div>
+                        <div className="font-bold text-[#1E1E1E] flex items-center gap-2">
+                          {emp
+                            ? `${emp.firstName} ${emp.lastName}`
+                            : "Funcionário removido"}
                           {emp && (
                             <span
-                              className={`sm:hidden inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold border ${getSquadBadgeColor(
+                              className={`hidden sm:inline-block px-1.5 py-0.5 rounded text-[9px] font-bold border ${getSquadBadgeColor(
                                 emp.squad
                               )}`}
                             >
@@ -877,63 +880,114 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                             </span>
                           )}
                         </div>
-                      </div>
-
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center gap-1 bg-[#204294]/10 px-2 py-0.5 rounded border border-[#204294]/20 text-[#204294] text-sm font-medium w-fit">
-                          <Calendar size={14} />
-                          {change.startDate === change.endDate
-                            ? change.startDate
-                            : `${change.startDate} até ${change.endDate}`}
+                        <div className="text-xs text-slate-500">
+                          {emp?.role}
                         </div>
-
-                        <div className="flex items-center gap-3 text-sm">
-                          <span className="text-slate-400 line-through flex items-center gap-1">
-                            <Clock size={12} /> {change.originalShiftStart} -{" "}
-                            {change.originalShiftEnd}
+                        {emp && (
+                          <span
+                            className={`sm:hidden inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold border ${getSquadBadgeColor(
+                              emp.squad
+                            )}`}
+                          >
+                            {emp.squad}
                           </span>
-                          <ArrowRight size={14} className="text-[#204294]" />
-                          <span className="text-slate-700 font-bold flex items-center gap-1">
-                            <Clock size={12} /> {change.newShiftStart} -{" "}
-                            {change.newShiftEnd}
-                          </span>
-                        </div>
-
-                        <div className="text-xs text-slate-500 italic">
-                          "{change.reason}"
-                        </div>
-
-                        {auditDate && (
-                          <div className="text-[10px] text-slate-400 mt-2 flex items-center gap-1 border-t border-slate-100 pt-1 w-full md:w-auto">
-                            <UserCircle size={10} />
-                            <span>
-                              {auditLabel} <strong>{auditUser}</strong> em{" "}
-                              {formatDateTime(auditDate)}
-                            </span>
-                          </div>
                         )}
                       </div>
+                    </div>
 
-                      <div className="flex items-center gap-2 md:justify-end">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            requestDelete(change.id);
-                          }}
-                          className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-1 bg-[#204294]/10 px-2 py-0.5 rounded border border-[#204294]/20 text-[#204294] text-sm font-medium w-fit">
+                        <Calendar size={14} />
+                        {change.startDate === change.endDate
+                          ? change.startDate
+                          : `${change.startDate} até ${change.endDate}`}
                       </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <span className="text-slate-400 line-through flex items-center gap-1">
+                          <Clock size={12} /> {change.originalShiftStart} -{" "}
+                          {change.originalShiftEnd}
+                        </span>
+                        <ArrowRight size={14} className="text-[#204294]" />
+                        <span className="text-slate-700 font-bold flex items-center gap-1">
+                          <Clock size={12} /> {change.newShiftStart} -{" "}
+                          {change.newShiftEnd}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-500 italic">
+                        "{change.reason}"
+                      </div>
+                      {auditDate && (
+                        <div className="text-[10px] text-slate-400 mt-2 flex items-center gap-1 border-t border-slate-100 pt-1 w-full md:w-auto">
+                          <UserCircle size={10} />
+                          <span>
+                            {auditLabel} <strong>{auditUser}</strong> em{" "}
+                            {formatDateTime(auditDate)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 md:justify-end">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          requestDelete(change.id);
+                        }}
+                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* --- RODAPÉ DE PAGINAÇÃO --- */}
+        {!isLoading && totalItems > 0 && (
+          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-slate-600">
+              Mostrando{" "}
+              <span className="font-bold text-slate-800">{startIndex + 1}</span>{" "}
+              a <span className="font-bold text-slate-800">{endIndex}</span> de{" "}
+              <span className="font-bold text-slate-800">{totalItems}</span>{" "}
+              registros
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft size={18} className="text-slate-600" />
+              </button>
+
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-slate-500">Página</span>
+                <span className="text-sm font-bold text-[#204294] bg-[#204294]/10 px-2 py-1 rounded border border-[#204294]/20">
+                  {currentPage}
+                </span>
+                <span className="text-sm text-slate-500">de {totalPages}</span>
+              </div>
+
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight size={18} className="text-slate-600" />
+              </button>
+            </div>
           </div>
         )}
       </div>
 
-      {/* --- Import Feedback Popup (Bottom) --- */}
+      {/* Import Feedback Popup */}
       {importFeedback && (
         <div className="fixed bottom-4 right-4 z-50 max-w-md w-full bg-white shadow-2xl rounded-xl border border-slate-200 overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
           <div
@@ -989,8 +1043,6 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
               <X size={16} />
             </button>
           </div>
-
-          {/* Scrollable Error List */}
           {importFeedback.errors > 0 && importFeedback.details.length > 0 && (
             <div className="max-h-48 overflow-y-auto bg-white border-t border-slate-100 p-3">
               <p className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">
@@ -1160,7 +1212,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                   <input
                     required
                     type="text"
-                    placeholder="Ex: Troca com colega, Necessidade pessoal..."
+                    placeholder="Ex: Troca com colega..."
                     className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900"
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
