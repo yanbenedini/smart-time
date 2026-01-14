@@ -103,6 +103,70 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
 
   const [isLoading, setIsLoading] = useState(true);
 
+  const [warningModalOpen, setWarningModalOpen] = useState(false);
+  const [warningMessage, setWarningMessage] = useState("");
+  const [pendingChange, setPendingChange] = useState<ShiftChange | null>(null);
+
+  // Função para verificar se existe cobertura para o horário que está sendo deixado vago
+  const checkShiftCoverage = (
+    targetEmp: Employee,
+    start: string,
+    end: string,
+    origStart: string,
+    origEnd: string
+  ) => {
+    const missingDates: string[] = [];
+
+    // Transforma o período em um array de datas
+    let currentDate = new Date(start + "T12:00:00");
+    const lastDate = new Date(end + "T12:00:00");
+    const dateList: string[] = [];
+
+    while (currentDate <= lastDate) {
+      dateList.push(currentDate.toISOString().split("T")[0]);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    // Para cada dia do período solicitado
+    for (const d of dateList) {
+      // 1. Busca colegas da mesma squad e cargo
+      const peers = employees.filter(
+        (e) =>
+          e.id !== targetEmp.id &&
+          e.squad === targetEmp.squad &&
+          e.role === targetEmp.role
+      );
+
+      let hasAvailablePeer = false;
+
+      for (const peer of peers) {
+        // 2. Verifica se o colega tem uma troca registrada para este dia específico
+        const peerChange = changes.find(
+          (c) => c.employeeId === peer.id && d >= c.startDate && d <= c.endDate
+        );
+
+        // 3. Define qual o horário que o colega estará fazendo naquele dia
+        const effectiveStart = peerChange
+          ? peerChange.newShiftStart
+          : peer.shiftStart || "00:00";
+        const effectiveEnd = peerChange
+          ? peerChange.newShiftEnd
+          : peer.shiftEnd || "00:00";
+
+        // 4. Verifica se esse horário cobre o horário original do João (origStart/origEnd)
+        if (effectiveStart === origStart && effectiveEnd === origEnd) {
+          hasAvailablePeer = true;
+          break;
+        }
+      }
+
+      if (!hasAvailablePeer) {
+        missingDates.push(d);
+      }
+    }
+
+    return missingDates;
+  };
   // --- DATA LOADING ---
   useEffect(() => {
     loadData();
@@ -234,11 +298,27 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
     setIsModalOpen(true);
   };
 
+  // Função que realmente salva no banco
+  const executeSave = async (data: ShiftChange) => {
+    try {
+      await saveShiftChange(data, currentUser.name);
+      await loadData();
+      setWarningModalOpen(false);
+      closeModal();
+    } catch (err) {
+      setError("Erro ao salvar troca de turno.");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    // Validation
+    // 1. DEFINIR O FUNCIONÁRIO (Resolve o erro "Cannot find name 'emp'")
+    const emp = employees.find((e) => e.id === selectedEmpId);
+    if (!emp) return;
+
+    // Validações básicas
     if (
       !selectedEmpId ||
       !startDate ||
@@ -256,16 +336,10 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
       return;
     }
 
+    // Verificação de conflito de troca do próprio funcionário
     const conflict = changes.find((c) => {
-      // Ignora a própria troca se estivermos editando
       if (editingId && c.id === editingId) return false;
-
-      // Verifica se é o mesmo funcionário
       if (c.employeeId !== selectedEmpId) return false;
-
-      // Lógica de sobreposição de datas:
-      // (InícioA <= FimB) E (FimA >= InícioB)
-      // Como as datas estão em formato YYYY-MM-DD, a comparação de string funciona perfeitamente.
       return startDate <= c.endDate && endDate >= c.startDate;
     });
 
@@ -278,7 +352,8 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
 
     const existing = editingId ? changes.find((c) => c.id === editingId) : null;
 
-    const newChange: ShiftChange = {
+    // 2. DEFINIR O OBJETO DA TROCA (Usando o nome 'shiftData' para resolver o erro)
+    const shiftData: ShiftChange = {
       id: editingId || "",
       employeeId: selectedEmpId,
       originalShiftStart,
@@ -294,14 +369,32 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
       updatedAt: existing ? new Date().toISOString() : undefined,
     };
 
-    try {
-      await saveShiftChange(newChange, currentUser.name);
-      await loadData();
-      closeModal();
-    } catch (err) {
-      console.error(err);
-      setError("Erro ao salvar troca de turno. Tente novamente.");
+    // --- VERIFICAÇÃO DE COBERTURA ---
+    const uncoveredDates = checkShiftCoverage(
+      emp,
+      startDate,
+      endDate,
+      originalShiftStart,
+      originalShiftEnd
+    );
+
+    if (uncoveredDates.length > 0) {
+      setWarningMessage(
+        `Atenção: Não há outro "${emp.role}" na Squad "${
+          emp.squad
+        }" escalado para o horário original (${originalShiftStart} - ${originalShiftEnd}) nas seguintes datas: ${uncoveredDates.join(
+          ", "
+        )}.`
+      );
+      // Certifique-se de que o seu estado se chama 'pendingChange' ou 'pendingData'
+      // Se você seguiu meu exemplo anterior, use: setPendingChange(shiftData);
+      setPendingChange(shiftData);
+      setWarningModalOpen(true);
+      return;
     }
+
+    // Se houver cobertura, salva direto chamando a função refatorada
+    await executeSave(shiftData);
   };
 
   const requestDelete = (id: string) => {
@@ -1311,6 +1404,34 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                 className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors shadow-sm font-medium"
               >
                 Sim, Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal de Aviso de Cobertura */}
+      {warningModalOpen && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-[2px]">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 text-center animate-in zoom-in duration-200">
+            <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600">
+              <AlertTriangle size={24} />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">
+              Conflito de Cobertura
+            </h3>
+            <p className="text-slate-600 mb-6 text-sm">{warningMessage}</p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => setWarningModalOpen(false)}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg border border-slate-200 font-medium"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={() => pendingChange && executeSave(pendingChange)}
+                className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 font-medium"
+              >
+                Confirmar mesmo assim
               </button>
             </div>
           </div>
