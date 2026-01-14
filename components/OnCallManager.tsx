@@ -202,6 +202,18 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
       return;
     }
 
+    const conflict = shifts.find(
+      (s) =>
+        s.employeeId === selectedEmpId && s.date === date && s.id !== editingId // Ignora o próprio registro se for edição
+    );
+
+    if (conflict) {
+      setError(
+        "Este funcionário já possui um plantão registrado para esta data."
+      );
+      return;
+    }
+
     if (startTime >= endTime) {
       setError("A hora de fim deve ser posterior à hora de início.");
       return;
@@ -446,6 +458,20 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
               }: Data inválida '${dateRaw}' para matrícula ${matricula}.`
             );
             continue;
+          }
+
+          const hasConflict = shifts.some(
+            (s) => s.employeeId === emp.id && s.date === finalDate
+          );
+
+          if (hasConflict) {
+            errorCount++;
+            errorsDetails.push(
+              `Linha ${i + 1}: O funcionário ${
+                emp.firstName
+              } já possui um plantão em ${finalDate}.`
+            );
+            continue; // Pula para a próxima linha do CSV
           }
 
           const newShift: OnCallShift = {
