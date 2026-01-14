@@ -845,7 +845,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-sm font-medium w-fit">
                           <Calendar size={14} />
-                          {shift.date}
+                          {formatDateBR(shift.date)}
                         </div>
                         <div className="flex items-center gap-1 text-sm text-slate-600">
                           <Clock size={14} />
