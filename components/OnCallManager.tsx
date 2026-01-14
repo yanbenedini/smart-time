@@ -29,6 +29,7 @@ import {
   deleteOnCallShift,
 } from "../services/dbService";
 import { IonSkeletonText } from "@ionic/react";
+import { formatDateBR } from "../server/src/utils/dateUtils";
 
 interface OnCallManagerProps {
   currentUser: SystemUser;
@@ -842,7 +843,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
 
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1 bg-[#204294]/10 px-2 py-0.5 rounded border border-[#204294]/20 text-[#204294] text-sm font-medium">
+                        <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-sm font-medium w-fit">
                           <Calendar size={14} />
                           {shift.date}
                         </div>

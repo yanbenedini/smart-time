@@ -35,6 +35,7 @@ import {
   checkCoverage,
 } from "../services/dbService";
 import { IonSkeletonText } from "@ionic/react";
+import { formatDateBR } from "../server/src/utils/dateUtils";
 
 type AbsenceType = "single" | "range" | "multi";
 
@@ -979,14 +980,14 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                       </div>
                       <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
                         {isRange ? (
-                          <div className="flex items-center gap-1 bg-[#204294]/10 px-2 py-0.5 rounded text-[#204294] font-medium border border-[#204294]/20">
-                            <CalendarRange size={12} /> {abs.date}{" "}
+                          <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-sm font-medium w-fit text-slate-900">
+                            <CalendarRange size={12} /> {formatDateBR(abs.date)}{" "}
                             <span className="text-slate-400">até</span>{" "}
-                            {abs.endDate}
+                            {formatDateBR(abs.endDate)}
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                            <Calendar size={12} /> {abs.date}
+                          <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-sm font-medium w-fit text-slate-900">
+                            <Calendar size={12} /> {formatDateBR(abs.date)}
                           </div>
                         )}
                         <div className="flex items-center gap-1">

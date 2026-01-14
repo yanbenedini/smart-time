@@ -19,6 +19,8 @@ import {
 } from "../services/dbService";
 import { Employee, Absence, ShiftChange, OnCallShift } from "../types";
 import { IonSkeletonText } from "@ionic/react";
+import { formatDateBR } from "../server/src/utils/dateUtils";
+
 
 const Dashboard: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -94,13 +96,6 @@ const Dashboard: React.FC = () => {
   const upcomingOnCalls = onCallShifts
     .filter((s) => s.date >= todayStr && s.date <= nextMonthStr)
     .sort((a, b) => a.date.localeCompare(b.date));
-
-  // Função para converter YYYY-MM-DD para DD/MM/YYYY
-  const formatDateBR = (dateStr: string) => {
-    if (!dateStr) return "";
-    const [year, month, day] = dateStr.split("-");
-    return `${day}/${month}/${year}`;
-  };
 
   return (
     <div className="flex flex-col h-full gap-4 pb-4">
