@@ -63,9 +63,9 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
   // Form State
   const [formData, setFormData] = useState<Partial<Employee>>({
-    role: Role.INFRA_ANALYST,
-    squad: Squad.LAKERS,
-    shiftStart: "09:00",
+    role: "" as Role,
+    squad: "" as Squad,
+    shiftStart: "08:00",
     shiftEnd: "18:00",
   });
 
@@ -163,9 +163,9 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     } else {
       setEditingId(null);
       setFormData({
-        role: Role.INFRA_ANALYST,
-        squad: Squad.LAKERS,
-        shiftStart: "09:00",
+        role: "" as Role,
+        squad: "" as Squad,
+        shiftStart: "08:00",
         shiftEnd: "18:00",
       });
     }
@@ -1005,6 +1005,9 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                         })
                       }
                     >
+                      <option value="" disabled>
+                        Selecionar um Cargo...
+                      </option>
                       {Object.values(Role).map((role) => (
                         <option key={role} value={role}>
                           {role}
@@ -1027,7 +1030,9 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                         })
                       }
                     >
-                      <option value="">Selecione uma Squad...</option>
+                      <option value="" disabled>
+                        Selecione uma Squad...
+                      </option>
                       {Object.values(Squad).map((s) => (
                         <option key={s} value={s}>
                           {s}
