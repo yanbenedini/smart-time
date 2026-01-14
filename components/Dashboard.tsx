@@ -95,6 +95,13 @@ const Dashboard: React.FC = () => {
     .filter((s) => s.date >= todayStr && s.date <= nextMonthStr)
     .sort((a, b) => a.date.localeCompare(b.date));
 
+  // Função para converter YYYY-MM-DD para DD/MM/YYYY
+  const formatDateBR = (dateStr: string) => {
+    if (!dateStr) return "";
+    const [year, month, day] = dateStr.split("-");
+    return `${day}/${month}/${year}`;
+  };
+
   return (
     <div className="flex flex-col h-full gap-4 pb-4">
       <header className="flex-shrink-0">
@@ -213,7 +220,7 @@ const Dashboard: React.FC = () => {
               Ausentes Hoje
             </h3>
             <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
-              {todayStr}
+              {formatDateBR(todayStr)}
             </span>
           </div>
 
@@ -283,7 +290,7 @@ const Dashboard: React.FC = () => {
               Em Férias
             </h3>
             <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
-              {todayStr}
+              {formatDateBR(todayStr)}
             </span>
           </div>
 
@@ -327,8 +334,10 @@ const Dashboard: React.FC = () => {
                     <div className="flex items-center gap-1 text-[10px] text-emerald-700 font-medium">
                       <Calendar size={10} />
                       {abs.date === abs.endDate
-                        ? abs.date
-                        : `${abs.date} até ${abs.endDate}`}
+                        ? formatDateBR(abs.date)
+                        : `${formatDateBR(abs.date)} até ${formatDateBR(
+                            abs.endDate
+                          )}`}
                     </div>
                   </div>
                 );
@@ -352,7 +361,7 @@ const Dashboard: React.FC = () => {
               Trocas Hoje
             </h3>
             <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
-              {todayStr}
+              {formatDateBR(todayStr)}
             </span>
           </div>
 
@@ -480,7 +489,7 @@ const Dashboard: React.FC = () => {
                       <span
                         className={isToday ? "font-bold text-indigo-700" : ""}
                       >
-                        {shift.date}
+                        {formatDateBR(shift.date)}
                       </span>
                     </div>
                     <div className="flex items-center gap-1 text-[10px] text-slate-500">
