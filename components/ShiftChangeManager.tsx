@@ -256,6 +256,26 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
       return;
     }
 
+    const conflict = changes.find((c) => {
+      // Ignora a própria troca se estivermos editando
+      if (editingId && c.id === editingId) return false;
+
+      // Verifica se é o mesmo funcionário
+      if (c.employeeId !== selectedEmpId) return false;
+
+      // Lógica de sobreposição de datas:
+      // (InícioA <= FimB) E (FimA >= InícioB)
+      // Como as datas estão em formato YYYY-MM-DD, a comparação de string funciona perfeitamente.
+      return startDate <= c.endDate && endDate >= c.startDate;
+    });
+
+    if (conflict) {
+      setError(
+        `Conflito detectado: Este funcionário já possui uma troca registrada entre ${conflict.startDate} e ${conflict.endDate}.`
+      );
+      return;
+    }
+
     const existing = editingId ? changes.find((c) => c.id === editingId) : null;
 
     const newChange: ShiftChange = {
@@ -493,6 +513,24 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
               `Linha ${i + 1}: Matrícula '${matricula}' não encontrada.`
             );
             continue;
+          }
+
+          // Compara a linha atual do CSV com as trocas que já estão no estado 'changes'
+          const hasConflictInImport = changes.some(
+            (c) =>
+              c.employeeId === emp.id &&
+              dStart <= c.endDate &&
+              dEnd >= c.startDate
+          );
+
+          if (hasConflictInImport) {
+            errorCount++;
+            errorsDetails.push(
+              `Linha ${i + 1}: O funcionário ${
+                emp.firstName
+              } já possui uma troca entre ${dStart} e ${dEnd}.`
+            );
+            continue; // Pula para a próxima linha sem adicionar aos 'promises'
           }
 
           const newChange: ShiftChange = {
