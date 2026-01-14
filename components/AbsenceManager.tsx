@@ -18,10 +18,18 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { Employee, Absence, SystemUser, Role, Squad } from "../types";
+import {
+  Employee,
+  Absence,
+  SystemUser,
+  Role,
+  Squad,
+  ShiftChange,
+} from "../types";
 import {
   getEmployees,
   getAbsences,
+  getShiftChanges,
   saveAbsence,
   deleteAbsence,
   checkCoverage,
@@ -61,6 +69,7 @@ const getSquadBadgeColor = (squad: Squad) => {
 const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [absences, setAbsences] = useState<Absence[]>([]);
+  const [shiftChanges, setShiftChanges] = useState<ShiftChange[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -126,14 +135,35 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [emps, abs] = await Promise.all([getEmployees(), getAbsences()]);
+      const [emps, abs, shifts] = await Promise.all([
+        getEmployees(),
+        getAbsences(),
+        getShiftChanges(), // Carrega as trocas
+      ]);
       setEmployees(emps);
       setAbsences(abs);
+      setShiftChanges(shifts);
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
     } finally {
       setTimeout(() => setIsLoading(false), 500);
     }
+  };
+
+  const getEffectiveShift = (empId: string, date: string) => {
+    const emp = employees.find((e) => e.id === empId);
+    if (!emp) return null;
+
+    // Procura se existe uma troca de turno para este funcionário nesta data
+    const change = shiftChanges.find(
+      (c) => c.employeeId === empId && date >= c.startDate && date <= c.endDate
+    );
+
+    return {
+      start: change ? change.newShiftStart : emp.shiftStart,
+      end: change ? change.newShiftEnd : emp.shiftEnd,
+      isChanged: !!change,
+    };
   };
 
   // Resetar para a página 1 sempre que os filtros ou paginação mudarem
@@ -417,35 +447,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
       return;
     }
 
-    let finalStartTime = startTime;
-    let finalEndTime = endTime;
-
-    if (isFullDay) {
-      finalStartTime = emp.shiftStart;
-      finalEndTime = emp.shiftEnd;
-    } else {
-      if (!finalStartTime || !finalEndTime) {
-        setError("Os campos Hora Início e Hora Fim são obrigatórios.");
-        return;
-      }
-
-      if (finalStartTime < emp.shiftStart || finalEndTime > emp.shiftEnd) {
-        setError(
-          `O horário da ausência deve estar dentro do expediente do funcionário (${emp.shiftStart} às ${emp.shiftEnd}).`
-        );
-        return;
-      }
-
-      if (finalStartTime >= finalEndTime) {
-        setError("A Hora Fim deve ser posterior à Hora Início.");
-        return;
-      }
-    }
-
-    const startMins = timeToMinutes(finalStartTime);
-    const endMins = timeToMinutes(finalEndTime);
-    const finalDuration = endMins - startMins;
-
+    // --- INÍCIO DA MUDANÇA 1: Movendo o cálculo de datas para o topo ---
     let targetDates: string[] = [];
 
     if (absenceType === "single") {
@@ -477,6 +479,49 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
       }
       targetDates = manualDates;
     }
+    // --- FIM DA MUDANÇA 1 ---
+
+    // --- INÍCIO DA MUDANÇA 2: Definindo horários com base no Horário Efetivo (Troca ou Normal) ---
+    // Pegamos o expediente do primeiro dia da ausência para basear a validação
+    const firstDayShift = getEffectiveShift(emp.id, targetDates[0]);
+
+    let finalStartTime = startTime;
+    let finalEndTime = endTime;
+
+    if (isFullDay) {
+      // Se for dia inteiro, o horário vem do expediente ativo (seja troca ou original)
+      finalStartTime = firstDayShift.start;
+      finalEndTime = firstDayShift.end;
+    } else {
+      if (!finalStartTime || !finalEndTime) {
+        setError("Os campos Hora Início e Hora Fim são obrigatórios.");
+        return;
+      }
+
+      // Validação em todos os dias selecionados para garantir que cabe em cada expediente
+      for (const d of targetDates) {
+        const dailyShift = getEffectiveShift(emp.id, d);
+        if (
+          finalStartTime < dailyShift.start ||
+          finalEndTime > dailyShift.end
+        ) {
+          setError(
+            `No dia ${d}, o horário solicitado está fora do expediente ativo (${dailyShift.start} às ${dailyShift.end}).`
+          );
+          return;
+        }
+      }
+
+      if (finalStartTime >= finalEndTime) {
+        setError("A Hora Fim deve ser posterior à Hora Início.");
+        return;
+      }
+    }
+    // --- FIM DA MUDANÇA 2 ---
+
+    const startMins = timeToMinutes(finalStartTime);
+    const endMins = timeToMinutes(finalEndTime);
+    const finalDuration = endMins - startMins;
 
     const dataToSave = {
       absenceType,
@@ -495,31 +540,41 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
 
     let missingCoverageDates: string[] = [];
 
+    // --- INÍCIO DA MUDANÇA 3: Lógica de Cobertura com Horário Exato e Trocas de Colegas ---
     for (const d of targetDates) {
-      const hasCoverage = await checkCoverage(
-        emp.id,
-        emp.role,
-        emp.squad,
-        d,
-        finalStartTime,
-        finalEndTime
+      // Qual o horário que o funcionário que vai faltar está fazendo nesse dia específico?
+      const currentEmpShift = getEffectiveShift(emp.id, d);
+
+      // Busca colegas da mesma squad e cargo
+      const peers = employees.filter(
+        (p) => p.id !== emp.id && p.role === emp.role && p.squad === emp.squad
       );
 
-      if (!hasCoverage) {
-        missingCoverageDates.push(d);
+      // REGRA: O backup deve ter o expediente EXATAMENTE IGUAL ao do ausente no dia
+      const hasExactBackup = peers.some((p) => {
+        const peerShift = getEffectiveShift(p.id, d);
+        return (
+          peerShift.start === currentEmpShift.start &&
+          peerShift.end === currentEmpShift.end
+        );
+      });
+
+      if (!hasExactBackup) {
+        // Formata data para exibir no erro (DD/MM/YYYY)
+        const [y, m, day] = d.split("-");
+        missingCoverageDates.push(`${day}/${m}/${y}`);
       }
     }
+    // --- FIM DA MUDANÇA 3 ---
 
     if (missingCoverageDates.length > 0) {
+      // --- INÍCIO DA MUDANÇA 4: Mensagem de erro atualizada para "Expediente Exato" ---
       setWarningMessage(
-        `Atenção: Não há outro funcionário (Backup) com cargo "${
-          emp.role
-        }" disponível na Squad "${
+        `Atenção: Não há outro funcionário com o expediente exato (${finalStartTime} - ${finalEndTime}) na Squad "${
           emp.squad
-        }" para cobrir o horário solicitado nas seguintes datas: ${missingCoverageDates.join(
-          ", "
-        )}.`
+        }" para as seguintes datas: ${missingCoverageDates.join(", ")}.`
       );
+      // --- FIM DA MUDANÇA 4 ---
       setPendingAbsenceData(dataToSave);
       setWarningModalOpen(true);
       return;
@@ -613,6 +668,21 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
     link.click();
     document.body.removeChild(link);
   };
+
+  // Lógica para pegar o expediente dinâmico para exibição na tela
+  const currentDisplayShift = (() => {
+    if (!selectedEmpId) return null;
+
+    // Define qual data usar para a consulta baseada no tipo de ausência
+    let dateToConsult = "";
+    if (absenceType === "single") dateToConsult = date;
+    else if (absenceType === "range") dateToConsult = startDate;
+    else if (absenceType === "multi") dateToConsult = manualDates[0];
+
+    if (!dateToConsult) return null;
+
+    return getEffectiveShift(selectedEmpId, dateToConsult);
+  })();
 
   return (
     <div>
@@ -1047,12 +1117,6 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                       </option>
                     ))}
                   </select>
-                  {selectedEmployee && (
-                    <p className="text-xs text-[#204294] mt-1 font-medium bg-[#204294]/10 inline-block px-2 py-1 rounded">
-                      Expediente Padrão: {selectedEmployee.shiftStart} às{" "}
-                      {selectedEmployee.shiftEnd}
-                    </p>
-                  )}
                 </div>
 
                 {!editingId && (
@@ -1184,6 +1248,16 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                   )}
                 </div>
 
+                {currentDisplayShift && (
+                  <div className="mt-2 animate-in fade-in duration-300">
+                    <p className="text-xs text-[#204294] font-bold bg-[#204294]/10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#204294]/20">
+                      <Clock size={12} />
+                      Expediente: {currentDisplayShift.start} às{" "}
+                      {currentDisplayShift.end}
+                    </p>
+                  </div>
+                )}
+
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-sm font-medium text-slate-700">
@@ -1223,11 +1297,9 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                       <Clock size={18} className="flex-shrink-0" />
                       <p>
                         Período:{" "}
-                        <strong>
-                          {selectedEmployee?.shiftStart || "--:--"}
-                        </strong>{" "}
+                        <strong>{currentDisplayShift?.start || "--:--"}</strong>{" "}
                         às{" "}
-                        <strong>{selectedEmployee?.shiftEnd || "--:--"}</strong>
+                        <strong>{currentDisplayShift?.end || "--:--"}</strong>
                       </p>
                     </div>
                   )}
