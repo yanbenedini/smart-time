@@ -38,7 +38,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         {/* Form Section */}
         <div className="w-full p-8 md:p-10">
           <div className="mb-8 text-center">
-            <h1 className="text-2xl font-bold text-slate-800">Smart Time</h1>
+            <div className="flex items-center justify-center gap-2 direction-row">
+              <img className="w-10 h-10" src="./assets/logo.png" alt="logo" />
+              <h1 className="text-2xl font-bold text-slate-800">Smart Time</h1>
+            </div>
             <p className="text-slate-500 text-sm mt-1">
               Gestão de Escalas Eficiente
             </p>
