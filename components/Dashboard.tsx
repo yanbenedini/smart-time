@@ -21,7 +21,6 @@ import { Employee, Absence, ShiftChange, OnCallShift } from "../types";
 import { IonSkeletonText } from "@ionic/react";
 import { formatDateBR } from "../server/src/utils/dateUtils";
 
-
 const Dashboard: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [absences, setAbsences] = useState<Absence[]>([]);
@@ -84,6 +83,9 @@ const Dashboard: React.FC = () => {
     (a) => todayStr >= a.date && todayStr <= a.endDate
   );
 
+  // Filtra ausências que ainda vão acontecer ou estão em curso (Fim >= Hoje)
+  const upcomingAbsences = absences.filter((a) => a.endDate >= todayStr);
+
   // Filter specific vacation absences for today
   const vacationAbsences = todaysAbsences.filter((a) => a.reason === "Férias");
 
@@ -132,31 +134,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Card 2: Ausências Totais */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
-          <div className="flex items-center gap-3 w-full">
-            <div className="p-2.5 bg-rose-50 rounded-lg text-rose-600">
-              <CalendarOff size={20} />
-            </div>
-            <div className="flex-1">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">
-                Ausências Totais
-              </p>
-              <h3 className="text-xl font-bold text-[#1E1E1E]">
-                {isLoading ? (
-                  <IonSkeletonText
-                    animated
-                    style={{ width: "40px", height: "20px" }}
-                  />
-                ) : (
-                  absences.length
-                )}
-              </h3>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3: Ausentes Hoje */}
+        {/* Card 2: Ausentes Hoje */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-3 w-full">
             <div className="p-2.5 bg-orange-50 rounded-lg text-orange-600">
@@ -180,7 +158,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Card 4: Trocas Hoje */}
+        {/* Card 3: Trocas Hoje */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-3 w-full">
             <div className="p-2.5 bg-[#00B0EA]/10 rounded-lg text-[#00B0EA]">
@@ -198,6 +176,29 @@ const Dashboard: React.FC = () => {
                   />
                 ) : (
                   todaysShiftChanges.length
+                )}
+              </h3>
+            </div>
+          </div>
+        </div>
+        {/* Card 4: Ausências Totais */}
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+          <div className="flex items-center gap-3 w-full">
+            <div className="p-2.5 bg-rose-50 rounded-lg text-rose-600">
+              <CalendarOff size={20} />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                Próximas Ausências
+              </p>
+              <h3 className="text-xl font-bold text-[#1E1E1E]">
+                {isLoading ? (
+                  <IonSkeletonText
+                    animated
+                    style={{ width: "40px", height: "20px" }}
+                  />
+                ) : (
+                  upcomingAbsences.length
                 )}
               </h3>
             </div>
