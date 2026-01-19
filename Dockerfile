@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 
 # Expõe a porta padrão do Vite
-EXPOSE 5173
+EXPOSE 3000
 
 # Roda o servidor de desenvolvimento, forçando o host para aceitar conexões externas (Docker)
 CMD ["npm", "run", "dev", "--", "--host"]
