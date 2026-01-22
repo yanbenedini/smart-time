@@ -501,7 +501,6 @@ AppDataSource.initialize()
     });
 
     // --- ROTA DE TROCA DE SENHA ---
-    // --- ROTA DE TROCA DE SENHA (SEGURA) ---
     app.post("/change-password", async (req, res) => {
       try {
         const { userId, currentPassword, newPassword } = req.body;
@@ -559,12 +558,10 @@ AppDataSource.initialize()
           // Se for Admin, talvez ele pudesse?
           // NÃO nesta rota, pois esta rota exige 'currentPassword', e admins não sabem a senha atual.
           // Esta rota é estritamente "Mudar Minha Senha".
-          return res
-            .status(403)
-            .json({
-              message:
-                "Você não tem permissão para alterar a senha de outro usuário.",
-            });
+          return res.status(403).json({
+            message:
+              "Você não tem permissão para alterar a senha de outro usuário.",
+          });
         }
         // -------------------------------------------------------------
 
