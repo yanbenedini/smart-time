@@ -49,9 +49,6 @@ services:
       - api
     ports:
       - "3000:3000"
-    environment:
-      # Variável para o Vite saber onde está a API (se necessário no código front)
-      VITE_API_URL: http://localhost:5000
     networks:
       - app-network
 
