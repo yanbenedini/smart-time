@@ -7,7 +7,8 @@ import {
   SystemLog,
 } from "../types";
 
-const API_URL = "http://localhost:5000";
+//seu ip aqui
+const API_URL = "http://163.176.231.117:5000";
 
 // --- LOGS DO SISTEMA ---
 const getAuthHeaders = () => {

@@ -104,6 +104,9 @@ O projeto utiliza **Docker Compose**, o que elimina a necessidade de configurar 
     - **Frontend**: [http://localhost:3000](http://localhost:3000)
     - **API**: [http://localhost:5000](http://localhost:5000)
     - **Banco de Dados**: Acessível externamente na porta `5433`.
+4.  **Lembretes**:
+    - No arquivo dbServices mude a url para o ip da sua api
+    - Depois lembre-se de liberar as portas para o front, back e banco de dados
 
 ### Credenciais Iniciais
 
