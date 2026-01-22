@@ -7,14 +7,7 @@ import {
   SystemLog,
 } from "../types";
 
-// --- CONFIGURAÇÃO DA API ---
-// Substitua SEU_IP_DA_ORACLE pelo IP público do seu servidor na Oracle.
-// Se estiver testando no seu próprio computador, use 'http://localhost:5000'
-
-// PROD:
-const API_URL = "http://163.176.231.117:5000";
-// DEV:
-// const API_URL = "http://localhost:5000";
+const API_URL = "http://localhost:5000";
 
 // --- LOGS DO SISTEMA ---
 const getAuthHeaders = () => {
@@ -70,7 +63,7 @@ export const createLog = async (
 
 export const loginUser = async (
   email: string,
-  password: string
+  password: string,
 ): Promise<SystemUser> => {
   try {
     // 1. Gera o token Basic Auth
@@ -81,7 +74,7 @@ export const loginUser = async (
       headers: {
         "Content-Type": "application/json",
         // Envia o header para validar no backend
-        "Authorization": `Basic ${authString}` 
+        Authorization: `Basic ${authString}`,
       },
       body: JSON.stringify({ email, password }),
     });
@@ -178,9 +171,9 @@ export const deleteEmployee = async (
   try {
     await fetch(`${API_URL}/employees/${id}`, {
       method: "DELETE",
-      headers: { 
+      headers: {
         ...getAuthHeaders(),
-        "x-user-name": userName 
+        "x-user-name": userName,
       },
     });
   } catch (error) {
@@ -235,9 +228,9 @@ export const deleteAbsence = async (
   try {
     await fetch(`${API_URL}/absences/${id}`, {
       method: "DELETE",
-      headers: { 
+      headers: {
         ...getAuthHeaders(),
-        "x-user-name": userName 
+        "x-user-name": userName,
       },
     });
   } catch (error) {
@@ -286,9 +279,9 @@ export const deleteShiftChange = async (
   try {
     await fetch(`${API_URL}/shift-changes/${id}`, {
       method: "DELETE",
-      headers: { 
+      headers: {
         ...getAuthHeaders(),
-        "x-user-name": userName 
+        "x-user-name": userName,
       },
     });
   } catch (error) {
@@ -337,9 +330,9 @@ export const deleteOnCallShift = async (
   try {
     await fetch(`${API_URL}/on-call/${id}`, {
       method: "DELETE",
-      headers: { 
+      headers: {
         ...getAuthHeaders(),
-        "x-user-name": userName 
+        "x-user-name": userName,
       },
     });
   } catch (error) {
@@ -400,9 +393,9 @@ export const deleteSystemUser = async (
   try {
     await fetch(`${API_URL}/users/${id}`, {
       method: "DELETE",
-      headers: { 
+      headers: {
         ...getAuthHeaders(),
-        "x-user-name": userName 
+        "x-user-name": userName,
       },
     });
   } catch (error) {
