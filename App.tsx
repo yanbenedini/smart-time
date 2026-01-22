@@ -54,6 +54,24 @@ const App: React.FC = () => {
     message: string;
   } | null>(null);
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem("smarttime_user");
+    const storedAuth = localStorage.getItem("smarttime_auth");
+
+    if (storedUser && storedAuth) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        // Atualiza o estado, evitando que a tela de Login apareça
+        setCurrentUser(parsedUser);
+      } catch (error) {
+        console.error("Erro ao restaurar sessão:", error);
+        // Se os dados estiverem corrompidos, limpa tudo para forçar novo login limpo
+        localStorage.removeItem("smarttime_user");
+        localStorage.removeItem("smarttime_auth");
+      }
+    }
+  }, []);
+
   // Check for forced password change on login
   useEffect(() => {
     if (currentUser?.mustChangePassword) {
@@ -67,6 +85,8 @@ const App: React.FC = () => {
   }
 
   const handleLogout = () => {
+    localStorage.removeItem("smarttime_auth"); // Remove o token
+    localStorage.removeItem("smarttime_user"); // Remove os dados do usuário
     setProfileMenuOpen(false);
     setCurrentUser(null);
     setCurrentView(View.DASHBOARD);
@@ -114,7 +134,7 @@ const App: React.FC = () => {
       await changePassword(
         currentUser.id,
         passwordForm.currentPassword,
-        passwordForm.newPassword
+        passwordForm.newPassword,
       );
 
       // 3. Atualiza o estado local apenas para liberar a tela (sem expor a senha)

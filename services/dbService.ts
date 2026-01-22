@@ -17,10 +17,24 @@ const API_URL = "http://163.176.231.117:5000";
 // const API_URL = "http://localhost:5000";
 
 // --- LOGS DO SISTEMA ---
+const getAuthHeaders = () => {
+  const auth = localStorage.getItem("smarttime_auth");
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (auth) {
+    headers["Authorization"] = `Basic ${auth}`;
+  }
+
+  return headers;
+};
 
 export const getSystemLogs = async (): Promise<SystemLog[]> => {
   try {
-    const response = await fetch(`${API_URL}/logs`);
+    const response = await fetch(`${API_URL}/logs`, {
+      headers: getAuthHeaders(),
+    });
     if (!response.ok) throw new Error("Erro ao buscar logs");
     return await response.json();
   } catch (error) {
@@ -33,13 +47,13 @@ export const getSystemLogs = async (): Promise<SystemLog[]> => {
 export const createLog = async (
   action: string,
   description: string,
-  userName: string
+  userName: string,
 ) => {
   try {
     await fetch(`${API_URL}/logs`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        ...getAuthHeaders(),
         "x-user-name": userName,
       },
       body: JSON.stringify({ action, description, userName }),
@@ -52,26 +66,38 @@ export const createLog = async (
 // --- AUTENTICAÇÃO (LOGIN) ---
 // Adicione esta função para corrigir o erro no Login.tsx
 
+// Em services/dbService.ts
+
 export const loginUser = async (
   email: string,
   password: string
 ): Promise<SystemUser> => {
   try {
+    // 1. Gera o token Basic Auth
+    const authString = btoa(`${email}:${password}`);
+
     const response = await fetch(`${API_URL}/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        // Envia o header para validar no backend
+        "Authorization": `Basic ${authString}` 
       },
       body: JSON.stringify({ email, password }),
     });
 
     if (!response.ok) {
-      // Tenta pegar a mensagem de erro do backend (ex: "Email ou senha inválidos")
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || "Falha na autenticação");
     }
 
-    return await response.json();
+    const user = await response.json();
+
+    // 2. SALVA OS DADOS NO NAVEGADOR (Isso é o que permite o F5 funcionar)
+    localStorage.setItem("smarttime_auth", authString);
+    localStorage.setItem("smarttime_user", JSON.stringify(user));
+
+    return user;
   } catch (error) {
     console.error("Erro no login:", error);
     throw error;
@@ -81,13 +107,13 @@ export const loginUser = async (
 export const changePassword = async (
   userId: string,
   currentPassword: string,
-  newPassword: string
+  newPassword: string,
 ): Promise<void> => {
   try {
     const response = await fetch(`${API_URL}/change-password`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        ...getAuthHeaders(),
       },
       body: JSON.stringify({ userId, currentPassword, newPassword }),
     });
@@ -106,7 +132,9 @@ export const changePassword = async (
 
 export const getEmployees = async (): Promise<Employee[]> => {
   try {
-    const response = await fetch(`${API_URL}/employees`);
+    const response = await fetch(`${API_URL}/employees`, {
+      headers: getAuthHeaders(),
+    });
     if (!response.ok) throw new Error("Erro ao buscar funcionários");
     return await response.json();
   } catch (error) {
@@ -117,7 +145,7 @@ export const getEmployees = async (): Promise<Employee[]> => {
 
 export const saveEmployee = async (
   employee: Employee,
-  userName: string
+  userName: string,
 ): Promise<Employee | null> => {
   try {
     const isEditing = employee.id && employee.id.length > 10;
@@ -129,7 +157,7 @@ export const saveEmployee = async (
     const response = await fetch(url, {
       method: method,
       headers: {
-        "Content-Type": "application/json",
+        ...getAuthHeaders(),
         "x-user-name": userName,
       },
       body: JSON.stringify(employee),
@@ -145,12 +173,15 @@ export const saveEmployee = async (
 
 export const deleteEmployee = async (
   id: string,
-  userName: string
+  userName: string,
 ): Promise<void> => {
   try {
     await fetch(`${API_URL}/employees/${id}`, {
       method: "DELETE",
-      headers: { "x-user-name": userName },
+      headers: { 
+        ...getAuthHeaders(),
+        "x-user-name": userName 
+      },
     });
   } catch (error) {
     console.error("Erro deleteEmployee:", error);
@@ -161,7 +192,9 @@ export const deleteEmployee = async (
 
 export const getAbsences = async (): Promise<Absence[]> => {
   try {
-    const response = await fetch(`${API_URL}/absences`);
+    const response = await fetch(`${API_URL}/absences`, {
+      headers: getAuthHeaders(),
+    });
     if (!response.ok) return [];
     return await response.json();
   } catch (error) {
@@ -172,7 +205,7 @@ export const getAbsences = async (): Promise<Absence[]> => {
 
 export const saveAbsence = async (
   absence: Absence,
-  userName: string
+  userName: string,
 ): Promise<void> => {
   try {
     const method = absence.id && absence.id.length > 10 ? "PUT" : "POST";
@@ -184,7 +217,7 @@ export const saveAbsence = async (
     await fetch(url, {
       method: method,
       headers: {
-        "Content-Type": "application/json",
+        ...getAuthHeaders(),
         "x-user-name": userName,
       },
       body: JSON.stringify(absence),
@@ -197,12 +230,15 @@ export const saveAbsence = async (
 
 export const deleteAbsence = async (
   id: string,
-  userName: string
+  userName: string,
 ): Promise<void> => {
   try {
     await fetch(`${API_URL}/absences/${id}`, {
       method: "DELETE",
-      headers: { "x-user-name": userName },
+      headers: { 
+        ...getAuthHeaders(),
+        "x-user-name": userName 
+      },
     });
   } catch (error) {
     console.error("Erro deleteAbsence:", error);
@@ -213,7 +249,9 @@ export const deleteAbsence = async (
 
 export const getShiftChanges = async (): Promise<ShiftChange[]> => {
   try {
-    const response = await fetch(`${API_URL}/shift-changes`);
+    const response = await fetch(`${API_URL}/shift-changes`, {
+      headers: getAuthHeaders(),
+    });
     if (!response.ok) return [];
     return await response.json();
   } catch (error) {
@@ -224,13 +262,13 @@ export const getShiftChanges = async (): Promise<ShiftChange[]> => {
 
 export const saveShiftChange = async (
   shiftChange: ShiftChange,
-  userName: string
+  userName: string,
 ): Promise<void> => {
   try {
     await fetch(`${API_URL}/shift-changes`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        ...getAuthHeaders(),
         "x-user-name": userName,
       },
       body: JSON.stringify(shiftChange),
@@ -243,12 +281,15 @@ export const saveShiftChange = async (
 
 export const deleteShiftChange = async (
   id: string,
-  userName: string
+  userName: string,
 ): Promise<void> => {
   try {
     await fetch(`${API_URL}/shift-changes/${id}`, {
       method: "DELETE",
-      headers: { "x-user-name": userName },
+      headers: { 
+        ...getAuthHeaders(),
+        "x-user-name": userName 
+      },
     });
   } catch (error) {
     console.error("Erro deleteShiftChange:", error);
@@ -259,7 +300,9 @@ export const deleteShiftChange = async (
 
 export const getOnCallShifts = async (): Promise<OnCallShift[]> => {
   try {
-    const response = await fetch(`${API_URL}/on-call`);
+    const response = await fetch(`${API_URL}/on-call`, {
+      headers: getAuthHeaders(),
+    });
     if (!response.ok) return [];
     return await response.json();
   } catch (error) {
@@ -270,13 +313,13 @@ export const getOnCallShifts = async (): Promise<OnCallShift[]> => {
 
 export const saveOnCallShift = async (
   shift: OnCallShift,
-  userName: string
+  userName: string,
 ): Promise<void> => {
   try {
     await fetch(`${API_URL}/on-call`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        ...getAuthHeaders(),
         "x-user-name": userName,
       },
       body: JSON.stringify(shift),
@@ -289,12 +332,15 @@ export const saveOnCallShift = async (
 
 export const deleteOnCallShift = async (
   id: string,
-  userName: string
+  userName: string,
 ): Promise<void> => {
   try {
     await fetch(`${API_URL}/on-call/${id}`, {
       method: "DELETE",
-      headers: { "x-user-name": userName },
+      headers: { 
+        ...getAuthHeaders(),
+        "x-user-name": userName 
+      },
     });
   } catch (error) {
     console.error("Erro deleteOnCallShift:", error);
@@ -305,7 +351,9 @@ export const deleteOnCallShift = async (
 
 export const getSystemUsers = async (): Promise<SystemUser[]> => {
   try {
-    const response = await fetch(`${API_URL}/users`);
+    const response = await fetch(`${API_URL}/users`, {
+      headers: getAuthHeaders(),
+    });
     if (!response.ok) return [];
     return await response.json();
   } catch (error) {
@@ -316,7 +364,7 @@ export const getSystemUsers = async (): Promise<SystemUser[]> => {
 
 export const saveSystemUser = async (
   user: SystemUser,
-  userName: string = "Sistema"
+  userName: string = "Sistema",
 ): Promise<void> => {
   try {
     // Se tem ID, é edição (PUT). Se não tem (string vazia), é criação (POST).
@@ -328,7 +376,7 @@ export const saveSystemUser = async (
     const response = await fetch(url, {
       method: method,
       headers: {
-        "Content-Type": "application/json",
+        ...getAuthHeaders(),
         "x-user-name": userName,
       },
       body: JSON.stringify(user),
@@ -347,12 +395,15 @@ export const saveSystemUser = async (
 
 export const deleteSystemUser = async (
   id: string,
-  userName: string = "Sistema"
+  userName: string = "Sistema",
 ): Promise<void> => {
   try {
     await fetch(`${API_URL}/users/${id}`, {
       method: "DELETE",
-      headers: { "x-user-name": userName },
+      headers: { 
+        ...getAuthHeaders(),
+        "x-user-name": userName 
+      },
     });
   } catch (error) {
     console.error("Erro deleteSystemUser:", error);
@@ -372,12 +423,15 @@ export const checkCoverage = async (
   squad: string,
   date: string,
   startTime: string,
-  endTime: string
+  endTime: string,
 ): Promise<boolean> => {
   try {
     const response = await fetch(`${API_URL}/check-coverage`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         employeeId,
         role,

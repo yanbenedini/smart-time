@@ -28,6 +28,55 @@ AppDataSource.initialize()
     const userRepo = AppDataSource.getRepository(SystemUser);
     const logRepo = AppDataSource.getRepository(SystemLog);
 
+    // --- MIDDLEWARE: BASIC AUTH VIA BANCO DE DADOS ---
+    const basicAuth = async (
+      req: express.Request,
+      res: express.Response,
+      next: express.NextFunction,
+    ) => {
+      const authHeader = req.headers.authorization;
+
+      if (!authHeader) {
+        res.setHeader("WWW-Authenticate", "Basic");
+        return res.status(401).json({ message: "Autenticação necessária" });
+      }
+
+      try {
+        // Decodifica o cabeçalho "Basic base64string"
+        const auth = Buffer.from(authHeader.split(" ")[1], "base64")
+          .toString()
+          .split(":");
+        const email = auth[0];
+        const password = auth[1];
+
+        // 1. Busca o usuário no banco (trazendo a senha oculta)
+        const user = await userRepo
+          .createQueryBuilder("user")
+          .addSelect("user.password")
+          .where("user.email = :email", { email })
+          .getOne();
+
+        // 2. Validações: Usuário existe? É Admin/SuperAdmin? Senha está correta?
+        if (!user) {
+          return res.status(401).json({ message: "Usuário não encontrado" });
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+          return res.status(401).json({ message: "Senha incorreta" });
+        }
+
+        return next();
+      } catch (error) {
+        return res
+          .status(500)
+          .json({ message: "Erro interno na autenticação" });
+      }
+    };
+
+    // Aplicar a proteção globalmente para todas as rotas abaixo
+    app.use(basicAuth);
+
     // --- HELPER: Pega o nome do header enviado pelo Frontend ---
     const getUserName = (req: express.Request): string => {
       const headerUser = req.headers["x-user-name"];
@@ -39,7 +88,7 @@ AppDataSource.initialize()
     const registerLog = async (
       action: string,
       description: string,
-      userName: string
+      userName: string,
     ) => {
       try {
         const newLog = logRepo.create({
@@ -89,7 +138,7 @@ AppDataSource.initialize()
         await registerLog(
           "CREATE",
           `Funcionário criado: ${result.firstName} ${result.lastName}`,
-          getUserName(req)
+          getUserName(req),
         );
 
         res.json(result);
@@ -107,7 +156,7 @@ AppDataSource.initialize()
         await registerLog(
           "UPDATE",
           `Funcionário atualizado: ${result.firstName} ${result.lastName}`,
-          getUserName(req)
+          getUserName(req),
         );
 
         res.json(result);
@@ -124,7 +173,7 @@ AppDataSource.initialize()
         await registerLog(
           "DELETE",
           `Funcionário removido: ${employee.firstName} ${employee.lastName}`,
-          getUserName(req)
+          getUserName(req),
         );
 
         res.json({ message: "Deleted" });
@@ -149,7 +198,7 @@ AppDataSource.initialize()
         await registerLog(
           "CREATE",
           `Ausência registrada: ${result.reason}`,
-          getUserName(req)
+          getUserName(req),
         );
 
         res.json(result);
@@ -177,7 +226,7 @@ AppDataSource.initialize()
         await registerLog(
           "UPDATE",
           `Ausência atualizada para: ${employeeName} - Motivo: ${result.reason}`,
-          getUserName(req)
+          getUserName(req),
         );
 
         res.json(result);
@@ -193,7 +242,7 @@ AppDataSource.initialize()
         await registerLog(
           "DELETE",
           `Ausência removida ID: ${req.params.id}`,
-          getUserName(req)
+          getUserName(req),
         );
         res.json("Deleted");
       } else {
@@ -219,7 +268,7 @@ AppDataSource.initialize()
         await registerLog(
           "CREATE",
           `Troca de turno criada: ${result.reason}`,
-          getUserName(req)
+          getUserName(req),
         );
 
         res.json(result);
@@ -233,7 +282,7 @@ AppDataSource.initialize()
       await registerLog(
         "DELETE",
         `Troca de turno removida ID: ${req.params.id}`,
-        getUserName(req)
+        getUserName(req),
       );
       res.json("Deleted");
     });
@@ -254,7 +303,7 @@ AppDataSource.initialize()
         await registerLog(
           "CREATE",
           `Plantão criado para data: ${result.date}`,
-          getUserName(req)
+          getUserName(req),
         );
 
         res.json(result);
@@ -269,7 +318,7 @@ AppDataSource.initialize()
       await registerLog(
         "DELETE",
         `Plantão removido ID: ${req.params.id}`,
-        getUserName(req)
+        getUserName(req),
       );
       res.json("Deleted");
     });
@@ -313,7 +362,7 @@ AppDataSource.initialize()
         await registerLog(
           "CREATE",
           `Usuário criado: ${result.email}`,
-          getUserName(req)
+          getUserName(req),
         );
 
         // Caminho 2: Adicionado 'return' aqui para consistência
@@ -357,7 +406,7 @@ AppDataSource.initialize()
         await registerLog(
           "UPDATE",
           `Usuário atualizado: ${result.name}`,
-          getUserName(req)
+          getUserName(req),
         );
 
         return res.json(userResponse);
@@ -376,7 +425,7 @@ AppDataSource.initialize()
         await registerLog(
           "DELETE",
           `Usuário removido: ${userToRemove.name}`,
-          getUserName(req)
+          getUserName(req),
         );
 
         res.json("Deleted");
@@ -427,7 +476,7 @@ AppDataSource.initialize()
         await registerLog(
           "LOGIN",
           `Login realizado com sucesso`,
-          userSafe.name
+          userSafe.name,
         );
 
         // console.log("SUCESSO: Login aprovado.");
@@ -461,7 +510,7 @@ AppDataSource.initialize()
         // 2. Verifica se a senha ATUAL informada bate com o Hash do banco
         const isPasswordValid = await bcrypt.compare(
           currentPassword,
-          user.password
+          user.password,
         );
 
         if (!isPasswordValid) {
@@ -483,7 +532,7 @@ AppDataSource.initialize()
         await registerLog(
           "UPDATE",
           `Senha alterada pelo próprio usuário`,
-          user.name
+          user.name,
         );
 
         return res.json({ message: "Senha alterada com sucesso!" });
@@ -502,27 +551,28 @@ AppDataSource.initialize()
 
         // 1. Busca colegas da mesma squad e cargo
         const peers = await employeeRepo.find({
-          where: { role: role, squad: squad }
+          where: { role: role, squad: squad },
         });
-        
+
         // Remove o próprio funcionário da lista
-        const potentialCovers = peers.filter(p => p.id !== employeeId);
+        const potentialCovers = peers.filter((p) => p.id !== employeeId);
 
         // 2. Filtra quem trabalha no horário solicitado
-        const shiftCoveringPeers = potentialCovers.filter(peer => 
-          peer.shiftStart <= startTime && peer.shiftEnd >= endTime
+        const shiftCoveringPeers = potentialCovers.filter(
+          (peer) => peer.shiftStart <= startTime && peer.shiftEnd >= endTime,
         );
 
         if (shiftCoveringPeers.length === 0) {
           // Caminho 1: Retorno explícito com return
-          return res.json({ hasCoverage: false }); 
+          return res.json({ hasCoverage: false });
         }
 
         // 3. Verifica se esses colegas têm ausência marcada no mesmo dia/hora
         let availablePeerFound = false;
 
         for (const peer of shiftCoveringPeers) {
-          const conflict = await absenceRepo.createQueryBuilder("absence")
+          const conflict = await absenceRepo
+            .createQueryBuilder("absence")
             .where("absence.employeeId = :peerId", { peerId: peer.id })
             .andWhere("absence.date <= :date", { date })
             .andWhere("absence.endDate >= :date", { date })
@@ -532,12 +582,11 @@ AppDataSource.initialize()
 
           if (!conflict) {
             availablePeerFound = true;
-            break; 
+            break;
           }
         }
 
         return res.json({ hasCoverage: availablePeerFound });
-
       } catch (error) {
         console.error("Erro check-coverage:", error);
         return res.status(500).json({ hasCoverage: false });
