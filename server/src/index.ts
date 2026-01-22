@@ -56,7 +56,7 @@ AppDataSource.initialize()
           .where("user.email = :email", { email })
           .getOne();
 
-        // 2. Validações: Usuário existe? É Admin/SuperAdmin? Senha está correta?
+        // 2. Validações de Login (Autenticação)
         if (!user) {
           return res.status(401).json({ message: "Usuário não encontrado" });
         }
@@ -66,6 +66,19 @@ AppDataSource.initialize()
           return res.status(401).json({ message: "Senha incorreta" });
         }
 
+        // 3. Validações de Permissão (Autorização)
+        // Bloqueia rotas de ADMIN para usuários comuns (Membros)
+        const isRestrictedRoute =
+          req.path.startsWith("/logs") || req.path.startsWith("/users");
+
+        // Se a rota for restrita E o usuário NÃO for admin/superadmin, bloqueia.
+        if (isRestrictedRoute && !user.isAdmin && !user.isSuperAdmin) {
+          return res.status(403).json({
+            message: "Acesso negado: requer privilégios de administrador",
+          });
+        }
+
+        // Se passou por tudo, permite o acesso
         return next();
       } catch (error) {
         return res
@@ -488,15 +501,74 @@ AppDataSource.initialize()
     });
 
     // --- ROTA DE TROCA DE SENHA ---
+    // --- ROTA DE TROCA DE SENHA (SEGURA) ---
     app.post("/change-password", async (req, res) => {
       try {
         const { userId, currentPassword, newPassword } = req.body;
+
+        // 1. Validações de Força de Senha (Mantidas do passo anterior)
+        if (newPassword === currentPassword)
+          return res
+            .status(400)
+            .json({ message: "A nova senha deve ser diferente da atual." });
+        if (newPassword.length < 8)
+          return res
+            .status(400)
+            .json({ message: "A senha deve ter no mínimo 8 caracteres." });
+        if (!/[A-Z]/.test(newPassword))
+          return res
+            .status(400)
+            .json({ message: "A senha deve ter letra maiúscula." });
+        if (!/[a-z]/.test(newPassword))
+          return res
+            .status(400)
+            .json({ message: "A senha deve ter letra minúscula." });
+        if (!/[0-9]/.test(newPassword))
+          return res.status(400).json({ message: "A senha deve ter número." });
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(newPassword))
+          return res
+            .status(400)
+            .json({ message: "A senha deve ter caractere especial." });
 
         if (!userId || !currentPassword || !newPassword) {
           return res.status(400).json({ message: "Dados incompletos." });
         }
 
-        // 1. Busca o usuário trazendo a senha (que é oculta)
+        // --- NOVA CAMADA DE SEGURANÇA: IDENTIFICAR QUEM ESTÁ CHAMANDO ---
+        const authHeader = req.headers.authorization;
+        // Sabemos que existe pois o middleware basicAuth já rodou, mas por segurança:
+        if (!authHeader)
+          return res.status(401).json({ message: "Não autenticado." });
+
+        const auth = Buffer.from(authHeader.split(" ")[1], "base64")
+          .toString()
+          .split(":");
+        const emailLogado = auth[0];
+
+        // Busca quem está logado realmente
+        const loggedUser = await userRepo.findOneBy({ email: emailLogado });
+
+        if (!loggedUser)
+          return res
+            .status(401)
+            .json({ message: "Usuário da sessão inválido." });
+
+        // VERIFICAÇÃO CRÍTICA:
+        // O usuário logado está tentando alterar a senha de OUTRA pessoa?
+        if (loggedUser.id !== userId) {
+          // Se for Admin, talvez ele pudesse?
+          // NÃO nesta rota, pois esta rota exige 'currentPassword', e admins não sabem a senha atual.
+          // Esta rota é estritamente "Mudar Minha Senha".
+          return res
+            .status(403)
+            .json({
+              message:
+                "Você não tem permissão para alterar a senha de outro usuário.",
+            });
+        }
+        // -------------------------------------------------------------
+
+        // 2. Busca o usuário alvo (agora sabemos que é o mesmo logado) para pegar a senha oculta
         const user = await userRepo
           .createQueryBuilder("user")
           .addSelect("user.password")
@@ -507,25 +579,23 @@ AppDataSource.initialize()
           return res.status(404).json({ message: "Usuário não encontrado." });
         }
 
-        // 2. Verifica se a senha ATUAL informada bate com o Hash do banco
+        // 3. Valida a senha atual
         const isPasswordValid = await bcrypt.compare(
           currentPassword,
           user.password,
         );
 
         if (!isPasswordValid) {
-          // Se falhar aqui, é porque o usuário digitou a senha atual errada
           return res
             .status(401)
             .json({ message: "A senha atual está incorreta." });
         }
 
-        // 3. Gera o Hash da NOVA senha
+        // 4. Salva a nova senha
         const newHashedPassword = await bcrypt.hash(newPassword, 10);
 
-        // 4. Atualiza o usuário
         user.password = newHashedPassword;
-        user.mustChangePassword = false; // Tira a obrigatoriedade de troca
+        user.mustChangePassword = false;
 
         await userRepo.save(user);
 

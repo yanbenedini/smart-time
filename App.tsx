@@ -362,7 +362,7 @@ const App: React.FC = () => {
 
             <form onSubmit={handlePasswordChange} className="p-6 space-y-4">
               {currentUser.mustChangePassword && (
-                <div className="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg text-sm mb-4">
+                <div className="block text-sm font-medium text-slate-700 mb-1">
                   Você deve alterar sua senha para continuar.
                 </div>
               )}
