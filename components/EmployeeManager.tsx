@@ -146,7 +146,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
   const paginatedEmployees = filteredEmployees.slice(
     startIndex,
-    startIndex + itemsPerPage
+    startIndex + itemsPerPage,
   );
 
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
@@ -190,12 +190,12 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     }
 
     const duplicate = employees.find(
-      (emp) => emp.matricula === targetMatricula && emp.id !== editingId
+      (emp) => emp.matricula === targetMatricula && emp.id !== editingId,
     );
 
     if (duplicate) {
       setFormError(
-        `Erro: A matrícula "${targetMatricula}" já está cadastrada para o funcionário ${duplicate.firstName} ${duplicate.lastName}.`
+        `Erro: A matrícula "${targetMatricula}" já está cadastrada para o funcionário ${duplicate.firstName} ${duplicate.lastName}.`,
       );
       return;
     }
@@ -298,7 +298,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
     link.href = url;
     link.setAttribute(
       "download",
-      `funcionarios_smarttime_${new Date().toISOString().split("T")[0]}.csv`
+      `funcionarios_smarttime_${new Date().toISOString().split("T")[0]}.csv`,
     );
     document.body.appendChild(link);
     link.click();
@@ -402,7 +402,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
           Object.entries(enumObj).find(
             ([k, v]) =>
               normalizeStr(v as string) === normalizeStr(val) ||
-              normalizeStr(k) === normalizeStr(val)
+              normalizeStr(k) === normalizeStr(val),
           )?.[1];
 
         const role = findEnum(Role, roleRaw) as Role;
@@ -492,32 +492,27 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
           >
             <Download size={18} />
           </button>
-
-          {isAdmin && (
-            <>
-              <button
-                onClick={handleDownloadTemplate}
-                className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm font-medium"
-                title="Baixar Modelo de Importação"
-              >
-                <FileText size={18} />
-              </button>
-              <button
-                onClick={handleImportClick}
-                className="flex-1 md:flex-none bg-[#01B8A1] hover:bg-[#019f8b] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm font-medium"
-                title="Importar Funcionário"
-              >
-                <Upload size={18} />
-              </button>
-              <button
-                onClick={() => openModal()}
-                className="flex-1 md:flex-none bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm font-medium"
-                title="Adicionar Funcionário"
-              >
-                <Plus size={18} />
-              </button>
-            </>
-          )}
+          <button
+            onClick={handleDownloadTemplate}
+            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm font-medium"
+            title="Baixar Modelo de Importação"
+          >
+            <FileText size={18} />
+          </button>
+          <button
+            onClick={handleImportClick}
+            className="flex-1 md:flex-none bg-[#01B8A1] hover:bg-[#019f8b] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm font-medium"
+            title="Importar Funcionário"
+          >
+            <Upload size={18} />
+          </button>
+          <button
+            onClick={() => openModal()}
+            className="flex-1 md:flex-none bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm font-medium"
+            title="Adicionar Funcionário"
+          >
+            <Plus size={18} />
+          </button>
 
           {/* Filter Dropdown Panel */}
           {isFilterOpen && (
@@ -717,7 +712,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                 <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-50 mt-2">
                   <span
                     className={`px-2 py-0.5 rounded-md font-medium border ${getSquadBadgeColor(
-                      emp.squad
+                      emp.squad,
                     )}`}
                   >
                     {emp.squad}
@@ -819,7 +814,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                   <td className="p-4 text-sm">
                     <span
                       className={`px-2 py-1 rounded-md font-medium text-xs border ${getSquadBadgeColor(
-                        emp.squad
+                        emp.squad,
                       )}`}
                     >
                       {emp.squad}
