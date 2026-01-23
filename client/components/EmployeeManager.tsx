@@ -438,15 +438,15 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
   const getSquadBadgeColor = (squad: Squad) => {
     switch (squad) {
       case Squad.LAKERS:
-        return "bg-yellow-50 text-yellow-700 border-yellow-100";
+        return "bg-yellow-50 text-yellow-700 border-yellow-100 dark:bg-yellow-500/60 dark:text-yellow-50 dark:border-yellow-600";
       case Squad.BULLS:
-        return "bg-red-50 text-red-700 border-red-100";
+        return "bg-red-50 text-red-700 border-red-100 dark:bg-red-600/60 dark:text-red-50 dark:border-red-600";
       case Squad.WARRIORS:
-        return "bg-blue-50 text-blue-700 border-blue-100";
+        return "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-600/60 dark:text-blue-50 dark:border-blue-600";
       case Squad.ROCKETS:
-        return "bg-purple-50 text-purple-700 border-purple-100";
+        return "bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-600/60 dark:text-purple-50 dark:border-purple-600";
       default:
-        return "bg-slate-50 text-slate-700 border-slate-100";
+        return "bg-slate-50 text-slate-700 border-slate-100 dark:bg-slate-600/60 dark:text-slate-50 dark:border-slate-600/60";
     }
   };
 
@@ -455,8 +455,8 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
       {/* Header Responsivo */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#1E1E1E]">Funcionários</h1>
-          <p className="text-slate-500">
+          <h1 className="text-2xl font-bold text-[#1E1E1E] dark:text-white">Funcionários</h1>
+          <p className="text-slate-500 dark:text-slate-400">
             Gerencie o quadro de colaboradores CX.
           </p>
         </div>
@@ -471,11 +471,10 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className={`flex-1 md:flex-none px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm border ${
-              isFilterOpen || activeFilterCount > 0
-                ? "bg-[#204294]/10 border-[#204294]/20 text-[#204294]"
-                : "bg-white border-slate-200 text-[#3F3F3F] hover:bg-slate-50"
-            }`}
+            className={`flex-1 md:flex-none px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm border ${isFilterOpen || activeFilterCount > 0
+              ? "bg-[#204294]/10 border-[#204294]/20 text-[#204294] dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400"
+              : "bg-white border-slate-200 text-[#3F3F3F] hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
+              }`}
           >
             <Filter size={18} />
             {activeFilterCount > 0 && (
@@ -487,14 +486,14 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
           <button
             onClick={handleExportCSV}
-            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm font-medium"
+            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
             title="Exportar para CSV"
           >
             <Download size={18} />
           </button>
           <button
             onClick={handleDownloadTemplate}
-            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm font-medium"
+            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
             title="Baixar Modelo de Importação"
           >
             <FileText size={18} />
@@ -516,9 +515,9 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
           {/* Filter Dropdown Panel */}
           {isFilterOpen && (
-            <div className="absolute top-12 right-0 w-full md:w-80 bg-white rounded-xl shadow-xl border border-slate-200 p-5 z-20">
+            <div className="absolute top-12 right-0 w-full md:w-80 bg-white rounded-xl shadow-xl border border-slate-200 p-5 z-20 dark:bg-slate-800 dark:border-slate-700">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-[#1E1E1E] flex items-center gap-2">
+                <h3 className="font-semibold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
                   <Search size={16} /> Filtros
                 </h3>
                 <button
@@ -531,13 +530,13 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                     Nome do Funcionário
                   </label>
                   <input
                     type="text"
                     placeholder="Buscar por nome..."
-                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                     value={filters.name}
                     onChange={(e) =>
                       setFilters({ ...filters, name: e.target.value })
@@ -633,12 +632,12 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
       {/* Seletor de Itens por Página Ajustado */}
       <div className="flex justify-end">
         <div className=" p-2 px-3 rounded-xl flex items-center w-fit">
-          <div className="flex items-center gap-2 text-sm text-slate-600 whitespace-nowrap">
+          <div className="flex items-center gap-2 text-sm text-slate-600 whitespace-nowrap dark:text-slate-400">
             <span>Mostrar</span>
             <select
               value={itemsPerPage}
               onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              className="border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-[#204294] bg-white font-medium text-[#204294] cursor-pointer"
+              className="border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-[#204294] bg-white font-medium text-[#204294] cursor-pointer dark:bg-slate-800 dark:border-slate-700 dark:text-blue-400"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -668,9 +667,8 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
             <div
               key={emp.id}
               onClick={() => isAdmin && openModal(emp)}
-              className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative ${
-                isAdmin ? "active:bg-slate-50" : ""
-              }`}
+              className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative ${isAdmin ? "active:bg-slate-50" : ""
+                }`}
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
@@ -728,9 +726,9 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
       </div>
 
       {/* DESKTOP TABLE VIEW */}
-      <div className="hidden md:block bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden">
+      <div className="hidden md:block bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden dark:bg-slate-800 dark:border-slate-700">
         <table className="w-full text-left border-collapse table-fixed">
-          <thead className="bg-slate-50 text-[#3F3F3F] border-b border-slate-200">
+          <thead className="bg-slate-50 text-[#3F3F3F] border-b border-slate-200 dark:bg-slate-700/50 dark:text-slate-300 dark:border-slate-700">
             <tr>
               <th
                 className="p-4 font-bold text-sm cursor-pointer hover:bg-slate-100 transition-colors select-none group w-1/3"
@@ -739,9 +737,8 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                 <div className="flex items-center gap-1">
                   Funcionário
                   <span
-                    className={`text-slate-400 group-hover:text-[#204294] transition-colors ${
-                      sortOrder === "asc" ? "text-[#204294]" : ""
-                    }`}
+                    className={`text-slate-400 group-hover:text-[#204294] transition-colors ${sortOrder === "asc" ? "text-[#204294]" : ""
+                      }`}
                   >
                     {sortOrder === "asc" ? (
                       <ArrowUp size={14} />
@@ -760,7 +757,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
               )}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={`sk-row-${i}`}>
@@ -786,31 +783,30 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                 <tr
                   key={emp.id}
                   onClick={() => isAdmin && openModal(emp)}
-                  className={`group transition-all duration-200 ${
-                    isAdmin
-                      ? "hover:bg-[#204294]/5 cursor-pointer"
-                      : "cursor-default"
-                  }`}
+                  className={`group transition-all duration-200 ${isAdmin
+                    ? "hover:bg-[#204294]/5 cursor-pointer dark:hover:bg-slate-700/50"
+                    : "cursor-default"
+                    }`}
                 >
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E]">
+                      <div className="w-8 h-8 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] dark:bg-slate-700 dark:text-white">
                         <User size={16} />
                       </div>
                       <div>
-                        <div className="font-bold text-[#1E1E1E] group-hover:text-[#204294]">
+                        <div className="font-bold text-[#1E1E1E] group-hover:text-[#204294] dark:text-white dark:group-hover:text-blue-400">
                           {emp.firstName} {emp.lastName}
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
                           {emp.email}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="p-4 text-sm text-slate-600 font-mono">
+                  <td className="p-4 text-sm text-slate-600 font-mono dark:text-slate-400">
                     {emp.matricula}
                   </td>
-                  <td className="p-4 text-sm text-slate-700">{emp.role}</td>
+                  <td className="p-4 text-sm text-slate-700 dark:text-slate-300">{emp.role}</td>
                   <td className="p-4 text-sm">
                     <span
                       className={`px-2 py-1 rounded-md font-medium text-xs border ${getSquadBadgeColor(
@@ -820,7 +816,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                       {emp.squad}
                     </span>
                   </td>
-                  <td className="p-4 text-sm text-slate-600">
+                  <td className="p-4 text-sm text-slate-600 dark:text-slate-400">
                     {emp.shiftStart} - {emp.shiftEnd}
                   </td>
                   {isAdmin && (
@@ -844,14 +840,14 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
         {/* --- RODAPÉ DE PAGINAÇÃO --- */}
         {!isLoading && totalItems > 0 && (
-          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-sm text-slate-600">
+          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 dark:bg-slate-800 dark:border-slate-700">
+            <div className="text-sm text-slate-600 dark:text-slate-400">
               Mostrando{" "}
-              <span className="font-bold text-slate-800">
+              <span className="font-bold text-slate-800 dark:text-white">
                 {totalItems === 0 ? 0 : startIndex + 1}
               </span>{" "}
-              a <span className="font-bold text-slate-800">{endIndex}</span> de{" "}
-              <span className="font-bold text-slate-800">{totalItems}</span>{" "}
+              a <span className="font-bold text-slate-800 dark:text-white">{endIndex}</span> de{" "}
+              <span className="font-bold text-slate-800 dark:text-white">{totalItems}</span>{" "}
               registros
             </div>
 
@@ -859,17 +855,17 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-600"
               >
-                <ChevronLeft size={18} className="text-slate-600" />
+                <ChevronLeft size={18} className="text-slate-600 dark:text-slate-300" />
               </button>
 
               <div className="flex items-center gap-1">
-                <span className="text-sm text-slate-500">Página</span>
-                <span className="text-sm font-bold text-[#204294] bg-[#204294]/10 px-2 py-1 rounded border border-[#204294]/20">
+                <span className="text-sm text-slate-500 dark:text-slate-400">Página</span>
+                <span className="text-sm font-bold text-[#204294] bg-[#204294]/10 px-2 py-1 rounded border border-[#204294]/20 dark:text-blue-400 dark:bg-blue-900/30 dark:border-blue-800">
                   {currentPage}
                 </span>
-                <span className="text-sm text-slate-500">de {totalPages}</span>
+                <span className="text-sm text-slate-500 dark:text-slate-400">de {totalPages}</span>
               </div>
 
               <button
@@ -877,9 +873,9 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-600"
               >
-                <ChevronRight size={18} className="text-slate-600" />
+                <ChevronRight size={18} className="text-slate-600 dark:text-slate-300" />
               </button>
             </div>
           </div>
@@ -889,14 +885,14 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
       {/* Edit/Create Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-[#1E1E1E]">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] dark:bg-slate-800">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center dark:border-slate-700">
+              <h3 className="text-lg font-bold text-[#1E1E1E] dark:text-white">
                 {editingId ? "Editar Funcionário" : "Novo Funcionário"}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-2 rounded-full transition-colors"
+                className="text-slate-400 hover:text-slate-600 p-2 rounded-full transition-colors dark:hover:text-slate-300"
               >
                 <X size={24} />
               </button>
@@ -914,18 +910,18 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
               )}
 
               <div>
-                <h4 className="text-sm font-bold text-[#204294] mb-3 flex items-center gap-2">
+                <h4 className="text-sm font-bold text-[#204294] mb-3 flex items-center gap-2 dark:text-blue-400">
                   <User size={16} /> Dados Pessoais
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
                       Nome
                     </label>
                     <input
                       required
                       type="text"
-                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500"
                       value={formData.firstName || ""}
                       onChange={(e) =>
                         setFormData({ ...formData, firstName: e.target.value })
@@ -933,13 +929,13 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
                       Sobrenome
                     </label>
                     <input
                       required
                       type="text"
-                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500"
                       value={formData.lastName || ""}
                       onChange={(e) =>
                         setFormData({ ...formData, lastName: e.target.value })
@@ -947,13 +943,13 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
                       Email Corporativo
                     </label>
                     <input
                       required
                       type="email"
-                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500"
                       value={formData.email || ""}
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
@@ -961,13 +957,13 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
                       Matrícula
                     </label>
                     <input
                       required
                       type="text"
-                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500"
                       value={formData.matricula || ""}
                       onChange={(e) =>
                         setFormData({
@@ -1097,27 +1093,27 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
       {/* Delete Confirmation Modal */}
       {deleteConfirmationId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden p-6 text-center">
-            <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-600">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden p-6 text-center dark:bg-slate-800">
+            <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400">
               <Trash2 size={24} />
             </div>
-            <h3 className="text-lg font-bold text-slate-800 mb-2">
+            <h3 className="text-lg font-bold text-slate-800 mb-2 dark:text-white">
               Excluir Funcionário?
             </h3>
-            <p className="text-slate-500 mb-6 text-sm">
+            <p className="text-slate-500 mb-6 text-sm dark:text-slate-400">
               Esta ação não pode ser desfeita. Todos os registros relacionados
               serão removidos.
             </p>
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => setDeleteConfirmationId(null)}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium"
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium dark:text-slate-300 dark:hover:bg-slate-700"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 font-medium"
+                className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 font-medium dark:bg-rose-600 dark:hover:bg-rose-700"
               >
                 Confirmar Exclusão
               </button>

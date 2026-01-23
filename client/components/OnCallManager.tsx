@@ -38,15 +38,15 @@ interface OnCallManagerProps {
 const getSquadBadgeColor = (squad: Squad) => {
   switch (squad) {
     case Squad.LAKERS:
-      return "bg-yellow-50 text-yellow-700 border-yellow-100";
+      return "bg-yellow-50 text-yellow-700 border-yellow-100 dark:bg-yellow-500/60 dark:text-yellow-50 dark:border-yellow-600";
     case Squad.BULLS:
-      return "bg-red-50 text-red-700 border-red-100";
+      return "bg-red-50 text-red-700 border-red-100 dark:bg-red-600/60 dark:text-red-50 dark:border-red-600";
     case Squad.WARRIORS:
-      return "bg-blue-50 text-blue-700 border-blue-100";
+      return "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-600/60 dark:text-blue-50 dark:border-blue-600";
     case Squad.ROCKETS:
-      return "bg-purple-50 text-purple-700 border-purple-100";
+      return "bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-600/60 dark:text-purple-50 dark:border-purple-600";
     default:
-      return "bg-slate-50 text-slate-700 border-slate-100";
+      return "bg-slate-50 text-slate-700 border-slate-100 dark:bg-slate-600/60 dark:text-slate-50 dark:border-slate-600/60";
   }
 };
 
@@ -520,10 +520,10 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#1E1E1E]">
+          <h1 className="text-2xl font-bold text-[#1E1E1E] dark:text-white">
             Escala de Plantões
           </h1>
-          <p className="text-slate-500">
+          <p className="text-slate-500 dark:text-slate-400">
             Gerencie os funcionários escalados para plantão.
           </p>
         </div>
@@ -539,14 +539,14 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
             className={`flex-1 md:flex-none px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm border ${isFilterOpen || activeFilterCount > 0
-                ? "bg-[#204294]/10 border-[#204294]/20 text-[#204294]"
-                : "bg-white border-slate-200 text-[#3F3F3F] hover:bg-slate-50"
+              ? "bg-[#204294]/10 border-[#204294]/20 text-[#204294] dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400"
+              : "bg-white border-slate-200 text-[#3F3F3F] hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
               }`}
           >
             <Filter size={18} />
 
             {activeFilterCount > 0 && (
-              <span className="bg-[#204294] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full ml-1">
+              <span className="bg-[#204294] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full ml-1 dark:bg-blue-600">
                 {activeFilterCount}
               </span>
             )}
@@ -554,7 +554,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
 
           <button
             onClick={handleExportCSV}
-            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
             title="Exportar para CSV"
           >
             <Download size={18} />
@@ -562,7 +562,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
 
           <button
             onClick={handleDownloadTemplate}
-            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
             title="Baixar Modelo de Importação"
           >
             <FileText size={18} />
@@ -578,7 +578,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
 
           <button
             onClick={openNewModal}
-            className="flex-1 md:flex-none bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-bold"
+            className="flex-1 md:flex-none bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-bold dark:bg-blue-600 dark:hover:bg-blue-700"
             title="Adicionar Plantão"
           >
             <Plus size={18} />
@@ -586,14 +586,14 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
 
           {/* Filter Dropdown Panel */}
           {isFilterOpen && (
-            <div className="absolute top-12 right-0 w-full md:w-80 bg-white rounded-xl shadow-xl border border-slate-200 p-5 z-20">
+            <div className="absolute top-12 right-0 w-full md:w-80 bg-white rounded-xl shadow-xl border border-slate-200 p-5 z-20 dark:bg-slate-800 dark:border-slate-700">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-[#1E1E1E] flex items-center gap-2">
+                <h3 className="font-semibold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
                   <Search size={16} /> Filtros
                 </h3>
                 <button
                   onClick={() => setIsFilterOpen(false)}
-                  className="text-slate-400 hover:text-slate-600"
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                 >
                   <X size={16} />
                 </button>
@@ -601,13 +601,13 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
 
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                     Nome do Funcionário
                   </label>
                   <input
                     type="text"
                     placeholder="Buscar por nome..."
-                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                     value={filters.employeeName}
                     onChange={(e) =>
                       setFilters({ ...filters, employeeName: e.target.value })
@@ -617,12 +617,12 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                       Data Início
                     </label>
                     <input
                       type="date"
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                       value={filters.startDate}
                       onChange={(e) =>
                         setFilters({ ...filters, startDate: e.target.value })
@@ -630,12 +630,12 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                       Data Fim
                     </label>
                     <input
                       type="date"
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                       value={filters.endDate}
                       onChange={(e) =>
                         setFilters({ ...filters, endDate: e.target.value })
@@ -645,11 +645,11 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                       Squad
                     </label>
                     <select
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                       value={filters.squad}
                       onChange={(e) =>
                         setFilters({ ...filters, squad: e.target.value })
@@ -664,11 +664,11 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                       Cargo
                     </label>
                     <select
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                       value={filters.role}
                       onChange={(e) =>
                         setFilters({ ...filters, role: e.target.value })
@@ -700,12 +700,12 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
       {/* --- SELETOR DE ITENS POR PÁGINA (Abaixo dos botões) --- */}
       <div className="flex justify-end">
         <div className="p-2 px-3 rounded-xl flex items-center w-fit">
-          <div className="flex items-center gap-2 text-sm text-slate-600 whitespace-nowrap">
+          <div className="flex items-center gap-2 text-sm text-slate-600 whitespace-nowrap dark:text-slate-400">
             <span>Mostrar</span>
             <select
               value={itemsPerPage}
               onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              className="border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-[#204294] bg-white font-medium text-[#204294] cursor-pointer"
+              className="border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-[#204294] bg-white font-medium text-[#204294] cursor-pointer dark:bg-slate-800 dark:border-slate-700 dark:text-blue-400"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -718,10 +718,10 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
       </div>
 
       {/* List Section */}
-      <div className="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden mb-20">
-        <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-          <h3 className="font-semibold text-slate-700">Plantões Agendados</h3>
-          <span className="text-xs text-slate-500 bg-white px-2 py-1 rounded border border-slate-200">
+      <div className="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden mb-20 dark:bg-slate-800 dark:border-slate-700">
+        <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center dark:bg-slate-700/50 dark:border-slate-700">
+          <h3 className="font-semibold text-slate-700 dark:text-white">Plantões Agendados</h3>
+          <span className="text-xs text-slate-500 bg-white px-2 py-1 rounded border border-slate-200 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-300">
             Total: {totalItems}
           </span>
         </div>
@@ -787,7 +787,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
             )}
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {paginatedShifts.map((shift) => {
               const emp = employees.find((e) => e.id === shift.employeeId);
               const auditUser = shift.updatedBy || shift.createdBy || "Sistema";
@@ -800,15 +800,15 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                 <div
                   key={shift.id}
                   onClick={() => handleEdit(shift)}
-                  className="p-4 hover:bg-[#204294]/5 transition-colors duration-200 cursor-pointer group hover:shadow-sm"
+                  className="p-4 hover:bg-[#204294]/5 transition-colors duration-200 cursor-pointer group hover:shadow-sm dark:hover:bg-[#204294]/20"
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-3 md:w-1/3">
-                      <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold group-hover:bg-[#204294] group-hover:text-white transition-colors">
+                      <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold group-hover:bg-[#204294] group-hover:text-white transition-colors dark:bg-slate-700 dark:text-white dark:group-hover:text-white">
                         <User size={18} />
                       </div>
                       <div>
-                        <div className="font-bold text-[#1E1E1E] flex items-center gap-2">
+                        <div className="font-bold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
                           {emp
                             ? `${emp.firstName} ${emp.lastName}`
                             : "Funcionário removido"}
@@ -822,7 +822,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
                           {emp?.role}
                         </div>
                         {emp && (
@@ -839,24 +839,24 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
 
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-sm font-medium w-fit">
+                        <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-sm font-medium w-fit dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200">
                           <Calendar size={14} />
                           {formatDateBR(shift.date)}
                         </div>
-                        <div className="flex items-center gap-1 text-sm text-slate-600">
+                        <div className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-300">
                           <Clock size={14} />
                           {shift.startTime} - {shift.endTime}
                         </div>
                       </div>
 
                       {shift.observation && (
-                        <div className="text-xs text-slate-500 mt-1 italic">
+                        <div className="text-xs text-slate-500 mt-1 italic dark:text-slate-400">
                           "{shift.observation}"
                         </div>
                       )}
 
                       {auditDate && (
-                        <div className="text-[10px] text-slate-400 mt-2 flex items-center gap-1 border-t border-slate-100 pt-1 w-full md:w-auto">
+                        <div className="text-[10px] text-slate-400 mt-2 flex items-center gap-1 border-t border-slate-100 pt-1 w-full md:w-auto dark:border-slate-700 dark:text-slate-500">
                           <UserCircle size={10} />
                           <span>
                             {auditLabel} <strong>{auditUser}</strong> em{" "}
@@ -872,7 +872,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                           e.stopPropagation();
                           requestDelete(shift.id);
                         }}
-                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors dark:text-slate-500 dark:hover:bg-rose-900/20"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -886,12 +886,12 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
 
         {/* --- RODAPÉ DE PAGINAÇÃO --- */}
         {!isLoading && totalItems > 0 && (
-          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-sm text-slate-600">
+          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 dark:bg-slate-800 dark:border-slate-700">
+            <div className="text-sm text-slate-600 dark:text-slate-400">
               Mostrando{" "}
-              <span className="font-bold text-slate-800">{startIndex + 1}</span>{" "}
-              a <span className="font-bold text-slate-800">{endIndex}</span> de{" "}
-              <span className="font-bold text-slate-800">{totalItems}</span>{" "}
+              <span className="font-bold text-slate-800 dark:text-white">{startIndex + 1}</span>{" "}
+              a <span className="font-bold text-slate-800 dark:text-white">{endIndex}</span> de{" "}
+              <span className="font-bold text-slate-800 dark:text-white">{totalItems}</span>{" "}
               registros
             </div>
 
@@ -899,17 +899,17 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-600"
               >
-                <ChevronLeft size={18} className="text-slate-600" />
+                <ChevronLeft size={18} className="text-slate-600 dark:text-slate-300" />
               </button>
 
               <div className="flex items-center gap-1">
-                <span className="text-sm text-slate-500">Página</span>
-                <span className="text-sm font-bold text-[#204294] bg-[#204294]/10 px-2 py-1 rounded border border-[#204294]/20">
+                <span className="text-sm text-slate-500 dark:text-slate-400">Página</span>
+                <span className="text-sm font-bold text-[#204294] bg-[#204294]/10 px-2 py-1 rounded border border-[#204294]/20 dark:text-blue-400 dark:bg-blue-900/30 dark:border-blue-800">
                   {currentPage}
                 </span>
-                <span className="text-sm text-slate-500">de {totalPages}</span>
+                <span className="text-sm text-slate-500 dark:text-slate-400">de {totalPages}</span>
               </div>
 
               <button
@@ -917,9 +917,9 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-600"
               >
-                <ChevronRight size={18} className="text-slate-600" />
+                <ChevronRight size={18} className="text-slate-600 dark:text-slate-300" />
               </button>
             </div>
           </div>
@@ -927,236 +927,242 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
       </div>
 
       {/* Import Feedback Popup */}
-      {importFeedback && (
-        <div className="fixed bottom-4 right-4 z-50 max-w-md w-full bg-white shadow-2xl rounded-xl border border-slate-200 overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
-          <div
-            className={`p-4 flex items-start justify-between ${importFeedback.errors > 0
-                ? "bg-rose-50 border-l-4 border-l-rose-500"
-                : "bg-emerald-50 border-l-4 border-l-emerald-500"
-              }`}
-          >
-            <div className="flex gap-3">
-              <div
-                className={`mt-0.5 ${importFeedback.errors > 0
-                    ? "text-rose-600"
-                    : "text-emerald-600"
-                  }`}
-              >
-                {importFeedback.errors > 0 ? (
-                  <FileWarning size={20} />
-                ) : (
-                  <CheckCircle size={20} />
-                )}
-              </div>
-              <div>
-                <h4
-                  className={`font-bold text-sm ${importFeedback.errors > 0
-                      ? "text-rose-800"
-                      : "text-emerald-800"
+      {
+        importFeedback && (
+          <div className="fixed bottom-4 right-4 z-50 max-w-md w-full bg-white shadow-2xl rounded-xl border border-slate-200 overflow-hidden animate-in slide-in-from-bottom-5 duration-300 dark:bg-slate-800 dark:border-slate-700">
+            <div
+              className={`p-4 flex items-start justify-between ${importFeedback.errors > 0
+                ? "bg-rose-50 border-l-4 border-l-rose-500 dark:bg-rose-900/30 dark:border-l-rose-500"
+                : "bg-emerald-50 border-l-4 border-l-emerald-500 dark:bg-emerald-900/30 dark:border-l-emerald-500"
+                }`}
+            >
+              <div className="flex gap-3">
+                <div
+                  className={`mt-0.5 ${importFeedback.errors > 0
+                    ? "text-rose-600 dark:text-rose-400"
+                    : "text-emerald-600 dark:text-emerald-400"
                     }`}
                 >
-                  Relatório de Importação
-                </h4>
-                <p className="text-xs text-slate-600 mt-1">
-                  Processamento finalizado com os seguintes resultados:
-                </p>
-                <div className="flex gap-4 mt-2">
-                  <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
-                    {importFeedback.success} Sucessos
-                  </span>
-                  {importFeedback.errors > 0 && (
-                    <span className="text-xs font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded">
-                      {importFeedback.errors} Erros
-                    </span>
+                  {importFeedback.errors > 0 ? (
+                    <FileWarning size={20} />
+                  ) : (
+                    <CheckCircle size={20} />
                   )}
                 </div>
-              </div>
-            </div>
-            <button
-              onClick={() => setImportFeedback(null)}
-              className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-200/50 rounded"
-            >
-              <X size={16} />
-            </button>
-          </div>
-          {importFeedback.errors > 0 && importFeedback.details.length > 0 && (
-            <div className="max-h-48 overflow-y-auto bg-white border-t border-slate-100 p-3">
-              <p className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">
-                Detalhes dos Erros:
-              </p>
-              <ul className="space-y-1.5">
-                {importFeedback.details.map((detail, idx) => (
-                  <li
-                    key={idx}
-                    className="text-xs text-rose-600 flex items-start gap-2 bg-rose-50/50 p-1.5 rounded"
+                <div>
+                  <h4
+                    className={`font-bold text-sm ${importFeedback.errors > 0
+                      ? "text-rose-800 dark:text-rose-300"
+                      : "text-emerald-800 dark:text-emerald-300"
+                      }`}
                   >
-                    <span className="mt-0.5 block min-w-[4px] h-[4px] rounded-full bg-rose-400" />
-                    <span className="leading-tight">{detail}</span>
-                  </li>
-                ))}
-              </ul>
+                    Relatório de Importação
+                  </h4>
+                  <p className="text-xs text-slate-600 mt-1 dark:text-slate-300">
+                    Processamento finalizado com os seguintes resultados:
+                  </p>
+                  <div className="flex gap-4 mt-2">
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded dark:bg-emerald-900/50 dark:text-emerald-300">
+                      {importFeedback.success} Sucessos
+                    </span>
+                    {importFeedback.errors > 0 && (
+                      <span className="text-xs font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded dark:bg-rose-900/50 dark:text-rose-300">
+                        {importFeedback.errors} Erros
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setImportFeedback(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-200/50 rounded dark:hover:bg-slate-700 dark:hover:text-slate-300"
+              >
+                <X size={16} />
+              </button>
             </div>
-          )}
-        </div>
-      )}
+            {importFeedback.errors > 0 && importFeedback.details.length > 0 && (
+              <div className="max-h-48 overflow-y-auto bg-white border-t border-slate-100 p-3 dark:bg-slate-800 dark:border-slate-700">
+                <p className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide dark:text-slate-400">
+                  Detalhes dos Erros:
+                </p>
+                <ul className="space-y-1.5">
+                  {importFeedback.details.map((detail, idx) => (
+                    <li
+                      key={idx}
+                      className="text-xs text-rose-600 flex items-start gap-2 bg-rose-50/50 p-1.5 rounded dark:text-rose-400 dark:bg-rose-900/20"
+                    >
+                      <span className="mt-0.5 block min-w-[4px] h-[4px] rounded-full bg-rose-400" />
+                      <span className="leading-tight">{detail}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )
+      }
 
       {/* Main Form Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-center p-6 border-b border-slate-100">
-              <h3 className="text-lg font-bold text-[#1E1E1E] flex items-center gap-2">
-                {editingId ? (
-                  <Edit2 size={18} className="text-[#204294]" />
-                ) : (
-                  <Plus size={18} className="text-[#204294]" />
-                )}
-                {editingId ? "Editar Plantão" : "Novo Plantão"}
-              </h3>
-              <button
-                onClick={closeModal}
-                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
+      {
+        isModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40 p-4 backdrop-blur-sm">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col animate-in fade-in zoom-in duration-200 dark:bg-slate-800">
+              <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-700">
+                <h3 className="text-lg font-bold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
+                  {editingId ? (
+                    <Edit2 size={18} className="text-[#204294] dark:text-blue-400" />
+                  ) : (
+                    <Plus size={18} className="text-[#204294] dark:text-blue-400" />
+                  )}
+                  {editingId ? "Editar Plantão" : "Novo Plantão"}
+                </h3>
+                <button
+                  onClick={closeModal}
+                  className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors dark:hover:bg-slate-700 dark:hover:text-slate-300"
+                >
+                  <X size={20} />
+                </button>
+              </div>
 
-            <div className="p-6 overflow-y-auto">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Funcionário <span className="text-rose-500">*</span>
-                  </label>
-                  <select
-                    required
-                    disabled={!!editingId}
-                    className={`w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900 ${editingId ? "bg-slate-100 text-slate-500" : ""
-                      }`}
-                    value={selectedEmpId}
-                    onChange={(e) => setSelectedEmpId(e.target.value)}
-                  >
-                    <option value="">Selecione...</option>
-                    {employees.map((emp) => (
-                      <option key={emp.id} value={emp.id}>
-                        {emp.firstName} {emp.lastName} ({emp.role})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Data do Plantão <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    required
-                    type="date"
-                    className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+              <div className="p-6 overflow-y-auto">
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Hora Início <span className="text-rose-500">*</span>
+                    <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
+                      Funcionário <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      required
+                      disabled={!!editingId}
+                      className={`w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900 ${editingId ? "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400" : "dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500"
+                        }`}
+                      value={selectedEmpId}
+                      onChange={(e) => setSelectedEmpId(e.target.value)}
+                    >
+                      <option value="">Selecione...</option>
+                      {employees.map((emp) => (
+                        <option key={emp.id} value={emp.id}>
+                          {emp.firstName} {emp.lastName} ({emp.role})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
+                      Data do Plantão <span className="text-rose-500">*</span>
                     </label>
                     <input
                       required
-                      type="time"
-                      className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900"
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
+                      type="date"
+                      className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
                     />
                   </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
+                        Hora Início <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        required
+                        type="time"
+                        className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
+                        Hora Fim <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        required
+                        type="time"
+                        className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
+                        value={endTime}
+                        onChange={(e) => setEndTime(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Hora Fim <span className="text-rose-500">*</span>
+                    <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
+                      Observação
                     </label>
-                    <input
-                      required
-                      type="time"
-                      className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900"
-                      value={endTime}
-                      onChange={(e) => setEndTime(e.target.value)}
+                    <textarea
+                      rows={3}
+                      placeholder="Ex: Sobreaviso remoto, Plantão presencial..."
+                      className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 resize-none dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
+                      value={observation}
+                      onChange={(e) => setObservation(e.target.value)}
                     />
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Observação
-                  </label>
-                  <textarea
-                    rows={3}
-                    placeholder="Ex: Sobreaviso remoto, Plantão presencial..."
-                    className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 resize-none"
-                    value={observation}
-                    onChange={(e) => setObservation(e.target.value)}
-                  />
-                </div>
+                  {error && (
+                    <div className="bg-rose-50 border border-rose-200 text-rose-700 p-3 rounded-lg text-sm flex items-start gap-2 max-w-full">
+                      <AlertTriangle size={18} className="mt-0.5 flex-shrink-0" />
+                      <span>{error}</span>
+                    </div>
+                  )}
 
-                {error && (
-                  <div className="bg-rose-50 border border-rose-200 text-rose-700 p-3 rounded-lg text-sm flex items-start gap-2">
-                    <AlertTriangle size={18} className="mt-0.5 flex-shrink-0" />
-                    <span>{error}</span>
+                  <div className="pt-2 flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={closeModal}
+                      className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-6 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] transition-colors shadow-sm font-bold dark:bg-blue-600 dark:hover:bg-blue-700"
+                    >
+                      Salvar
+                    </button>
                   </div>
-                )}
-
-                <div className="pt-2 flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] transition-colors shadow-sm font-bold"
-                  >
-                    Salvar
-                  </button>
-                </div>
-              </form>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Delete Confirmation Modal */}
-      {deleteConfirmationId && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden p-6 text-center">
-            <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-600">
-              <Trash2 size={24} />
-            </div>
-            <h3 className="text-lg font-bold text-slate-800 mb-2">
-              Excluir Plantão?
-            </h3>
-            <p className="text-slate-500 mb-6 text-sm">
-              Esta ação não pode ser desfeita. O registro será removido
-              permanentemente.
-            </p>
-            <div className="flex gap-3 justify-center">
-              <button
-                onClick={() => setDeleteConfirmationId(null)}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors shadow-sm font-medium"
-              >
-                Sim, Excluir
-              </button>
+      {
+        deleteConfirmationId && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden p-6 text-center dark:bg-slate-800">
+              <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400">
+                <Trash2 size={24} />
+              </div>
+              <h3 className="text-lg font-bold text-slate-800 mb-2 dark:text-white">
+                Excluir Plantão?
+              </h3>
+              <p className="text-slate-500 mb-6 text-sm dark:text-slate-400">
+                Esta ação não pode ser desfeita. O registro será removido
+                permanentemente.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => setDeleteConfirmationId(null)}
+                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium dark:text-slate-300 dark:hover:bg-slate-700"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors shadow-sm font-medium dark:bg-rose-600 dark:hover:bg-rose-700"
+                >
+                  Sim, Excluir
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 

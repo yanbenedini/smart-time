@@ -55,15 +55,15 @@ const REASON_OPTIONS = [
 const getSquadBadgeColor = (squad: Squad) => {
   switch (squad) {
     case Squad.LAKERS:
-      return "bg-yellow-50 text-yellow-700 border-yellow-100";
+      return "bg-yellow-50 text-yellow-700 border-yellow-100 dark:bg-yellow-500/60 dark:text-yellow-50 dark:border-yellow-600";
     case Squad.BULLS:
-      return "bg-red-50 text-red-700 border-red-100";
+      return "bg-red-50 text-red-700 border-red-100 dark:bg-red-600/60 dark:text-red-50 dark:border-red-600";
     case Squad.WARRIORS:
-      return "bg-blue-50 text-blue-700 border-blue-100";
+      return "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-600/60 dark:text-blue-50 dark:border-blue-600";
     case Squad.ROCKETS:
-      return "bg-purple-50 text-purple-700 border-purple-100";
+      return "bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-600/60 dark:text-purple-50 dark:border-purple-600";
     default:
-      return "bg-slate-50 text-slate-700 border-slate-100";
+      return "bg-slate-50 text-slate-700 border-slate-100 dark:bg-slate-600/60 dark:text-slate-50 dark:border-slate-600/60";
   }
 };
 
@@ -689,10 +689,10 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#1E1E1E]">
+          <h1 className="text-2xl font-bold text-[#1E1E1E] dark:text-white">
             Controle de Ausências
           </h1>
-          <p className="text-slate-500">
+          <p className="text-slate-500 dark:text-slate-400">
             Registre saídas antecipadas, faltas ou férias.
           </p>
         </div>
@@ -700,8 +700,8 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
             className={`flex-1 md:flex-none px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm border ${isFilterOpen || activeFilterCount > 0
-                ? "bg-[#204294]/10 border-[#204294]/20 text-[#204294]"
-                : "bg-white border-slate-200 text-[#3F3F3F] hover:bg-slate-50"
+              ? "bg-[#204294]/10 border-[#204294]/20 text-[#204294] dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400"
+              : "bg-white border-slate-200 text-[#3F3F3F] hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
               }`}
           >
             <Filter size={18} />
@@ -715,7 +715,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
 
           <button
             onClick={handleExportCSV}
-            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
             title="Exportar para CSV"
           >
             <Download size={18} />
@@ -730,9 +730,9 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
 
           {/* Filter Dropdown Panel */}
           {isFilterOpen && (
-            <div className="absolute top-12 right-0 w-full md:w-80 bg-white rounded-xl shadow-xl border border-slate-200 p-5 z-20">
+            <div className="absolute top-12 right-0 w-full md:w-80 bg-white rounded-xl shadow-xl border border-slate-200 p-5 z-20 dark:bg-slate-800 dark:border-slate-700">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-[#1E1E1E] flex items-center gap-2">
+                <h3 className="font-semibold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
                   <Search size={16} /> Filtros
                 </h3>
                 <button
@@ -745,13 +745,13 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
 
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                     Nome do Funcionário
                   </label>
                   <input
                     type="text"
                     placeholder="Buscar por nome..."
-                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                     value={filters.employeeName}
                     onChange={(e) =>
                       setFilters({ ...filters, employeeName: e.target.value })
@@ -760,13 +760,13 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                     Motivo
                   </label>
                   <input
                     type="text"
                     placeholder="Ex: Férias, Médico..."
-                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                     value={filters.reason}
                     onChange={(e) =>
                       setFilters({ ...filters, reason: e.target.value })
@@ -776,12 +776,12 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                       Data Início
                     </label>
                     <input
                       type="date"
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                       value={filters.startDate}
                       onChange={(e) =>
                         setFilters({ ...filters, startDate: e.target.value })
@@ -789,12 +789,12 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                       Data Fim
                     </label>
                     <input
                       type="date"
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                       value={filters.endDate}
                       onChange={(e) =>
                         setFilters({ ...filters, endDate: e.target.value })
@@ -859,12 +859,12 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
       {/* --- SELETOR DE ITENS POR PÁGINA --- */}
       <div className="flex justify-end">
         <div className="p-2 px-3 rounded-xl flex items-center w-fit">
-          <div className="flex items-center gap-2 text-sm text-slate-600 whitespace-nowrap">
+          <div className="flex items-center gap-2 text-sm text-slate-600 whitespace-nowrap dark:text-slate-400">
             <span>Mostrar</span>
             <select
               value={itemsPerPage}
               onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              className="border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-[#204294] bg-white font-medium text-[#204294] cursor-pointer"
+              className="border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-[#204294] bg-white font-medium text-[#204294] cursor-pointer dark:bg-slate-800 dark:border-slate-700 dark:text-blue-400"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -877,12 +877,12 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
       </div>
 
       {/* List Section */}
-      <div className="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden">
-        <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-          <h3 className="font-semibold text-slate-700">
+      <div className="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden dark:bg-slate-800 dark:border-slate-700">
+        <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center dark:bg-slate-700/50 dark:border-slate-700">
+          <h3 className="font-semibold text-slate-700 dark:text-white">
             Histórico de Registros
           </h3>
-          <span className="text-xs text-slate-500 bg-white px-2 py-1 rounded border border-slate-200">
+          <span className="text-xs text-slate-500 bg-white px-2 py-1 rounded border border-slate-200 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-300">
             Total: {totalItems}
           </span>
         </div>
@@ -930,7 +930,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
             <p>Nenhum registro encontrado.</p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {paginatedAbsences.map((abs) => {
               const emp = employees.find((e) => e.id === abs.employeeId);
               const isRange = abs.date !== abs.endDate;
@@ -944,15 +944,15 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                 <div
                   key={abs.id}
                   onClick={() => handleEdit(abs)}
-                  className="p-4 hover:bg-[#204294]/5 transition-all duration-200 cursor-pointer group hover:shadow-sm"
+                  className="p-4 hover:bg-[#204294]/5 transition-all duration-200 cursor-pointer group hover:shadow-sm dark:hover:bg-[#204294]/20"
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-3 md:w-1/3">
-                      <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold group-hover:bg-[#204294] group-hover:text-white transition-colors">
+                      <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold group-hover:bg-[#204294] group-hover:text-white transition-colors dark:bg-slate-700 dark:text-white dark:group-hover:text-white">
                         <User size={18} />
                       </div>
                       <div>
-                        <div className="font-bold text-[#1E1E1E] flex items-center gap-2">
+                        <div className="font-bold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
                           {emp
                             ? `${emp.firstName} ${emp.lastName}`
                             : "Funcionário removido"}
@@ -966,25 +966,25 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
                           {emp?.role}
                         </div>
                       </div>
                     </div>
 
                     <div className="flex-1 space-y-1">
-                      <div className="text-sm font-medium text-slate-700">
+                      <div className="text-sm font-medium text-slate-700 dark:text-slate-200">
                         {abs.reason}
                       </div>
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                         {isRange ? (
-                          <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-sm font-medium w-fit text-slate-900">
+                          <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-sm font-medium w-fit text-slate-900 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200">
                             <CalendarRange size={12} /> {formatDateBR(abs.date)}{" "}
                             <span className="text-slate-400">até</span>{" "}
                             {formatDateBR(abs.endDate)}
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-sm font-medium w-fit text-slate-900">
+                          <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-sm font-medium w-fit text-slate-900 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200">
                             <Calendar size={12} /> {formatDateBR(abs.date)}
                           </div>
                         )}
@@ -998,7 +998,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                         )}
                       </div>
                       {auditDate && (
-                        <div className="text-[10px] text-slate-400 mt-2 flex items-center gap-1 border-t border-slate-100 pt-1 w-full md:w-auto">
+                        <div className="text-[10px] text-slate-400 mt-2 flex items-center gap-1 border-t border-slate-100 dark:border-slate-700 pt-1 w-full md:w-auto">
                           <UserCircle size={10} />
                           <span>
                             {auditLabel} <strong>{auditUser}</strong> em{" "}
@@ -1014,7 +1014,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                           e.stopPropagation();
                           requestDelete(abs.id);
                         }}
-                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors dark:text-slate-500 dark:hover:bg-rose-900/20"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -1028,12 +1028,12 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
 
         {/* --- RODAPÉ DE PAGINAÇÃO --- */}
         {!isLoading && totalItems > 0 && (
-          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-sm text-slate-600">
+          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 dark:bg-slate-800 dark:border-slate-700">
+            <div className="text-sm text-slate-600 dark:text-slate-400">
               Mostrando{" "}
-              <span className="font-bold text-slate-800">{startIndex + 1}</span>{" "}
-              a <span className="font-bold text-slate-800">{endIndex}</span> de{" "}
-              <span className="font-bold text-slate-800">{totalItems}</span>{" "}
+              <span className="font-bold text-slate-800 dark:text-white">{startIndex + 1}</span>{" "}
+              a <span className="font-bold text-slate-800 dark:text-white">{endIndex}</span> de{" "}
+              <span className="font-bold text-slate-800 dark:text-white">{totalItems}</span>{" "}
               registros
             </div>
 
@@ -1041,17 +1041,17 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-600"
               >
-                <ChevronLeft size={18} className="text-slate-600" />
+                <ChevronLeft size={18} className="text-slate-600 dark:text-slate-300" />
               </button>
 
               <div className="flex items-center gap-1">
-                <span className="text-sm text-slate-500">Página</span>
-                <span className="text-sm font-bold text-[#204294] bg-[#204294]/10 px-2 py-1 rounded border border-[#204294]/20">
+                <span className="text-sm text-slate-500 dark:text-slate-400">Página</span>
+                <span className="text-sm font-bold text-[#204294] bg-[#204294]/10 px-2 py-1 rounded border border-[#204294]/20 dark:text-blue-400 dark:bg-blue-900/30 dark:border-blue-800">
                   {currentPage}
                 </span>
-                <span className="text-sm text-slate-500">de {totalPages}</span>
+                <span className="text-sm text-slate-500 dark:text-slate-400">de {totalPages}</span>
               </div>
 
               <button
@@ -1059,9 +1059,9 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-600"
               >
-                <ChevronRight size={18} className="text-slate-600" />
+                <ChevronRight size={18} className="text-slate-600 dark:text-slate-300" />
               </button>
             </div>
           </div>
@@ -1071,24 +1071,24 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
       {/* Main Form Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-center p-6 border-b border-slate-100">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-200 dark:bg-slate-800">
+            <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-700">
               <div>
-                <h3 className="text-lg font-bold text-[#1E1E1E] flex items-center gap-2">
+                <h3 className="text-lg font-bold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
                   {editingId ? (
-                    <Edit2 size={18} className="text-[#204294]" />
+                    <Edit2 size={18} className="text-[#204294] dark:text-blue-400" />
                   ) : (
-                    <Plus size={18} className="text-[#204294]" />
+                    <Plus size={18} className="text-[#204294] dark:text-blue-400" />
                   )}
                   {editingId ? "Editar Ausência" : "Nova Ausência"}
                 </h3>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                   Preencha os dados da ocorrência.
                 </p>
               </div>
               <button
                 onClick={closeModal}
-                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors"
+                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors dark:hover:bg-slate-700 dark:hover:text-slate-300"
               >
                 <X size={20} />
               </button>
@@ -1097,13 +1097,13 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
             <div className="p-6 overflow-y-auto">
               <form onSubmit={handleRequest} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
                     Funcionário <span className="text-rose-500">*</span>
                   </label>
                   <select
                     required
                     disabled={!!editingId}
-                    className={`w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900 ${editingId ? "bg-slate-100 text-slate-500" : ""
+                    className={`w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500 ${editingId ? "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400" : ""
                       }`}
                     value={selectedEmpId}
                     onChange={(e) => setSelectedEmpId(e.target.value)}
@@ -1127,8 +1127,8 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                         type="button"
                         onClick={() => setAbsenceType("single")}
                         className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${absenceType === "single"
-                            ? "bg-white text-[#204294] shadow-sm"
-                            : "text-slate-500 hover:text-slate-700"
+                          ? "bg-white text-[#204294] shadow-sm"
+                          : "text-slate-500 hover:text-slate-700"
                           }`}
                       >
                         <Calendar size={16} /> Dia Único
@@ -1137,8 +1137,8 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                         type="button"
                         onClick={() => setAbsenceType("range")}
                         className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${absenceType === "range"
-                            ? "bg-white text-[#204294] shadow-sm"
-                            : "text-slate-500 hover:text-slate-700"
+                          ? "bg-white text-[#204294] shadow-sm"
+                          : "text-slate-500 hover:text-slate-700"
                           }`}
                       >
                         <CalendarRange size={16} /> Período
@@ -1147,8 +1147,8 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                         type="button"
                         onClick={() => setAbsenceType("multi")}
                         className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${absenceType === "multi"
-                            ? "bg-white text-[#204294] shadow-sm"
-                            : "text-slate-500 hover:text-slate-700"
+                          ? "bg-white text-[#204294] shadow-sm"
+                          : "text-slate-500 hover:text-slate-700"
                           }`}
                       >
                         <CalendarDays size={16} /> Dias
@@ -1157,12 +1157,12 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                   </div>
                 )}
 
-                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 dark:bg-slate-900/50 dark:border-slate-700">
                   {absenceType === "single" && (
                     <input
                       required
                       type="date"
-                      className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900"
+                      className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
                     />
@@ -1170,25 +1170,25 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                   {absenceType === "range" && (
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs text-slate-500 mb-1">
+                        <label className="block text-xs text-slate-500 mb-1 dark:text-slate-400">
                           Início
                         </label>
                         <input
                           required
                           type="date"
-                          className="w-full border border-slate-300 rounded-lg p-2 bg-white"
+                          className="w-full border border-slate-300 rounded-lg p-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white"
                           value={startDate}
                           onChange={(e) => setStartDate(e.target.value)}
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-slate-500 mb-1">
+                        <label className="block text-xs text-slate-500 mb-1 dark:text-slate-400">
                           Fim
                         </label>
                         <input
                           required
                           type="date"
-                          className="w-full border border-slate-300 rounded-lg p-2 bg-white"
+                          className="w-full border border-slate-300 rounded-lg p-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white"
                           value={endDate}
                           onChange={(e) => setEndDate(e.target.value)}
                         />
@@ -1206,7 +1206,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                           <div className="flex gap-2 mb-3">
                             <input
                               type="date"
-                              className="flex-1 border border-slate-300 rounded-lg p-2 bg-white"
+                              className="flex-1 border border-slate-300 rounded-lg p-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white"
                               value={tempManualDate}
                               onChange={(e) =>
                                 setTempManualDate(e.target.value)
@@ -1215,7 +1215,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                             <button
                               type="button"
                               onClick={addManualDate}
-                              className="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 rounded-lg"
+                              className="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 rounded-lg dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
                             >
                               <Plus size={20} />
                             </button>
@@ -1224,7 +1224,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                             {manualDates.map((d) => (
                               <span
                                 key={d}
-                                className="inline-flex items-center gap-1 bg-white border border-slate-200 px-2 py-1 rounded-md text-sm text-slate-600"
+                                className="inline-flex items-center gap-1 bg-white border border-slate-200 px-2 py-1 rounded-md text-sm text-slate-600 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-300"
                               >
                                 {d}{" "}
                                 <button
@@ -1255,7 +1255,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
 
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium text-slate-700">
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       Horário
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -1265,7 +1265,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                         onChange={(e) => setIsFullDay(e.target.checked)}
                         className="w-4 h-4 text-[#204294] rounded focus:ring-[#204294]"
                       />
-                      <span className="text-sm text-slate-600">
+                      <span className="text-sm text-slate-600 dark:text-slate-300">
                         Dia Inteiro
                       </span>
                     </label>
@@ -1275,14 +1275,14 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                       <input
                         required
                         type="time"
-                        className="w-full border border-slate-300 rounded-lg p-2 bg-white"
+                        className="w-full border border-slate-300 rounded-lg p-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white"
                         value={startTime}
                         onChange={(e) => setStartTime(e.target.value)}
                       />
                       <input
                         required
                         type="time"
-                        className="w-full border border-slate-300 rounded-lg p-2 bg-white"
+                        className="w-full border border-slate-300 rounded-lg p-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white"
                         value={endTime}
                         onChange={(e) => setEndTime(e.target.value)}
                       />
@@ -1301,12 +1301,12 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
                     Motivo <span className="text-rose-500">*</span>
                   </label>
                   <select
                     required
-                    className="w-full border border-slate-300 rounded-lg p-2 bg-white"
+                    className="w-full border border-slate-300 rounded-lg p-2 bg-white dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
                     value={reasonCategory}
                     onChange={(e) => {
                       const val = e.target.value;
@@ -1327,7 +1327,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
 
                 {reasonCategory === "Outros" && (
                   <div className="animate-in fade-in slide-in-from-top-2 duration-200">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
                       Detalhe o motivo <span className="text-rose-500">*</span>
                     </label>
                     <input
@@ -1342,13 +1342,13 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
                     Observação{" "}
                     <span className="text-xs text-slate-400">(Opcional)</span>
                   </label>
                   <textarea
                     rows={3}
-                    className="w-full border border-slate-300 rounded-lg p-2 bg-white"
+                    className="w-full border border-slate-300 rounded-lg p-2 bg-white dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
                     value={observation}
                     onChange={(e) => setObservation(e.target.value)}
                   ></textarea>
@@ -1363,16 +1363,16 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
               </form>
             </div>
 
-            <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50 rounded-b-xl">
+            <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50 rounded-b-xl dark:bg-slate-800 dark:border-slate-700">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg font-medium"
+                className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg font-medium dark:text-slate-300 dark:hover:bg-slate-700"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleRequest}
-                className="px-6 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] shadow-sm font-bold"
+                className="px-6 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] shadow-sm font-bold dark:bg-blue-600 dark:hover:bg-blue-700"
               >
                 {editingId ? "Salvar Alterações" : "Registrar Ausência"}
               </button>
@@ -1384,15 +1384,15 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
       {/* Warning Confirmation Modal */}
       {warningModalOpen && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-[2px]">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 text-center animate-in zoom-in duration-200">
-            <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 text-center animate-in zoom-in duration-200 dark:bg-slate-800 dark:border dark:border-slate-700">
+            <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
               <AlertTriangle size={24} />
             </div>
-            <h3 className="text-lg font-bold text-slate-800 mb-2">
+            <h3 className="text-lg font-bold text-slate-800 mb-2 dark:text-white">
               Conflito de Escala
             </h3>
-            <p className="text-slate-600 mb-6 text-sm">{warningMessage}</p>
-            <p className="text-slate-500 mb-6 text-sm font-medium">
+            <p className="text-slate-600 mb-6 text-sm dark:text-slate-300">{warningMessage}</p>
+            <p className="text-slate-500 mb-6 text-sm font-medium dark:text-slate-400">
               Deseja prosseguir mesmo assim?
             </p>
             <div className="flex gap-3 justify-center">
@@ -1401,13 +1401,13 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                   setWarningModalOpen(false);
                   setPendingAbsenceData(null);
                 }}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg border border-slate-200 font-medium"
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg border border-slate-200 font-medium dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700"
               >
                 Voltar
               </button>
               <button
                 onClick={() => executeSave(pendingAbsenceData)}
-                className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 font-medium"
+                className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 font-medium dark:bg-slate-700 dark:hover:bg-slate-600"
               >
                 Sim, Confirmar
               </button>
@@ -1419,26 +1419,26 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
       {/* Delete Confirmation Modal */}
       {deleteConfirmationId && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
-            <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-600">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center dark:bg-slate-800">
+            <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400">
               <Trash2 size={24} />
             </div>
-            <h3 className="text-lg font-bold text-slate-800 mb-2">
+            <h3 className="text-lg font-bold text-slate-800 mb-2 dark:text-white">
               Excluir Ausência?
             </h3>
-            <p className="text-slate-500 mb-6 text-sm">
+            <p className="text-slate-500 mb-6 text-sm dark:text-slate-400">
               Esta ação não pode ser desfeita.
             </p>
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => setDeleteConfirmationId(null)}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium"
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium dark:text-slate-300 dark:hover:bg-slate-700"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 font-medium"
+                className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 font-medium dark:bg-rose-600 dark:hover:bg-rose-700"
               >
                 Sim, Excluir
               </button>

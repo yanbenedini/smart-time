@@ -102,8 +102,8 @@ const Dashboard: React.FC = () => {
   return (
     <div className="flex flex-col h-full gap-4 pb-4">
       <header className="flex-shrink-0">
-        <h1 className="text-xl font-bold text-[#1E1E1E]">Dashboard</h1>
-        <p className="text-sm text-slate-500">
+        <h1 className="text-xl font-bold text-[#1E1E1E] dark:text-white">Dashboard</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
           Visão geral da empresa e métricas.
         </p>
       </header>
@@ -111,16 +111,16 @@ const Dashboard: React.FC = () => {
       {/* TOP SECTION: Stats in Single Line (4 Columns) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 flex-shrink-0">
         {/* Card 1: Funcionários */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between dark:bg-slate-800 dark:border-slate-700">
           <div className="flex items-center gap-3 w-full">
-            <div className="p-2.5 bg-[#204294]/10 rounded-lg text-[#204294]">
+            <div className="p-2.5 bg-[#204294]/10 rounded-lg text-[#204294] dark:bg-blue-900/30 dark:text-blue-400">
               <Users size={20} />
             </div>
             <div className="flex-1">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide dark:text-slate-400">
                 Funcionários
               </p>
-              <h3 className="text-xl font-bold text-[#1E1E1E]">
+              <h3 className="text-xl font-bold text-[#1E1E1E] dark:text-white">
                 {isLoading ? (
                   <IonSkeletonText
                     animated
@@ -135,16 +135,16 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Card 2: Ausentes Hoje */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between dark:bg-slate-800 dark:border-slate-700">
           <div className="flex items-center gap-3 w-full">
-            <div className="p-2.5 bg-orange-50 rounded-lg text-orange-600">
+            <div className="p-2.5 bg-orange-50 rounded-lg text-orange-600 dark:bg-orange-900/20 dark:text-orange-400">
               <UserMinus size={20} />
             </div>
             <div className="flex-1">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide dark:text-slate-400">
                 Ausentes Hoje
               </p>
-              <h3 className="text-xl font-bold text-[#1E1E1E]">
+              <h3 className="text-xl font-bold text-[#1E1E1E] dark:text-white">
                 {isLoading ? (
                   <IonSkeletonText
                     animated
@@ -159,16 +159,16 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Card 3: Trocas Hoje */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between dark:bg-slate-800 dark:border-slate-700">
           <div className="flex items-center gap-3 w-full">
-            <div className="p-2.5 bg-[#00B0EA]/10 rounded-lg text-[#00B0EA]">
+            <div className="p-2.5 bg-[#00B0EA]/10 rounded-lg text-[#00B0EA] dark:bg-cyan-900/20 dark:text-cyan-400">
               <ArrowLeftRight size={20} />
             </div>
             <div className="flex-1">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide dark:text-slate-400">
                 Trocas Hoje
               </p>
-              <h3 className="text-xl font-bold text-[#1E1E1E]">
+              <h3 className="text-xl font-bold text-[#1E1E1E] dark:text-white">
                 {isLoading ? (
                   <IonSkeletonText
                     animated
@@ -182,16 +182,16 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
         {/* Card 4: Ausências Totais */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between dark:bg-slate-800 dark:border-slate-700">
           <div className="flex items-center gap-3 w-full">
-            <div className="p-2.5 bg-rose-50 rounded-lg text-rose-600">
+            <div className="p-2.5 bg-rose-50 rounded-lg text-rose-600 dark:bg-rose-900/20 dark:text-rose-400">
               <CalendarOff size={20} />
             </div>
             <div className="flex-1">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide dark:text-slate-400">
                 Próximas Ausências
               </p>
-              <h3 className="text-xl font-bold text-[#1E1E1E]">
+              <h3 className="text-xl font-bold text-[#1E1E1E] dark:text-white">
                 {isLoading ? (
                   <IonSkeletonText
                     animated
@@ -209,13 +209,13 @@ const Dashboard: React.FC = () => {
       {/* BOTTOM SECTION: Lists Grid 2x2 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0">
         {/* Box 1: Absent Today List */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col h-full">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col h-full dark:bg-slate-800 dark:border-slate-700">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-bold text-[#1E1E1E] flex items-center gap-2">
+            <h3 className="text-sm font-bold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
               <UserMinus size={16} className="text-rose-500" />
               Ausentes Hoje
             </h3>
-            <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full dark:bg-slate-700 dark:text-slate-400">
               {formatDateBR(todayStr)}
             </span>
           </div>
@@ -226,7 +226,7 @@ const Dashboard: React.FC = () => {
               Array.from({ length: 2 }).map((_, i) => (
                 <div
                   key={`sk-abs-${i}`}
-                  className="p-2 border border-slate-100 rounded-lg bg-slate-50"
+                  className="p-2 border border-slate-100 rounded-lg bg-slate-50 dark:border-slate-700 dark:bg-slate-700/50"
                 >
                   <div className="flex justify-between mb-1">
                     <IonSkeletonText
@@ -250,17 +250,17 @@ const Dashboard: React.FC = () => {
                 return (
                   <div
                     key={abs.id}
-                    className="p-2 border border-slate-100 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
+                    className="p-2 border border-slate-100 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-700"
                   >
                     <div className="flex justify-between items-start mb-0.5">
-                      <span className="font-bold text-[#1E1E1E] text-xs truncate max-w-[120px]">
+                      <span className="font-bold text-[#1E1E1E] text-xs truncate max-w-[120px] dark:text-slate-200">
                         {emp ? `${emp.firstName} ${emp.lastName}` : "Excluído"}
                       </span>
                     </div>
-                    <div className="text-[11px] text-rose-600 font-medium mb-0.5 truncate">
+                    <div className="text-[11px] text-rose-600 font-medium mb-0.5 truncate dark:text-rose-400">
                       {abs.reason}
                     </div>
-                    <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                    <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
                       <Clock size={10} />
                       {abs.startTime} - {abs.endTime}
                     </div>
@@ -269,7 +269,7 @@ const Dashboard: React.FC = () => {
               })
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-center p-4 text-slate-400">
-                <div className="w-8 h-8 bg-[#01B8A1]/10 text-[#01B8A1] rounded-full flex items-center justify-center mb-1">
+                <div className="w-8 h-8 bg-[#01B8A1]/10 text-[#01B8A1] rounded-full flex items-center justify-center mb-1 dark:bg-teal-900/20 dark:text-teal-400">
                   <CheckCircle size={16} />
                 </div>
                 <p className="text-[11px]">Todos presentes hoje.</p>
@@ -279,13 +279,13 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Box 2: Vacation Today List */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col h-full">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col h-full dark:bg-slate-800 dark:border-slate-700">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-bold text-[#1E1E1E] flex items-center gap-2">
+            <h3 className="text-sm font-bold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
               <Palmtree size={16} className="text-emerald-500" />
               Em Férias
             </h3>
-            <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full dark:bg-slate-700 dark:text-slate-400">
               {formatDateBR(todayStr)}
             </span>
           </div>
@@ -296,7 +296,7 @@ const Dashboard: React.FC = () => {
               Array.from({ length: 2 }).map((_, i) => (
                 <div
                   key={`sk-vac-${i}`}
-                  className="p-2 border border-emerald-100 rounded-lg bg-emerald-50"
+                  className="p-2 border border-emerald-100 rounded-lg bg-emerald-50 dark:border-emerald-900/30 dark:bg-emerald-900/10"
                 >
                   <div className="flex justify-between mb-1">
                     <IonSkeletonText
@@ -320,14 +320,14 @@ const Dashboard: React.FC = () => {
                 return (
                   <div
                     key={abs.id}
-                    className="p-2 border border-emerald-100 rounded-lg bg-emerald-50 hover:bg-emerald-100 transition-colors"
+                    className="p-2 border border-emerald-100 rounded-lg bg-emerald-50 hover:bg-emerald-100 transition-colors dark:bg-emerald-900/10 dark:border-emerald-900/30 dark:hover:bg-emerald-900/20"
                   >
                     <div className="flex justify-between items-start mb-0.5">
-                      <span className="font-bold text-[#1E1E1E] text-xs truncate max-w-[120px]">
+                      <span className="font-bold text-[#1E1E1E] text-xs truncate max-w-[120px] dark:text-slate-200">
                         {emp ? `${emp.firstName} ${emp.lastName}` : "Excluído"}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-[10px] text-emerald-700 font-medium">
+                    <div className="flex items-center gap-1 text-[10px] text-emerald-700 font-medium dark:text-emerald-400">
                       <Calendar size={10} />
                       {abs.date === abs.endDate
                         ? formatDateBR(abs.date)
@@ -340,7 +340,7 @@ const Dashboard: React.FC = () => {
               })
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-center p-4 text-slate-400">
-                <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-1">
+                <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-1 dark:bg-emerald-900/20 dark:text-emerald-400">
                   <Palmtree size={16} />
                 </div>
                 <p className="text-[11px]">Ninguém em férias hoje.</p>
@@ -350,13 +350,13 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Box 3: Shift Changes Today List */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col h-full">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col h-full dark:bg-slate-800 dark:border-slate-700">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-bold text-[#1E1E1E] flex items-center gap-2">
+            <h3 className="text-sm font-bold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
               <ArrowLeftRight size={16} className="text-[#00B0EA]" />
               Trocas Hoje
             </h3>
-            <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full dark:bg-slate-700 dark:text-slate-400">
               {formatDateBR(todayStr)}
             </span>
           </div>
@@ -367,7 +367,7 @@ const Dashboard: React.FC = () => {
               Array.from({ length: 2 }).map((_, i) => (
                 <div
                   key={`sk-shift-${i}`}
-                  className="p-2 border border-slate-100 rounded-lg bg-slate-50"
+                  className="p-2 border border-slate-100 rounded-lg bg-slate-50 dark:bg-slate-700/50 dark:border-slate-700"
                 >
                   <IonSkeletonText
                     animated
@@ -385,22 +385,22 @@ const Dashboard: React.FC = () => {
                 return (
                   <div
                     key={change.id}
-                    className="p-2 border border-slate-100 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
+                    className="p-2 border border-slate-100 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-700"
                   >
                     <div className="flex justify-between items-start mb-0.5">
-                      <span className="font-bold text-[#1E1E1E] text-xs truncate max-w-[120px]">
+                      <span className="font-bold text-[#1E1E1E] text-xs truncate max-w-[120px] dark:text-slate-200">
                         {emp ? `${emp.firstName} ${emp.lastName}` : "Excluído"}
                       </span>
                     </div>
-                    <div className="text-[11px] text-slate-500 mb-1 truncate">
+                    <div className="text-[11px] text-slate-500 mb-1 truncate dark:text-slate-400">
                       {change.reason}
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] bg-white p-1 rounded border border-slate-100">
+                    <div className="flex items-center gap-2 text-[10px] bg-white p-1 rounded border border-slate-100 dark:bg-slate-900 dark:border-slate-700">
                       <span className="text-slate-400 line-through decoration-rose-300">
                         {change.originalShiftStart} - {change.originalShiftEnd}
                       </span>
                       <ArrowRight size={8} className="text-slate-400" />
-                      <span className="font-bold text-[#204294]">
+                      <span className="font-bold text-[#204294] dark:text-blue-400">
                         {change.newShiftStart} - {change.newShiftEnd}
                       </span>
                     </div>
@@ -409,7 +409,7 @@ const Dashboard: React.FC = () => {
               })
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-center p-4 text-slate-400">
-                <div className="w-8 h-8 bg-[#00B0EA]/10 text-[#00B0EA] rounded-full flex items-center justify-center mb-1">
+                <div className="w-8 h-8 bg-[#00B0EA]/10 text-[#00B0EA] rounded-full flex items-center justify-center mb-1 dark:bg-cyan-900/20 dark:text-cyan-400">
                   <CheckCircle size={16} />
                 </div>
                 <p className="text-[11px]">Nenhuma troca hoje.</p>
@@ -419,13 +419,13 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Box 4: Upcoming On-Call Shifts */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col h-full">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col h-full dark:bg-slate-800 dark:border-slate-700">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-bold text-[#1E1E1E] flex items-center gap-2">
+            <h3 className="text-sm font-bold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
               <Phone size={16} className="text-indigo-500" />
               Próximos Plantões
             </h3>
-            <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full dark:bg-slate-700 dark:text-slate-400">
               Próx. 30 dias
             </span>
           </div>
@@ -436,7 +436,7 @@ const Dashboard: React.FC = () => {
               Array.from({ length: 2 }).map((_, i) => (
                 <div
                   key={`sk-call-${i}`}
-                  className="p-2 border border-slate-100 rounded-lg bg-slate-50"
+                  className="p-2 border border-slate-100 rounded-lg bg-slate-50 dark:bg-slate-700/50 dark:border-slate-700"
                 >
                   <IonSkeletonText
                     animated
@@ -460,12 +460,12 @@ const Dashboard: React.FC = () => {
                   <div
                     key={shift.id}
                     className={`p-2 border rounded-lg transition-colors ${isToday
-                        ? "bg-indigo-50 border-indigo-200"
-                        : "bg-slate-50 border-slate-100 hover:bg-slate-100"
+                      ? "bg-indigo-50 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-800"
+                      : "bg-slate-50 border-slate-100 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-700"
                       }`}
                   >
                     <div className="flex justify-between items-start mb-0.5">
-                      <span className="font-bold text-[#1E1E1E] text-xs truncate max-w-[120px]">
+                      <span className="font-bold text-[#1E1E1E] text-xs truncate max-w-[120px] dark:text-slate-200">
                         {emp ? `${emp.firstName} ${emp.lastName}` : "Excluído"}
                       </span>
                       {isToday && (
@@ -474,7 +474,7 @@ const Dashboard: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] text-slate-500 mb-0.5">
+                    <div className="flex items-center gap-2 text-[10px] text-slate-500 mb-0.5 dark:text-slate-400">
                       <Calendar
                         size={10}
                         className={
@@ -482,12 +482,12 @@ const Dashboard: React.FC = () => {
                         }
                       />
                       <span
-                        className={isToday ? "font-bold text-indigo-700" : ""}
+                        className={isToday ? "font-bold text-indigo-700 dark:text-indigo-400" : ""}
                       >
                         {formatDateBR(shift.date)}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                    <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
                       <Clock size={10} />
                       {shift.startTime} - {shift.endTime}
                     </div>
@@ -496,7 +496,7 @@ const Dashboard: React.FC = () => {
               })
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-center p-4 text-slate-400">
-                <div className="w-8 h-8 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mb-1">
+                <div className="w-8 h-8 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mb-1 dark:bg-indigo-900/20 dark:text-indigo-400">
                   <Phone size={16} />
                 </div>
                 <p className="text-[11px]">Nenhum plantão próximo.</p>

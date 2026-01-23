@@ -39,15 +39,15 @@ interface ShiftChangeManagerProps {
 const getSquadBadgeColor = (squad: Squad) => {
   switch (squad) {
     case Squad.LAKERS:
-      return "bg-yellow-50 text-yellow-700 border-yellow-100";
+      return "bg-yellow-50 text-yellow-700 border-yellow-100 dark:bg-yellow-500/60 dark:text-yellow-50 dark:border-yellow-600";
     case Squad.BULLS:
-      return "bg-red-50 text-red-700 border-red-100";
+      return "bg-red-50 text-red-700 border-red-100 dark:bg-red-600/60 dark:text-red-50 dark:border-red-600";
     case Squad.WARRIORS:
-      return "bg-blue-50 text-blue-700 border-blue-100";
+      return "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-600/60 dark:text-blue-50 dark:border-blue-600";
     case Squad.ROCKETS:
-      return "bg-purple-50 text-purple-700 border-purple-100";
+      return "bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-600/60 dark:text-purple-50 dark:border-purple-600";
     default:
-      return "bg-slate-50 text-slate-700 border-slate-100";
+      return "bg-slate-50 text-slate-700 border-slate-100 dark:bg-slate-600/60 dark:text-slate-50 dark:border-slate-600/60";
   }
 };
 
@@ -672,8 +672,8 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#1E1E1E]">Trocas de Turno</h1>
-          <p className="text-slate-500">
+          <h1 className="text-2xl font-bold text-[#1E1E1E] dark:text-white">Trocas de Turno</h1>
+          <p className="text-slate-500 dark:text-slate-400">
             Gerencie alterações temporárias de horário.
           </p>
         </div>
@@ -689,14 +689,14 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
             className={`flex-1 md:flex-none px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm border ${isFilterOpen || activeFilterCount > 0
-                ? "bg-[#204294]/10 border-[#204294]/20 text-[#204294]"
-                : "bg-white border-slate-200 text-[#3F3F3F] hover:bg-slate-50"
+              ? "bg-[#204294]/10 border-[#204294]/20 text-[#204294] dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400"
+              : "bg-white border-slate-200 text-[#3F3F3F] hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
               }`}
           >
             <Filter size={18} />
 
             {activeFilterCount > 0 && (
-              <span className="bg-[#204294] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full ml-1">
+              <span className="bg-[#204294] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full ml-1 dark:bg-blue-600">
                 {activeFilterCount}
               </span>
             )}
@@ -704,7 +704,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
 
           <button
             onClick={handleExportCSV}
-            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
             title="Exportar para CSV"
           >
             <Download size={18} />
@@ -712,7 +712,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
 
           <button
             onClick={handleDownloadTemplate}
-            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+            className="flex-1 md:flex-none bg-white hover:bg-slate-50 border border-slate-200 text-[#3F3F3F] px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
             title="Baixar Modelo de Importação"
           >
             <FileText size={18} />
@@ -728,7 +728,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
 
           <button
             onClick={openNewModal}
-            className="flex-1 md:flex-none bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-bold"
+            className="flex-1 md:flex-none bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm font-bold dark:bg-blue-600 dark:hover:bg-blue-700"
             title="Adicionar Troca"
           >
             <Plus size={18} />
@@ -736,14 +736,14 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
 
           {/* Filter Dropdown Panel */}
           {isFilterOpen && (
-            <div className="absolute top-12 right-0 w-full md:w-80 bg-white rounded-xl shadow-xl border border-slate-200 p-5 z-20">
+            <div className="absolute top-12 right-0 w-full md:w-80 bg-white rounded-xl shadow-xl border border-slate-200 p-5 z-20 dark:bg-slate-800 dark:border-slate-700">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-[#1E1E1E] flex items-center gap-2">
+                <h3 className="font-semibold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
                   <Search size={16} /> Filtros
                 </h3>
                 <button
                   onClick={() => setIsFilterOpen(false)}
-                  className="text-slate-400 hover:text-slate-600"
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                 >
                   <X size={16} />
                 </button>
@@ -751,13 +751,13 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
 
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                     Nome do Funcionário
                   </label>
                   <input
                     type="text"
                     placeholder="Buscar por nome..."
-                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                     value={filters.employeeName}
                     onChange={(e) =>
                       setFilters({ ...filters, employeeName: e.target.value })
@@ -767,12 +767,12 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                       Data Início
                     </label>
                     <input
                       type="date"
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                       value={filters.startDate}
                       onChange={(e) =>
                         setFilters({ ...filters, startDate: e.target.value })
@@ -780,12 +780,12 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                       Data Fim
                     </label>
                     <input
                       type="date"
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                       value={filters.endDate}
                       onChange={(e) =>
                         setFilters({ ...filters, endDate: e.target.value })
@@ -837,12 +837,12 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                 {/* Novos Filtros: Novo Horário (Início e Fim) */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                       Novo Início
                     </label>
                     <input
                       type="time"
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                       value={filters.newShiftStart}
                       onChange={(e) =>
                         setFilters({
@@ -853,12 +853,12 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                       Novo Fim
                     </label>
                     <input
                       type="time"
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                       value={filters.newShiftEnd}
                       onChange={(e) =>
                         setFilters({
@@ -886,12 +886,12 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
       {/* --- SELETOR DE ITENS POR PÁGINA (Alinhado à direita) --- */}
       <div className="flex justify-end">
         <div className="p-2 px-3 rounded-xl flex items-center w-fit">
-          <div className="flex items-center gap-2 text-sm text-slate-600 whitespace-nowrap">
+          <div className="flex items-center gap-2 text-sm text-slate-600 whitespace-nowrap dark:text-slate-400">
             <span>Mostrar</span>
             <select
               value={itemsPerPage}
               onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              className="border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-[#204294] bg-white font-medium text-[#204294] cursor-pointer"
+              className="border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-[#204294] bg-white font-medium text-[#204294] cursor-pointer dark:bg-slate-800 dark:border-slate-700 dark:text-blue-400"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -904,10 +904,10 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
       </div>
 
       {/* List Section */}
-      <div className="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden mb-20">
-        <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-          <h3 className="font-semibold text-slate-700">Histórico de Trocas</h3>
-          <span className="text-xs text-slate-500 bg-white px-2 py-1 rounded border border-slate-200">
+      <div className="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden mb-20 dark:bg-slate-800 dark:border-slate-700">
+        <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center dark:bg-slate-700/50 dark:border-slate-700">
+          <h3 className="font-semibold text-slate-700 dark:text-white">Histórico de Trocas</h3>
+          <span className="text-xs text-slate-500 bg-white px-2 py-1 rounded border border-slate-200 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-300">
             Total: {totalItems}
           </span>
         </div>
@@ -973,7 +973,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
             )}
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {paginatedChanges.map((change) => {
               const emp = employees.find((e) => e.id === change.employeeId);
               const auditUser =
@@ -987,15 +987,15 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                 <div
                   key={change.id}
                   onClick={() => handleEdit(change)}
-                  className="p-4 hover:bg-[#204294]/5 transition-colors duration-200 cursor-pointer group hover:shadow-sm"
+                  className="p-4 hover:bg-[#204294]/5 transition-colors duration-200 cursor-pointer group hover:shadow-sm dark:hover:bg-[#204294]/20"
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-3 md:w-1/3">
-                      <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold group-hover:bg-[#204294] group-hover:text-white transition-colors">
+                      <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold group-hover:bg-[#204294] group-hover:text-white transition-colors dark:bg-slate-700 dark:text-white dark:group-hover:text-white">
                         <User size={18} />
                       </div>
                       <div>
-                        <div className="font-bold text-[#1E1E1E] flex items-center gap-2">
+                        <div className="font-bold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
                           {emp
                             ? `${emp.firstName} ${emp.lastName}`
                             : "Funcionário removido"}
@@ -1009,7 +1009,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
                           {emp?.role}
                         </div>
                         {emp && (
@@ -1025,7 +1025,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                     </div>
 
                     <div className="flex-1 space-y-2">
-                      <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-sm font-medium w-fit">
+                      <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-sm font-medium w-fit dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200">
                         <Calendar size={14} />
                         {change.startDate === change.endDate
                           ? formatDateBR(change.startDate)
@@ -1034,21 +1034,21 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                           )} até ${formatDateBR(change.endDate)}`}
                       </div>
                       <div className="flex items-center gap-3 text-sm">
-                        <span className="text-slate-400 line-through flex items-center gap-1">
+                        <span className="text-slate-400 line-through flex items-center gap-1 dark:text-slate-500">
                           <Clock size={12} /> {change.originalShiftStart} -{" "}
                           {change.originalShiftEnd}
                         </span>
-                        <ArrowRight size={14} className="text-[#204294]" />
-                        <span className="text-slate-700 font-bold flex items-center gap-1">
+                        <ArrowRight size={14} className="text-[#204294] dark:text-blue-400" />
+                        <span className="text-slate-700 font-bold flex items-center gap-1 dark:text-white">
                           <Clock size={12} /> {change.newShiftStart} -{" "}
                           {change.newShiftEnd}
                         </span>
                       </div>
-                      <div className="text-xs text-slate-500 italic">
+                      <div className="text-xs text-slate-500 italic dark:text-slate-400">
                         "{change.reason}"
                       </div>
                       {auditDate && (
-                        <div className="text-[10px] text-slate-400 mt-2 flex items-center gap-1 border-t border-slate-100 pt-1 w-full md:w-auto">
+                        <div className="text-[10px] text-slate-400 mt-2 flex items-center gap-1 border-t border-slate-100 pt-1 w-full md:w-auto dark:border-slate-700 dark:text-slate-500">
                           <UserCircle size={10} />
                           <span>
                             {auditLabel} <strong>{auditUser}</strong> em{" "}
@@ -1064,7 +1064,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                           e.stopPropagation();
                           requestDelete(change.id);
                         }}
-                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors dark:text-slate-500 dark:hover:bg-rose-900/20"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -1078,12 +1078,12 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
 
         {/* --- RODAPÉ DE PAGINAÇÃO --- */}
         {!isLoading && totalItems > 0 && (
-          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-sm text-slate-600">
+          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 dark:bg-slate-800 dark:border-slate-700">
+            <div className="text-sm text-slate-600 dark:text-slate-400">
               Mostrando{" "}
-              <span className="font-bold text-slate-800">{startIndex + 1}</span>{" "}
-              a <span className="font-bold text-slate-800">{endIndex}</span> de{" "}
-              <span className="font-bold text-slate-800">{totalItems}</span>{" "}
+              <span className="font-bold text-slate-800 dark:text-white">{startIndex + 1}</span>{" "}
+              a <span className="font-bold text-slate-800 dark:text-white">{endIndex}</span> de{" "}
+              <span className="font-bold text-slate-800 dark:text-white">{totalItems}</span>{" "}
               registros
             </div>
 
@@ -1091,17 +1091,17 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-600"
               >
-                <ChevronLeft size={18} className="text-slate-600" />
+                <ChevronLeft size={18} className="text-slate-600 dark:text-slate-300" />
               </button>
 
               <div className="flex items-center gap-1">
-                <span className="text-sm text-slate-500">Página</span>
-                <span className="text-sm font-bold text-[#204294] bg-[#204294]/10 px-2 py-1 rounded border border-[#204294]/20">
+                <span className="text-sm text-slate-500 dark:text-slate-400">Página</span>
+                <span className="text-sm font-bold text-[#204294] bg-[#204294]/10 px-2 py-1 rounded border border-[#204294]/20 dark:text-blue-400 dark:bg-blue-900/30 dark:border-blue-800">
                   {currentPage}
                 </span>
-                <span className="text-sm text-slate-500">de {totalPages}</span>
+                <span className="text-sm text-slate-500 dark:text-slate-400">de {totalPages}</span>
               </div>
 
               <button
@@ -1109,9 +1109,9 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-600"
               >
-                <ChevronRight size={18} className="text-slate-600" />
+                <ChevronRight size={18} className="text-slate-600 dark:text-slate-300" />
               </button>
             </div>
           </div>
@@ -1123,15 +1123,15 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
         <div className="fixed bottom-4 right-4 z-50 max-w-md w-full bg-white shadow-2xl rounded-xl border border-slate-200 overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
           <div
             className={`p-4 flex items-start justify-between ${importFeedback.errors > 0
-                ? "bg-rose-50 border-l-4 border-l-rose-500"
-                : "bg-emerald-50 border-l-4 border-l-emerald-500"
+              ? "bg-rose-50 border-l-4 border-l-rose-500"
+              : "bg-emerald-50 border-l-4 border-l-emerald-500"
               }`}
           >
             <div className="flex gap-3">
               <div
                 className={`mt-0.5 ${importFeedback.errors > 0
-                    ? "text-rose-600"
-                    : "text-emerald-600"
+                  ? "text-rose-600"
+                  : "text-emerald-600"
                   }`}
               >
                 {importFeedback.errors > 0 ? (
@@ -1143,8 +1143,8 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
               <div>
                 <h4
                   className={`font-bold text-sm ${importFeedback.errors > 0
-                      ? "text-rose-800"
-                      : "text-emerald-800"
+                    ? "text-rose-800"
+                    : "text-emerald-800"
                     }`}
                 >
                   Relatório de Importação
@@ -1195,19 +1195,19 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
       {/* Main Form Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-center p-6 border-b border-slate-100">
-              <h3 className="text-lg font-bold text-[#1E1E1E] flex items-center gap-2">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col animate-in fade-in zoom-in duration-200 dark:bg-slate-800">
+            <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-700">
+              <h3 className="text-lg font-bold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
                 {editingId ? (
-                  <Edit2 size={18} className="text-[#204294]" />
+                  <Edit2 size={18} className="text-[#204294] dark: text-blue-400" />
                 ) : (
-                  <Plus size={18} className="text-[#204294]" />
+                  <Plus size={18} className="text-[#204294] dark: text-blue-400" />
                 )}
                 {editingId ? "Editar Troca" : "Nova Troca de Turno"}
               </h3>
               <button
                 onClick={closeModal}
-                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors"
+                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors dark:hover:bg-slate-700 dark:hover:text-slate-300"
               >
                 <X size={20} />
               </button>
@@ -1216,13 +1216,13 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
             <div className="p-6 overflow-y-auto max-h-[80vh]">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
                     Funcionário <span className="text-rose-500">*</span>
                   </label>
                   <select
                     required
                     disabled={!!editingId}
-                    className={`w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900 ${editingId ? "bg-slate-100 text-slate-500" : ""
+                    className={`w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500 ${editingId ? "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400" : ""
                       }`}
                     value={selectedEmpId}
                     onChange={(e) => setSelectedEmpId(e.target.value)}
@@ -1244,7 +1244,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                     <input
                       required
                       type="date"
-                      className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900"
+                      className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
                     />
@@ -1256,75 +1256,75 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                     <input
                       required
                       type="date"
-                      className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900"
+                      className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
                     />
                   </div>
                 </div>
 
-                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-4">
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-4 dark:bg-slate-900/50 dark:border-slate-700">
                   <div className="flex items-center gap-2 mb-2">
                     <Clock size={16} className="text-slate-400" />
-                    <span className="text-sm font-bold text-slate-700">
+                    <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
                       Horários
                     </span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 opacity-70">
                     <div>
-                      <label className="block text-xs font-medium text-slate-500 mb-1">
+                      <label className="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">
                         Turno Original (Início)
                       </label>
                       <input
                         readOnly
                         type="time"
-                        className="w-full border border-slate-200 rounded-lg p-2 bg-slate-100 text-slate-500 cursor-not-allowed"
+                        className="w-full border border-slate-200 rounded-lg p-2 bg-slate-100 text-slate-500 cursor-not-allowed dark:bg-slate-700 dark:border-slate-600 dark:text-slate-400"
                         value={originalShiftStart}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-slate-500 mb-1">
+                      <label className="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">
                         Turno Original (Fim)
                       </label>
                       <input
                         readOnly
                         type="time"
-                        className="w-full border border-slate-200 rounded-lg p-2 bg-slate-100 text-slate-500 cursor-not-allowed"
+                        className="w-full border border-slate-200 rounded-lg p-2 bg-slate-100 text-slate-500 cursor-not-allowed dark:bg-slate-700 dark:border-slate-600 dark:text-slate-400"
                         value={originalShiftEnd}
                       />
                     </div>
                   </div>
 
                   <div className="flex justify-center -my-2 relative z-10">
-                    <div className="bg-white border border-slate-200 rounded-full p-1 shadow-sm">
-                      <ArrowRight size={14} className="text-[#204294]" />
+                    <div className="bg-white border border-slate-200 rounded-full p-1 shadow-sm dark:bg-slate-600 dark:border-slate-500">
+                      <ArrowRight size={14} className="text-[#204294] dark:text-blue-400" />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-[#204294] mb-1">
+                      <label className="block text-xs font-bold text-[#204294] mb-1 dark:text-blue-400">
                         Novo Horário (Início){" "}
                         <span className="text-rose-500">*</span>
                       </label>
                       <input
                         required
                         type="time"
-                        className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 focus:ring-2 focus:ring-[#204294]"
+                        className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 focus:ring-2 focus:ring-[#204294] dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500"
                         value={newShiftStart}
                         onChange={(e) => setNewShiftStart(e.target.value)}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-[#204294] mb-1">
+                      <label className="block text-xs font-bold text-[#204294] mb-1 dark:text-blue-400">
                         Novo Horário (Fim){" "}
                         <span className="text-rose-500">*</span>
                       </label>
                       <input
                         required
                         type="time"
-                        className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 focus:ring-2 focus:ring-[#204294]"
+                        className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 focus:ring-2 focus:ring-[#204294] dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500"
                         value={newShiftEnd}
                         onChange={(e) => setNewShiftEnd(e.target.value)}
                       />
@@ -1333,7 +1333,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
                     Motivo <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -1357,13 +1357,13 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] transition-colors shadow-sm font-bold"
+                    className="px-6 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] transition-colors shadow-sm font-bold dark:bg-blue-600 dark:hover:bg-blue-700"
                   >
                     Salvar Alteração
                   </button>
@@ -1377,27 +1377,27 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
       {/* Delete Confirmation Modal */}
       {deleteConfirmationId && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden p-6 text-center">
-            <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-600">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden p-6 text-center dark:bg-slate-800">
+            <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400">
               <Trash2 size={24} />
             </div>
-            <h3 className="text-lg font-bold text-slate-800 mb-2">
+            <h3 className="text-lg font-bold text-slate-800 mb-2 dark:text-white">
               Excluir Troca?
             </h3>
-            <p className="text-slate-500 mb-6 text-sm">
+            <p className="text-slate-500 mb-6 text-sm dark:text-slate-400">
               Esta ação não pode ser desfeita. O registro será removido
               permanentemente.
             </p>
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => setDeleteConfirmationId(null)}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium"
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium dark:text-slate-300 dark:hover:bg-slate-700"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors shadow-sm font-medium"
+                className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors shadow-sm font-medium dark:bg-rose-600 dark:hover:bg-rose-700"
               >
                 Sim, Excluir
               </button>
@@ -1408,24 +1408,24 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
       {/* Modal de Aviso de Cobertura */}
       {warningModalOpen && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-[2px]">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 text-center animate-in zoom-in duration-200">
-            <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 text-center animate-in zoom-in duration-200 dark:bg-slate-800 dark:border dark:border-slate-700">
+            <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
               <AlertTriangle size={24} />
             </div>
-            <h3 className="text-lg font-bold text-slate-800 mb-2">
+            <h3 className="text-lg font-bold text-slate-800 mb-2 dark:text-white">
               Conflito de Cobertura
             </h3>
-            <p className="text-slate-600 mb-6 text-sm">{warningMessage}</p>
+            <p className="text-slate-600 mb-6 text-sm dark:text-slate-300">{warningMessage}</p>
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => setWarningModalOpen(false)}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg border border-slate-200 font-medium"
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg border border-slate-200 font-medium dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700"
               >
                 Voltar
               </button>
               <button
                 onClick={() => pendingChange && executeSave(pendingChange)}
-                className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 font-medium"
+                className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 font-medium dark:bg-slate-700 dark:hover:bg-slate-600"
               >
                 Confirmar mesmo assim
               </button>

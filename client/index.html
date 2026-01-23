@@ -1,43 +1,57 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Smart Time</title>
-    <link rel="icon" type="image/x-icon" href="./assets/favicon.ico" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      /* Using Montserrat as a close alternative to Gotham (Geometric Sans) */
-      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap");
 
-      body {
-        font-family: "Montserrat", sans-serif;
-        background-color: #f8fafc;
-        color: #1e1e1e; /* CCM Dark Grey */
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Time</title>
+  <link rel="icon" type="image/x-icon" href="./assets/favicon.ico" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            // Mantendo as cores customizadas que vi no código
+          }
+        }
       }
+    }
+  </script>
+  <style>
+    /* Using Montserrat as a close alternative to Gotham (Geometric Sans) */
+    @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap");
 
-      /* Fix for Date/Time picker icons visibility */
-      input[type="date"]::-webkit-calendar-picker-indicator,
-      input[type="time"]::-webkit-calendar-picker-indicator {
-        display: block;
-        background-color: transparent;
-        cursor: pointer;
-        opacity: 0.6;
-        transition: opacity 0.2s;
-        margin-left: 8px;
-      }
+    body {
+      font-family: "Montserrat", sans-serif;
+      background-color: #f8fafc;
+      color: #1e1e1e;
+      /* CCM Dark Grey */
+    }
 
-      input[type="date"]::-webkit-calendar-picker-indicator:hover,
-      input[type="time"]::-webkit-calendar-picker-indicator:hover {
-        opacity: 1;
-        transform: scale(1.1);
-      }
+    /* Fix for Date/Time picker icons visibility */
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      display: block;
+      background-color: transparent;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+      margin-left: 8px;
+    }
 
-      :root {
-        color-scheme: light;
-      }
-    </style>
-    <script type="importmap">
+    input[type="date"]::-webkit-calendar-picker-indicator:hover,
+    input[type="time"]::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    :root {
+      color-scheme: light;
+    }
+  </style>
+  <script type="importmap">
       {
         "imports": {
           "react/": "https://esm.sh/react@^19.2.1/",
@@ -54,9 +68,11 @@
         }
       }
     </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
 </html>

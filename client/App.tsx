@@ -62,7 +62,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#F8FAFC]">
+    <div className="min-h-screen flex bg-[#F8FAFC] dark:bg-slate-900 transition-colors duration-200">
       <Sidebar
         currentUser={currentUser}
         currentView={currentView}
