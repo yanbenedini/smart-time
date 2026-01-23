@@ -18,6 +18,16 @@ export enum Squad {
   ROCKETS = "Rockets",
 }
 
+export enum View {
+  DASHBOARD,
+  EMPLOYEES,
+  ABSENCES,
+  SHIFT_CHANGES,
+  ON_CALL,
+  USERS,
+  LOGS,
+}
+
 export interface Employee {
   id: string;
   matricula: string;

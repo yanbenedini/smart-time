@@ -7,8 +7,7 @@ import {
   SystemLog,
 } from "../types";
 
-//seu ip aqui
-const API_URL = "http://163.176.231.117:5000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 // --- LOGS DO SISTEMA ---
 const getAuthHeaders = () => {

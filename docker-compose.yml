@@ -49,6 +49,8 @@ services:
       - api
     ports:
       - "3000:3000"
+    environment:
+      - VITE_API_URL=http://163.176.231.117:5000
     networks:
       - app-network
 
