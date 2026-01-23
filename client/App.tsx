@@ -23,8 +23,8 @@ import UserManager from "./components/UserManager";
 import OnCallManager from "./components/OnCallManager";
 import LogManager from "./components/LogManager";
 import Login from "./components/Login";
-import { SystemUser } from "./types";
 import { saveSystemUser, changePassword } from "./services/dbService";
+import { useAuth } from "./context/AuthContext";
 
 enum View {
   DASHBOARD,
@@ -37,7 +37,7 @@ enum View {
 }
 
 const App: React.FC = () => {
-  const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
+  const { user: currentUser, logout, updateUser, login, isLoading } = useAuth();
   const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -54,24 +54,6 @@ const App: React.FC = () => {
     message: string;
   } | null>(null);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("smarttime_user");
-    const storedAuth = localStorage.getItem("smarttime_auth");
-
-    if (storedUser && storedAuth) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        // Atualiza o estado, evitando que a tela de Login apareça
-        setCurrentUser(parsedUser);
-      } catch (error) {
-        console.error("Erro ao restaurar sessão:", error);
-        // Se os dados estiverem corrompidos, limpa tudo para forçar novo login limpo
-        localStorage.removeItem("smarttime_user");
-        localStorage.removeItem("smarttime_auth");
-      }
-    }
-  }, []);
-
   // Check for forced password change on login
   useEffect(() => {
     if (currentUser?.mustChangePassword) {
@@ -80,15 +62,38 @@ const App: React.FC = () => {
     }
   }, [currentUser]);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#204294]"></div>
+      </div>
+    );
+  }
+
   if (!currentUser) {
-    return <Login onLogin={setCurrentUser} />;
+    return (
+      <Login
+        onLogin={async (user) => {
+          // O componente Login chama o serviço e devolve o usuario,
+          // Mas como estamos usando contexto, podemos fazer o Login.tsx usar o contexto tambem
+          // OU por compatibilidade, apenas atualizamos o usuario aqui.
+          // O ideal seria refatorar Login.tsx, mas vou manter simples:
+          // Se Login.tsx retorna usuário, assumimos que o token já está no localStorage.
+          // Apenas forçamos um reload ou setamos o usuário no contexto.
+          // Mas espere! Login.tsx TENTA chamar o loginUser do dbService.
+          // Vamos fazer um wrapper simples aqui ou modificar Login.tsx.
+
+          // Na verdade, o Login.tsx chama onLogin(user).
+          // Podemos simplesmente chamar updateUser(user) aqui se ele já estiver logado pelo Login.tsx
+          updateUser(user);
+        }}
+      />
+    );
   }
 
   const handleLogout = () => {
-    localStorage.removeItem("smarttime_auth"); // Remove o token
-    localStorage.removeItem("smarttime_user"); // Remove os dados do usuário
+    logout();
     setProfileMenuOpen(false);
-    setCurrentUser(null);
     setCurrentView(View.DASHBOARD);
   };
 
@@ -124,9 +129,6 @@ const App: React.FC = () => {
       return;
     }
 
-    // OBS: Removemos a checagem local da senha antiga.
-    // Quem vai dizer se a senha antiga está certa é o Backend.
-
     try {
       if (!currentUser?.id) return;
 
@@ -138,7 +140,7 @@ const App: React.FC = () => {
       );
 
       // 3. Atualiza o estado local apenas para liberar a tela (sem expor a senha)
-      setCurrentUser({
+      updateUser({
         ...currentUser,
         mustChangePassword: false,
       });
@@ -159,8 +161,6 @@ const App: React.FC = () => {
         });
       }, 1500);
     } catch (err: any) {
-      // 4. Se a senha antiga estiver errada, o backend retorna erro 401
-      // e cai aqui. Mostramos a mensagem do servidor.
       setPasswordFeedback({
         type: "error",
         message:
@@ -183,11 +183,10 @@ const App: React.FC = () => {
         setCurrentView(view);
         setMobileMenuOpen(false);
       }}
-      className={`flex items-center space-x-3 w-full p-3 rounded-lg transition-all duration-200 ${
-        currentView === view
+      className={`flex items-center space-x-3 w-full p-3 rounded-lg transition-all duration-200 ${currentView === view
           ? "bg-[#204294] text-white shadow-md shadow-blue-900/20"
           : "text-[#3F3F3F] hover:bg-slate-100"
-      }`}
+        }`}
     >
       <Icon
         size={20}
@@ -200,9 +199,8 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex bg-[#F8FAFC]">
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <div className="h-full flex flex-col p-6">
           <div className="mb-10">
@@ -283,9 +281,8 @@ const App: React.FC = () => {
               </div>
               <ChevronUp
                 size={16}
-                className={`text-slate-400 transition-transform ${
-                  profileMenuOpen ? "" : "rotate-180"
-                }`}
+                className={`text-slate-400 transition-transform ${profileMenuOpen ? "" : "rotate-180"
+                  }`}
               />
             </div>
           </div>
@@ -369,11 +366,10 @@ const App: React.FC = () => {
 
               {passwordFeedback && (
                 <div
-                  className={`p-3 rounded-lg text-sm flex items-start gap-2 ${
-                    passwordFeedback.type === "error"
+                  className={`p-3 rounded-lg text-sm flex items-start gap-2 ${passwordFeedback.type === "error"
                       ? "bg-rose-50 text-rose-700 border border-rose-200"
                       : "bg-green-50 text-green-700 border border-green-200"
-                  }`}
+                    }`}
                 >
                   {passwordFeedback.type === "error" ? (
                     <AlertCircle size={18} />
