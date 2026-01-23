@@ -26,7 +26,7 @@ AppDataSource.initialize()
     console.log("Data Source has been initialized!");
 
     // --- Middleware Global de Auth ---
-    app.use(basicAuth);
+
 
     // --- Definição das Rotas ---
     app.use("/employees", employeeRoutes);
@@ -39,7 +39,7 @@ AppDataSource.initialize()
     // --- Rotas Específicas que não se encaixaram CRUD padrão ---
     // (Poderiam ir para um Controller específico, mas mantendo simples por enquanto)
 
-    app.post("/check-coverage", async (req, res) => {
+    app.post("/check-coverage", basicAuth, async (req, res) => {
       try {
         const { employeeId, role, squad, date, startTime, endTime } = req.body;
         const employeeRepo = AppDataSource.getRepository(Employee);

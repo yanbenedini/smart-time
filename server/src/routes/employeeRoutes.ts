@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { EmployeeController } from "../controllers/EmployeeController";
+import { basicAuth } from "../middlewares/authMiddleware";
 
 const router = Router();
+
+router.use(basicAuth);
 
 router.get("/", EmployeeController.list);
 router.post("/", EmployeeController.create);

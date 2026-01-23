@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { AppDataSource } from "../data-source";
 import { SystemUser } from "../entity/SystemUser";
 import { registerLog, getUserName } from "../utils/logger";
+import { generateToken, verifyToken } from "../utils/token";
 import bcrypt from "bcryptjs";
 
 export class UserController {
@@ -130,9 +131,11 @@ export class UserController {
 
             const { password: _, ...userSafe } = user;
 
+            const token = generateToken(user);
+
             await registerLog("LOGIN", `Login realizado com sucesso`, userSafe.name);
 
-            return res.json(userSafe);
+            return res.json({ user: userSafe, token });
         } catch (error) {
             console.error("Erro interno no login:", error);
             return res.status(500).json({ message: "Erro interno no servidor" });
@@ -159,10 +162,14 @@ export class UserController {
             if (!authHeader)
                 return res.status(401).json({ message: "Não autenticado." });
 
-            const auth = Buffer.from(authHeader.split(" ")[1], "base64")
-                .toString()
-                .split(":");
-            const emailLogado = auth[0];
+            const token = authHeader.split(" ")[1];
+            const decoded = verifyToken(token);
+
+            if (!decoded) {
+                return res.status(401).json({ message: "Sessão inválida ou expirada." });
+            }
+
+            const emailLogado = decoded.email;
 
             const loggedUser = await userRepo.findOneBy({ email: emailLogado });
 

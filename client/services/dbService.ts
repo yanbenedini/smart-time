@@ -12,13 +12,13 @@ const API_URL = "http://163.176.231.117:5000";
 
 // --- LOGS DO SISTEMA ---
 const getAuthHeaders = () => {
-  const auth = localStorage.getItem("smarttime_auth");
+  const token = localStorage.getItem("smarttime_token");
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
 
-  if (auth) {
-    headers["Authorization"] = `Basic ${auth}`;
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   return headers;
@@ -57,25 +57,18 @@ export const createLog = async (
   }
 };
 
+// ... (omitindo outras funções para focar na mudança)
+
 // --- AUTENTICAÇÃO (LOGIN) ---
-// Adicione esta função para corrigir o erro no Login.tsx
-
-// Em services/dbService.ts
-
 export const loginUser = async (
   email: string,
   password: string,
 ): Promise<SystemUser> => {
   try {
-    // 1. Gera o token Basic Auth
-    const authString = btoa(`${email}:${password}`);
-
-    const response = await fetch(`${API_URL}/login`, {
+    const response = await fetch(`${API_URL}/users/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // Envia o header para validar no backend
-        Authorization: `Basic ${authString}`,
       },
       body: JSON.stringify({ email, password }),
     });
@@ -85,10 +78,11 @@ export const loginUser = async (
       throw new Error(errorData.message || "Falha na autenticação");
     }
 
-    const user = await response.json();
+    const data = await response.json();
+    const { user, token } = data;
 
-    // 2. SALVA OS DADOS NO NAVEGADOR (Isso é o que permite o F5 funcionar)
-    localStorage.setItem("smarttime_auth", authString);
+    // 2. SALVA O TOKEN E O USUÁRIO NO NAVEGADOR
+    localStorage.setItem("smarttime_token", token);
     localStorage.setItem("smarttime_user", JSON.stringify(user));
 
     return user;
@@ -104,7 +98,7 @@ export const changePassword = async (
   newPassword: string,
 ): Promise<void> => {
   try {
-    const response = await fetch(`${API_URL}/change-password`, {
+    const response = await fetch(`${API_URL}/users/change-password`, {
       method: "POST",
       headers: {
         ...getAuthHeaders(),

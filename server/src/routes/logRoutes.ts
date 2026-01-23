@@ -1,8 +1,11 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
 import { SystemLog } from "../entity/SystemLog";
+import { basicAuth } from "../middlewares/authMiddleware";
 
 const router = Router();
+
+router.use(basicAuth);
 
 router.get("/", async (req, res) => {
     const logRepo = AppDataSource.getRepository(SystemLog);
