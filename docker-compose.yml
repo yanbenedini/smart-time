@@ -42,7 +42,7 @@ services:
 
   # --- Frontend React ---
   frontend:
-    build: .
+    build: ./client
     container_name: smart_time_frontend
     restart: always
     depends_on:
