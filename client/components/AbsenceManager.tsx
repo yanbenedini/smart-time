@@ -35,7 +35,7 @@ import {
   checkCoverage,
 } from "../services/dbService";
 import { IonSkeletonText } from "@ionic/react";
-import { formatDateBR } from "../server/src/utils/dateUtils";
+import { formatDateBR } from "../utils/dateUtils";
 
 type AbsenceType = "single" | "range" | "multi";
 
@@ -178,8 +178,8 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
 
     const nameMatch = emp
       ? (emp.firstName + " " + emp.lastName)
-          .toLowerCase()
-          .includes(filters.employeeName.toLowerCase())
+        .toLowerCase()
+        .includes(filters.employeeName.toLowerCase())
       : false;
 
     const reasonMatch = abs.reason
@@ -571,8 +571,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
     if (missingCoverageDates.length > 0) {
       // --- INÍCIO DA MUDANÇA 4: Mensagem de erro atualizada para "Expediente Exato" ---
       setWarningMessage(
-        `Atenção: Não há outro funcionário com o expediente exato (${finalStartTime} - ${finalEndTime}) na Squad "${
-          emp.squad
+        `Atenção: Não há outro funcionário com o expediente exato (${finalStartTime} - ${finalEndTime}) na Squad "${emp.squad
         }" para as seguintes datas: ${missingCoverageDates.join(", ")}.`
       );
       // --- FIM DA MUDANÇA 4 ---
@@ -700,11 +699,10 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
         <div className="flex flex-wrap gap-2 relative w-full md:w-auto">
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className={`flex-1 md:flex-none px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm border ${
-              isFilterOpen || activeFilterCount > 0
+            className={`flex-1 md:flex-none px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm border ${isFilterOpen || activeFilterCount > 0
                 ? "bg-[#204294]/10 border-[#204294]/20 text-[#204294]"
                 : "bg-white border-slate-200 text-[#3F3F3F] hover:bg-slate-50"
-            }`}
+              }`}
           >
             <Filter size={18} />
 
@@ -1105,9 +1103,8 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                   <select
                     required
                     disabled={!!editingId}
-                    className={`w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900 ${
-                      editingId ? "bg-slate-100 text-slate-500" : ""
-                    }`}
+                    className={`w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900 ${editingId ? "bg-slate-100 text-slate-500" : ""
+                      }`}
                     value={selectedEmpId}
                     onChange={(e) => setSelectedEmpId(e.target.value)}
                   >
@@ -1129,33 +1126,30 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                       <button
                         type="button"
                         onClick={() => setAbsenceType("single")}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${
-                          absenceType === "single"
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${absenceType === "single"
                             ? "bg-white text-[#204294] shadow-sm"
                             : "text-slate-500 hover:text-slate-700"
-                        }`}
+                          }`}
                       >
                         <Calendar size={16} /> Dia Único
                       </button>
                       <button
                         type="button"
                         onClick={() => setAbsenceType("range")}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${
-                          absenceType === "range"
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${absenceType === "range"
                             ? "bg-white text-[#204294] shadow-sm"
                             : "text-slate-500 hover:text-slate-700"
-                        }`}
+                          }`}
                       >
                         <CalendarRange size={16} /> Período
                       </button>
                       <button
                         type="button"
                         onClick={() => setAbsenceType("multi")}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${
-                          absenceType === "multi"
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${absenceType === "multi"
                             ? "bg-white text-[#204294] shadow-sm"
                             : "text-slate-500 hover:text-slate-700"
-                        }`}
+                          }`}
                       >
                         <CalendarDays size={16} /> Dias
                       </button>

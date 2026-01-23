@@ -29,7 +29,7 @@ import {
   deleteOnCallShift,
 } from "../services/dbService";
 import { IonSkeletonText } from "@ionic/react";
-import { formatDateBR } from "../server/src/utils/dateUtils";
+import { formatDateBR } from "../utils/dateUtils";
 
 interface OnCallManagerProps {
   currentUser: SystemUser;
@@ -127,8 +127,8 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
 
     const nameMatch = emp
       ? (emp.firstName + " " + emp.lastName)
-          .toLowerCase()
-          .includes(filters.employeeName.toLowerCase())
+        .toLowerCase()
+        .includes(filters.employeeName.toLowerCase())
       : false;
 
     const squadMatch = filters.squad ? emp?.squad === filters.squad : true;
@@ -438,8 +438,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
           if (!emp) {
             errorCount++;
             errorsDetails.push(
-              `Linha ${
-                i + 1
+              `Linha ${i + 1
               }: Funcionário com matrícula '${matricula}' não encontrado.`
             );
             continue;
@@ -454,8 +453,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
           } else {
             errorCount++;
             errorsDetails.push(
-              `Linha ${
-                i + 1
+              `Linha ${i + 1
               }: Data inválida '${dateRaw}' para matrícula ${matricula}.`
             );
             continue;
@@ -468,8 +466,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
           if (hasConflict) {
             errorCount++;
             errorsDetails.push(
-              `Linha ${i + 1}: O funcionário ${
-                emp.firstName
+              `Linha ${i + 1}: O funcionário ${emp.firstName
               } já possui um plantão em ${finalDate}.`
             );
             continue; // Pula para a próxima linha do CSV
@@ -541,11 +538,10 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
 
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className={`flex-1 md:flex-none px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm border ${
-              isFilterOpen || activeFilterCount > 0
+            className={`flex-1 md:flex-none px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm border ${isFilterOpen || activeFilterCount > 0
                 ? "bg-[#204294]/10 border-[#204294]/20 text-[#204294]"
                 : "bg-white border-slate-200 text-[#3F3F3F] hover:bg-slate-50"
-            }`}
+              }`}
           >
             <Filter size={18} />
 
@@ -934,19 +930,17 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
       {importFeedback && (
         <div className="fixed bottom-4 right-4 z-50 max-w-md w-full bg-white shadow-2xl rounded-xl border border-slate-200 overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
           <div
-            className={`p-4 flex items-start justify-between ${
-              importFeedback.errors > 0
+            className={`p-4 flex items-start justify-between ${importFeedback.errors > 0
                 ? "bg-rose-50 border-l-4 border-l-rose-500"
                 : "bg-emerald-50 border-l-4 border-l-emerald-500"
-            }`}
+              }`}
           >
             <div className="flex gap-3">
               <div
-                className={`mt-0.5 ${
-                  importFeedback.errors > 0
+                className={`mt-0.5 ${importFeedback.errors > 0
                     ? "text-rose-600"
                     : "text-emerald-600"
-                }`}
+                  }`}
               >
                 {importFeedback.errors > 0 ? (
                   <FileWarning size={20} />
@@ -956,11 +950,10 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
               </div>
               <div>
                 <h4
-                  className={`font-bold text-sm ${
-                    importFeedback.errors > 0
+                  className={`font-bold text-sm ${importFeedback.errors > 0
                       ? "text-rose-800"
                       : "text-emerald-800"
-                  }`}
+                    }`}
                 >
                   Relatório de Importação
                 </h4>
@@ -1037,9 +1030,8 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                   <select
                     required
                     disabled={!!editingId}
-                    className={`w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900 ${
-                      editingId ? "bg-slate-100 text-slate-500" : ""
-                    }`}
+                    className={`w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900 ${editingId ? "bg-slate-100 text-slate-500" : ""
+                      }`}
                     value={selectedEmpId}
                     onChange={(e) => setSelectedEmpId(e.target.value)}
                   >

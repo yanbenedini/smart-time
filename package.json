@@ -1,31 +1,11 @@
 {
-  "name": "smart-time",
+  "name": "smart-time-root",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "install:all": "npm install && cd client && npm install && cd server && npm install"
   },
-  "dependencies": {
-    "@google/genai": "^1.33.0",
-    "@ionic/react": "^8.7.16",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "express": "^5.2.1",
-    "lucide-react": "^0.560.0",
-    "react": "^19.2.1",
-    "react-dom": "^19.2.1",
-    "react-toastify": "^11.0.5",
-    "recharts": "^3.5.1",
-    "reflect-metadata": "^0.2.2",
-    "typeorm": "^0.3.28"
-  },
-  "devDependencies": {
-    "@types/node": "^22.14.0",
-    "@vitejs/plugin-react": "^5.0.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.0"
-  }
+  "devDependencies": {}
 }

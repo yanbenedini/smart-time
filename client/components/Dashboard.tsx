@@ -19,7 +19,7 @@ import {
 } from "../services/dbService";
 import { Employee, Absence, ShiftChange, OnCallShift } from "../types";
 import { IonSkeletonText } from "@ionic/react";
-import { formatDateBR } from "../server/src/utils/dateUtils";
+import { formatDateBR } from "../utils/dateUtils";
 
 const Dashboard: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -332,8 +332,8 @@ const Dashboard: React.FC = () => {
                       {abs.date === abs.endDate
                         ? formatDateBR(abs.date)
                         : `${formatDateBR(abs.date)} até ${formatDateBR(
-                            abs.endDate
-                          )}`}
+                          abs.endDate
+                        )}`}
                     </div>
                   </div>
                 );
@@ -459,11 +459,10 @@ const Dashboard: React.FC = () => {
                 return (
                   <div
                     key={shift.id}
-                    className={`p-2 border rounded-lg transition-colors ${
-                      isToday
+                    className={`p-2 border rounded-lg transition-colors ${isToday
                         ? "bg-indigo-50 border-indigo-200"
                         : "bg-slate-50 border-slate-100 hover:bg-slate-100"
-                    }`}
+                      }`}
                   >
                     <div className="flex justify-between items-start mb-0.5">
                       <span className="font-bold text-[#1E1E1E] text-xs truncate max-w-[120px]">
