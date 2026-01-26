@@ -888,12 +888,12 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
         </div>
 
         {isLoading ? (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={`sk-abs-${i}`} className="p-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-center gap-3 md:w-1/3">
-                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 animate-pulse" />
+                    <div className="min-w-10 min-h-10 rounded-full bg-slate-100 dark:bg-slate-700 animate-pulse" />
                     <div className="flex-1">
                       <IonSkeletonText
                         animated
@@ -916,7 +916,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                     />
                   </div>
                   <div className="md:justify-end">
-                    <div className="w-8 h-8 rounded bg-slate-100 dark:bg-slate-700 animate-pulse" />
+                    <div className="min-w-8 min-h-8 rounded bg-slate-100 dark:bg-slate-700 animate-pulse" />
                   </div>
                 </div>
               </div>
