@@ -976,18 +976,18 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 pt-4">
-                <h4 className="text-sm font-bold text-[#204294] mb-3 flex items-center gap-2">
+              <div className="border-t border-slate-100 dark:border-slate-700 pt-4">
+                <h4 className="text-sm font-bold text-[#204294] mb-3 flex items-center gap-2 dark:text-blue-400">
                   <Briefcase size={16} /> Cargo e Alocação
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
                       Cargo
                     </label>
                     <select
                       required
-                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500"
                       value={formData.role}
                       onChange={(e) =>
                         setFormData({
@@ -1007,12 +1007,12 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
                       Squad
                     </label>
                     <select
                       required
-                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500"
                       value={formData.squad || ""}
                       onChange={(e) =>
                         setFormData({
@@ -1034,19 +1034,19 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 pt-4">
-                <h4 className="text-sm font-bold text-[#204294] mb-3 flex items-center gap-2">
+              <div className="border-t border-slate-100 dark:border-slate-700 pt-4">
+                <h4 className="text-sm font-bold text-[#204294] mb-3 flex items-center gap-2 dark:text-blue-400">
                   <Clock size={16} /> Jornada de Trabalho
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
                       Início Expediente
                     </label>
                     <input
                       required
                       type="time"
-                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500 dark:[color-scheme:dark]"
                       value={formData.shiftStart}
                       onChange={(e) =>
                         setFormData({ ...formData, shiftStart: e.target.value })
@@ -1054,13 +1054,13 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
                       Fim Expediente
                     </label>
                     <input
                       required
                       type="time"
-                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none"
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500 dark:[color-scheme:dark]"
                       value={formData.shiftEnd}
                       onChange={(e) =>
                         setFormData({ ...formData, shiftEnd: e.target.value })
@@ -1070,11 +1070,11 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                 </div>
               </div>
 
-              <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
+              <div className="pt-4 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-700">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium"
+                  className="px-4 py-2 text-slate-600 hover:text-white hover:bg-red-700 rounded-lg font-medium transition duration-150"
                 >
                   Cancelar
                 </button>
@@ -1107,7 +1107,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => setDeleteConfirmationId(null)}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium dark:text-slate-300 dark:hover:bg-slate-700"
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium dark:text-slate-300 dark:hover:bg-slate-700 "
               >
                 Cancelar
               </button>
