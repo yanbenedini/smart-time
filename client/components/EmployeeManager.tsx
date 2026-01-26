@@ -42,7 +42,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
   const [formError, setFormError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isAdmin = currentUser.isAdmin;
+
 
   // Filter & Sort State
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -154,8 +154,6 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
   // --- Modal & CRUD Logic ---
 
   const openModal = (employee?: Employee) => {
-    if (!isAdmin) return;
-
     setFormError(null);
     if (employee) {
       setFormData(employee);
@@ -174,7 +172,6 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isAdmin) return;
 
     setFormError(null);
     const targetMatricula = formData.matricula?.trim();
@@ -234,12 +231,11 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
   };
 
   const requestDelete = (id: string) => {
-    if (!isAdmin) return;
     setDeleteConfirmationId(id);
   };
 
   const confirmDelete = async () => {
-    if (deleteConfirmationId && isAdmin) {
+    if (deleteConfirmationId) {
       await deleteEmployee(deleteConfirmationId, currentUser.name);
       await loadData();
       setDeleteConfirmationId(null);
@@ -340,7 +336,6 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
   };
 
   const handleImportClick = () => {
-    if (!isAdmin) return;
     fileInputRef.current?.click();
   };
 
@@ -546,13 +541,13 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                       Matrícula
                     </label>
                     <input
                       type="text"
                       placeholder="000"
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                       value={filters.matricula}
                       onChange={(e) =>
                         setFilters({ ...filters, matricula: e.target.value })
@@ -560,12 +555,12 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                       Horário Início
                     </label>
                     <input
                       type="time"
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      className="dark:[color-scheme:dark] w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                       value={filters.shiftStart}
                       onChange={(e) =>
                         setFilters({ ...filters, shiftStart: e.target.value })
@@ -575,11 +570,11 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                     Squad
                   </label>
                   <select
-                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                     value={filters.squad}
                     onChange={(e) =>
                       setFilters({ ...filters, squad: e.target.value as Squad })
@@ -595,11 +590,11 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                     Cargo
                   </label>
                   <select
-                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                     value={filters.role}
                     onChange={(e) =>
                       setFilters({ ...filters, role: e.target.value as Role })
@@ -666,48 +661,45 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
           paginatedEmployees.map((emp) => (
             <div
               key={emp.id}
-              onClick={() => isAdmin && openModal(emp)}
-              className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative ${isAdmin ? "active:bg-slate-50" : ""
-                }`}
+              onClick={() => openModal(emp)}
+              className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative dark:bg-slate-800 dark:border-slate-700`}
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold text-sm">
+                  <div className="min-w-10 min-h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold text-sm dark:bg-slate-700 dark:text-white">
                     <User size={18} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-[#1E1E1E] text-sm">
+                    <h3 className="font-bold text-[#1E1E1E] text-sm dark:text-white">
                       {emp.firstName} {emp.lastName}
                     </h3>
-                    <p className="text-xs text-slate-500">{emp.email}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{emp.email}</p>
                   </div>
                 </div>
-                {isAdmin && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      requestDelete(emp.id);
-                    }}
-                    className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    requestDelete(emp.id);
+                  }}
+                  className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg"
+                >
+                  <Trash2 size={18} />
+                </button>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500 font-medium">Cargo</span>
-                  <span className="text-slate-700 font-semibold text-right max-w-[60%] truncate">
+                  <span className="text-slate-500 font-medium dark:text-slate-400">Cargo</span>
+                  <span className="text-slate-700 font-semibold text-right max-w-[60%] truncate dark:text-slate-300">
                     {emp.role}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500 font-medium">Matrícula</span>
-                  <span className="font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                  <span className="text-slate-500 font-medium dark:text-slate-400">Matrícula</span>
+                  <span className="font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded dark:bg-slate-700 dark:text-slate-300">
                     {emp.matricula}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-50 mt-2">
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-50 mt-2 dark:border-slate-700">
                   <span
                     className={`px-2 py-0.5 rounded-md font-medium border ${getSquadBadgeColor(
                       emp.squad,
@@ -715,7 +707,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                   >
                     {emp.squad}
                   </span>
-                  <div className="flex items-center gap-1 text-slate-600 font-medium">
+                  <div className="flex items-center gap-1 text-slate-600 font-medium dark:text-slate-400">
                     <Clock size={12} /> {emp.shiftStart} - {emp.shiftEnd}
                   </div>
                 </div>
@@ -731,7 +723,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
           <thead className="bg-slate-50 text-[#3F3F3F] border-b border-slate-200 dark:bg-slate-700/50 dark:text-slate-300 dark:border-slate-700">
             <tr>
               <th
-                className="p-4 font-bold text-sm cursor-pointer hover:bg-slate-100 transition-colors select-none group w-1/3"
+                className="p-4 font-bold text-sm cursor-pointer select-none group w-1/3"
                 onClick={toggleSort}
               >
                 <div className="flex items-center gap-1">
@@ -752,16 +744,14 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
               <th className="p-4 font-bold text-sm">Cargo</th>
               <th className="p-4 font-bold text-sm">Squad</th>
               <th className="p-4 font-bold text-sm">Horário</th>
-              {isAdmin && (
-                <th className="p-4 font-bold text-sm text-right"></th>
-              )}
+              <th className="p-4 font-bold text-sm text-right"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={`sk-row-${i}`}>
-                  <td className="p-4" colSpan={isAdmin ? 6 : 5}>
+                  <td className="p-4" colSpan={6}>
                     <IonSkeletonText
                       animated
                       style={{ width: "100%", height: "20px" }}
@@ -772,7 +762,7 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
             ) : paginatedEmployees.length === 0 ? (
               <tr>
                 <td
-                  colSpan={isAdmin ? 6 : 5}
+                  colSpan={6}
                   className="p-8 text-center text-slate-500"
                 >
                   Nenhum funcionário encontrado.
@@ -782,15 +772,12 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
               paginatedEmployees.map((emp) => (
                 <tr
                   key={emp.id}
-                  onClick={() => isAdmin && openModal(emp)}
-                  className={`group transition-all duration-200 ${isAdmin
-                    ? "hover:bg-[#204294]/5 cursor-pointer dark:hover:bg-slate-700/50"
-                    : "cursor-default"
-                    }`}
+                  onClick={() => openModal(emp)}
+                  className={`group transition-all duration-200 hover:bg-[#204294]/5 cursor-pointer dark:hover:bg-slate-700/50`}
                 >
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] dark:bg-slate-700 dark:text-white">
+                      <div className="min-w-10 min-h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] dark:bg-slate-700 dark:text-white">
                         <User size={16} />
                       </div>
                       <div>
@@ -819,19 +806,17 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                   <td className="p-4 text-sm text-slate-600 dark:text-slate-400">
                     {emp.shiftStart} - {emp.shiftEnd}
                   </td>
-                  {isAdmin && (
-                    <td className="p-4 text-right">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          requestDelete(emp.id);
-                        }}
-                        className="text-slate-400 hover:text-rose-600 p-2 rounded-lg"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </td>
-                  )}
+                  <td className="p-4 text-right">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        requestDelete(emp.id);
+                      }}
+                      className="p-2 text-slate-400 hover:text-rose-600 rounded-lg transition duration-200 dark:text-slate-500 dark:hover:text-rose-600"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
                 </tr>
               ))
             )}
@@ -1074,13 +1059,13 @@ const EmployeeManager: React.FC<EmployeeManagerProps> = ({ currentUser }) => {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-slate-600 hover:text-white hover:bg-red-700 rounded-lg font-medium transition duration-150"
+                  className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg font-medium dark:text-slate-300 dark:hover:bg-slate-700 transition duration-150"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] font-bold"
+                  className="px-4 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] font-bold transition duration-150"
                 >
                   Salvar Funcionário
                 </button>

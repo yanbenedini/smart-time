@@ -781,7 +781,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                     </label>
                     <input
                       type="date"
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                      className="dark:[color-scheme:dark] w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                       value={filters.startDate}
                       onChange={(e) =>
                         setFilters({ ...filters, startDate: e.target.value })
@@ -794,7 +794,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                     </label>
                     <input
                       type="date"
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                      className="dark:[color-scheme:dark] w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                       value={filters.endDate}
                       onChange={(e) =>
                         setFilters({ ...filters, endDate: e.target.value })
@@ -804,11 +804,11 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                       Squad
                     </label>
                     <select
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                       value={filters.squad}
                       onChange={(e) =>
                         setFilters({ ...filters, squad: e.target.value })
@@ -823,11 +823,11 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block">
+                    <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
                       Cargo
                     </label>
                     <select
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294]"
+                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                       value={filters.role}
                       onChange={(e) =>
                         setFilters({ ...filters, role: e.target.value })
@@ -893,7 +893,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
               <div key={`sk-abs-${i}`} className="p-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-center gap-3 md:w-1/3">
-                    <div className="w-10 h-10 rounded-full bg-slate-100 animate-pulse" />
+                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 animate-pulse" />
                     <div className="flex-1">
                       <IonSkeletonText
                         animated
@@ -916,7 +916,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                     />
                   </div>
                   <div className="md:justify-end">
-                    <div className="w-8 h-8 rounded bg-slate-100 animate-pulse" />
+                    <div className="w-8 h-8 rounded bg-slate-100 dark:bg-slate-700 animate-pulse" />
                   </div>
                 </div>
               </div>
@@ -944,15 +944,16 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                 <div
                   key={abs.id}
                   onClick={() => handleEdit(abs)}
-                  className="p-4 hover:bg-[#204294]/5 transition-all duration-200 cursor-pointer group hover:shadow-sm dark:hover:bg-[#204294]/20"
+                  // group transition-all duration-200 hover:bg-[#204294]/5 cursor-pointer dark:hover:bg-slate-700/50
+                  className="p-4 hover:bg-[#204294]/5 transition-all duration-200 cursor-pointer group dark:hover:bg-slate-700/50"
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-3 md:w-1/3">
-                      <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold group-hover:bg-[#204294] group-hover:text-white transition-colors dark:bg-slate-700 dark:text-white dark:group-hover:text-white">
+                      <div className="min-w-10 min-h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold text-sm dark:bg-slate-700 dark:text-white">
                         <User size={18} />
                       </div>
                       <div>
-                        <div className="font-bold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
+                        <div className="font-bold text-[#1E1E1E] flex items-center gap-2 dark:text-white dark:group-hover:text-blue-400">
                           {emp
                             ? `${emp.firstName} ${emp.lastName}`
                             : "Funcionário removido"}
@@ -1014,7 +1015,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                           e.stopPropagation();
                           requestDelete(abs.id);
                         }}
-                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors dark:text-slate-500 dark:hover:bg-rose-900/20"
+                        className="p-2 text-slate-400 hover:text-rose-600 rounded-lg transition duration-200 dark:text-slate-500 dark:hover:text-rose-600"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -1119,16 +1120,16 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
 
                 {!editingId && (
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-300">
                       Tipo de Ausência <span className="text-rose-500">*</span>
                     </label>
-                    <div className="flex bg-slate-100 p-1 rounded-lg">
+                    <div className="flex bg-slate-100 p-1 rounded-lg dark:bg-slate-700">
                       <button
                         type="button"
                         onClick={() => setAbsenceType("single")}
                         className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${absenceType === "single"
-                          ? "bg-white text-[#204294] shadow-sm"
-                          : "text-slate-500 hover:text-slate-700"
+                          ? "dark:bg-slate-800 dark:text-white bg-white text-[#204294] shadow-sm"
+                          : "dark:bg-slate-700 dark:text-slate-300 text-slate-500 hover:text-slate-700 dark:hover:text-slate-400"
                           }`}
                       >
                         <Calendar size={16} /> Dia Único
@@ -1137,8 +1138,8 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                         type="button"
                         onClick={() => setAbsenceType("range")}
                         className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${absenceType === "range"
-                          ? "bg-white text-[#204294] shadow-sm"
-                          : "text-slate-500 hover:text-slate-700"
+                          ? "dark:bg-slate-800 dark:text-white bg-white text-[#204294] shadow-sm"
+                          : "dark:bg-slate-700 dark:text-slate-300 text-slate-500 hover:text-slate-700 dark:hover:text-slate-400"
                           }`}
                       >
                         <CalendarRange size={16} /> Período
@@ -1147,8 +1148,8 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                         type="button"
                         onClick={() => setAbsenceType("multi")}
                         className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${absenceType === "multi"
-                          ? "bg-white text-[#204294] shadow-sm"
-                          : "text-slate-500 hover:text-slate-700"
+                          ? "dark:bg-slate-800 dark:text-white bg-white text-[#204294] shadow-sm"
+                          : "dark:bg-slate-700 dark:text-slate-300 text-slate-500 hover:text-slate-700 dark:hover:text-slate-400"
                           }`}
                       >
                         <CalendarDays size={16} /> Dias
@@ -1162,7 +1163,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                     <input
                       required
                       type="date"
-                      className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
+                      className="dark:text-white dark:[color-scheme:dark] w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 dark:bg-slate-800 dark:border-slate-600 dark:focus:border-blue-500"
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
                     />
@@ -1245,7 +1246,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
 
                 {currentDisplayShift && (
                   <div className="mt-2 animate-in fade-in duration-300">
-                    <p className="text-xs text-[#204294] font-bold bg-[#204294]/10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#204294]/20">
+                    <p className="dark:text-slate-300 text-xs text-[#204294] font-bold bg-[#204294]/10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#204294]/20">
                       <Clock size={12} />
                       Expediente: {currentDisplayShift.start} às{" "}
                       {currentDisplayShift.end}
@@ -1263,7 +1264,7 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                         type="checkbox"
                         checked={isFullDay}
                         onChange={(e) => setIsFullDay(e.target.checked)}
-                        className="w-4 h-4 text-[#204294] rounded focus:ring-[#204294]"
+                        className=" w-4 h-4 text-[#204294] rounded focus:ring-[#204294]"
                       />
                       <span className="text-sm text-slate-600 dark:text-slate-300">
                         Dia Inteiro
@@ -1275,20 +1276,20 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                       <input
                         required
                         type="time"
-                        className="w-full border border-slate-300 rounded-lg p-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white"
+                        className="dark:[color-scheme:dark] w-full border border-slate-300 rounded-lg p-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white"
                         value={startTime}
                         onChange={(e) => setStartTime(e.target.value)}
                       />
                       <input
                         required
                         type="time"
-                        className="w-full border border-slate-300 rounded-lg p-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white"
+                        className="dark:[color-scheme:dark] w-full border border-slate-300 rounded-lg p-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white"
                         value={endTime}
                         onChange={(e) => setEndTime(e.target.value)}
                       />
                     </div>
                   ) : (
-                    <div className="bg-[#204294]/10 border border-[#204294]/20 rounded-lg p-3 text-sm text-[#204294] flex gap-2">
+                    <div className="dark:text-slate-300 bg-[#204294]/10 border border-[#204294]/20 rounded-lg p-3 text-sm text-[#204294] flex gap-2">
                       <Clock size={18} className="flex-shrink-0" />
                       <p>
                         Período:{" "}
@@ -1366,13 +1367,13 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
             <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50 rounded-b-xl dark:bg-slate-800 dark:border-slate-700">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg font-medium dark:text-slate-300 dark:hover:bg-slate-700"
+                className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg font-medium dark:text-slate-300 dark:hover:bg-slate-700 transition duration-150"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleRequest}
-                className="px-6 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] shadow-sm font-bold dark:bg-blue-600 dark:hover:bg-blue-700"
+                className="px-6 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] shadow-sm font-bold dark:bg-blue-600 dark:hover:bg-blue-700 transition duration-150"
               >
                 {editingId ? "Salvar Alterações" : "Registrar Ausência"}
               </button>

@@ -76,9 +76,9 @@ const App: React.FC = () => {
       />
 
       <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
-        <div className="lg:hidden bg-white border-b border-slate-200 p-4 flex items-center justify-between sticky top-0 z-30">
+        <div className="lg:hidden bg-white border-b border-slate-200 p-4 flex items-center justify-between sticky top-0 z-30 dark:bg-slate-800 dark:border-slate-700">
           <div className="flex flex-col leading-tight">
-            <span className="text-xl font-extrabold text-[#204294] tracking-tight">
+            <span className="text-xl font-extrabold text-[#204294] tracking-tight dark:text-blue-400">
               CCM
             </span>
             <span className="text-[10px] font-medium text-[#00B0EA] tracking-widest uppercase">
@@ -87,7 +87,7 @@ const App: React.FC = () => {
           </div>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 text-[#204294] rounded-lg hover:bg-slate-100"
+            className="p-2 text-[#204294] rounded-lg hover:bg-slate-100 dark:text-blue-400 dark:hover:bg-slate-700"
           >
             <Menu size={24} />
           </button>
