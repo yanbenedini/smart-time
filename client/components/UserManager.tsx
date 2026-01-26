@@ -11,6 +11,10 @@ import {
   Check,
   Eye,
   EyeOff,
+  Filter,
+  Search,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { SystemUser } from "../types";
 import {
@@ -43,12 +47,23 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
 
   const isSuperAdmin = !!currentUser.isSuperAdmin;
 
+  // Filter & Pagination State
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+
   const [isLoading, setIsLoading] = useState(true);
 
   // --- DATA LOADING (ASYNC) ---
   useEffect(() => {
     loadData();
   }, []);
+
+  // Reset page when search or items per page changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, itemsPerPage]);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -161,22 +176,34 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
     if (user.id === currentUser.id) return false;
 
     // 2. Se o logado for Super Admin: Vê todo o resto (Admins e Membros)
-    if (isSuperAdmin) return true;
-
     // 3. Se o logado for Admin comum:
-    if (currentUser.isAdmin) {
+    if (currentUser.isAdmin && !isSuperAdmin) {
       // SÓ pode ver quem NÃO é admin e NÃO é super admin (ou seja, apenas Membros)
-      return !user.isAdmin && !user.isSuperAdmin;
+      if (user.isAdmin || user.isSuperAdmin) return false;
     }
 
-    // 4. Se for um usuário comum (Membro): Não deveria nem acessar esta tela,
-    // mas por segurança, retornamos vazio.
-    return false;
+    // 4. Search Filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        user.name.toLowerCase().includes(query) ||
+        user.email.toLowerCase().includes(query)
+      );
+    }
+
+    return true;
   });
+
+  // --- PAGINATION LOGIC ---
+  const totalItems = filteredUsers.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-[#1E1E1E] dark:text-white">
             Usuários do Sistema
@@ -185,20 +212,95 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
             Gerencie quem tem acesso ao Smart Time.
           </p>
         </div>
-        <button
-          onClick={openNewModal}
-          className="bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm font-bold dark:bg-blue-600 dark:hover:bg-blue-700"
-          title="Adicionar Usuário"
-        >
-          <Plus size={18} />
-        </button>
+        <div className="flex gap-2 relative">
+          <button
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className={`px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm border ${isFilterOpen || searchQuery
+              ? "bg-[#204294]/10 border-[#204294]/20 text-[#204294] dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400"
+              : "bg-white border-slate-200 text-[#3F3F3F] hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
+              }`}
+          >
+            <Filter size={18} />
+            {searchQuery && (
+              <span className="bg-[#204294] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full ml-1">1</span>
+            )}
+          </button>
+
+          <button
+            onClick={openNewModal}
+            className="bg-[#204294] hover:bg-[#1a367a] text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm font-bold dark:bg-blue-600 dark:hover:bg-blue-700"
+            title="Adicionar Usuário"
+          >
+            <Plus size={18} />
+          </button>
+
+          {/* Filter Dropdown Panel */}
+          {isFilterOpen && (
+            <div className="absolute top-12 right-0 w-full md:w-80 bg-white rounded-xl shadow-xl border border-slate-200 p-5 z-20 dark:bg-slate-800 dark:border-slate-700">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
+                  <Search size={16} /> Filtros
+                </h3>
+                <button
+                  onClick={() => setIsFilterOpen(false)}
+                  className="text-slate-400 hover:text-slate-600"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-[#3F3F3F] mb-1 block dark:text-slate-300">
+                    Buscar por Nome ou Email
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Digite para buscar..."
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="text-xs text-rose-600 hover:text-rose-700 font-medium px-2 py-1"
+                  >
+                    Limpar Filtros
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <div className="p-2 px-3 rounded-xl flex items-center w-fit">
+          <div className="flex items-center gap-2 text-sm text-slate-600 whitespace-nowrap dark:text-slate-400">
+            <span>Mostrar</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              className="border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-[#204294] bg-white font-medium text-[#204294] cursor-pointer dark:bg-slate-800 dark:border-slate-700 dark:text-blue-400"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+            <span>por página</span>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden dark:bg-slate-800 dark:border-slate-700">
         <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center dark:bg-slate-700/50 dark:border-slate-700">
           <h3 className="font-semibold text-slate-700 dark:text-white">Contas Cadastradas</h3>
           <span className="text-xs text-slate-500 bg-white px-2 py-1 rounded border border-slate-200 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-300">
-            Visualizando: {filteredUsers.length}
+            Visualizando: {totalItems}
           </span>
         </div>
 
@@ -229,9 +331,9 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
                 </div>
               </div>
             ))
-          ) : filteredUsers.length > 0 ? (
+          ) : paginatedUsers.length > 0 ? (
             // --- LISTA REAL DE DADOS ---
-            filteredUsers.map((user) => (
+            paginatedUsers.map((user) => (
               <div
                 key={user.id}
                 onClick={() => handleEdit(user)}
@@ -278,160 +380,209 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
             </div>
           )}
         </div>
-      </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col animate-in fade-in zoom-in duration-200 dark:bg-slate-800">
-            <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-700">
-              <h3 className="text-lg font-bold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
-                {editingId ? <Edit2 size={18} className="dark:text-blue-400" /> : <Plus size={18} className="dark:text-blue-400" />}
-                {editingId ? "Editar Usuário" : "Novo Usuário"}
-              </h3>
-              <button
-                onClick={closeModal}
-                className="text-slate-400 hover:text-slate-600 p-2 rounded-full dark:hover:text-slate-300"
-              >
-                <X size={20} />
-              </button>
+        {/* --- PAGINATION FOOTER --- */}
+        {!isLoading && totalItems > 0 && (
+          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 dark:bg-slate-800 dark:border-slate-700">
+            <div className="text-sm text-slate-600 dark:text-slate-400">
+              Mostrando{" "}
+              <span className="font-bold text-slate-800 dark:text-white">{startIndex + 1}</span>{" "}
+              a <span className="font-bold text-slate-800 dark:text-white">{endIndex}</span> de{" "}
+              <span className="font-bold text-slate-800 dark:text-white">{totalItems}</span>{" "}
+              registros
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
-                  Nome Completo
-                </label>
-                <div className="relative">
-                  <UserCog
-                    size={18}
-                    className="absolute left-3 top-2.5 text-slate-400"
-                  />
-                  <input
-                    required
-                    type="text"
-                    className="w-full border border-slate-300 rounded-lg pl-10 p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-600"
+              >
+                <ChevronLeft size={18} className="text-slate-600 dark:text-slate-300" />
+              </button>
+
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-slate-500 dark:text-slate-400">Página</span>
+                <span className="text-sm font-bold text-[#204294] bg-[#204294]/10 px-2 py-1 rounded border border-[#204294]/20 dark:text-blue-400 dark:bg-blue-900/30 dark:border-blue-800">
+                  {currentPage}
+                </span>
+                <span className="text-sm text-slate-500 dark:text-slate-400">de {totalPages}</span>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
-                  Email
-                </label>
-                <div className="relative">
-                  <Mail
-                    size={18}
-                    className="absolute left-3 top-2.5 text-slate-400"
-                  />
-                  <input
-                    required
-                    type="email"
-                    className="w-full border border-slate-300 rounded-lg pl-10 p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-600"
+              >
+                <ChevronRight size={18} className="text-slate-600 dark:text-slate-300" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+
+      {/* --- PAGINATION FOOTER --- */}
+
+
+      {
+        isModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40 p-4 backdrop-blur-sm">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col animate-in fade-in zoom-in duration-200 dark:bg-slate-800">
+              <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-700">
+                <h3 className="text-lg font-bold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
+                  {editingId ? <Edit2 size={18} className="dark:text-blue-400" /> : <Plus size={18} className="dark:text-blue-400" />}
+                  {editingId ? "Editar Usuário" : "Novo Usuário"}
+                </h3>
+                <button
+                  onClick={closeModal}
+                  className="text-slate-400 hover:text-slate-600 p-2 rounded-full dark:hover:text-slate-300"
+                >
+                  <X size={20} />
+                </button>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
-                  Senha
-                </label>
-                <div className="relative">
-                  <Key
-                    size={18}
-                    className="absolute left-3 top-2.5 text-slate-400"
-                  />
-                  <input
-                    required
-                    type={showPassword ? "text" : "password"}
-                    className="w-full border border-slate-300 rounded-lg pl-10 pr-10 p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
+              <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
+                    Nome Completo
+                  </label>
+                  <div className="relative">
+                    <UserCog
+                      size={18}
+                      className="absolute left-3 top-2.5 text-slate-400"
+                    />
+                    <input
+                      required
+                      type="text"
+                      className="w-full border border-slate-300 rounded-lg pl-10 p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
+                    Email
+                  </label>
+                  <div className="relative">
+                    <Mail
+                      size={18}
+                      className="absolute left-3 top-2.5 text-slate-400"
+                    />
+                    <input
+                      required
+                      type="email"
+                      className="w-full border border-slate-300 rounded-lg pl-10 p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
+                    Senha
+                  </label>
+                  <div className="relative">
+                    <Key
+                      size={18}
+                      className="absolute left-3 top-2.5 text-slate-400"
+                    />
+                    <input
+                      required
+                      type={showPassword ? "text" : "password"}
+                      className="w-full border border-slate-300 rounded-lg pl-10 pr-10 p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                {isSuperAdmin && (
+                  <div className="flex items-center gap-2 pt-2">
+                    <input
+                      type="checkbox"
+                      id="isAdmin"
+                      checked={isAdmin}
+                      onChange={(e) => setIsAdmin(e.target.checked)}
+                      className="w-4 h-4 text-[#204294] rounded focus:ring-[#204294] dark:bg-slate-700 dark:border-slate-600"
+                    />
+                    <label htmlFor="isAdmin" className="text-sm text-slate-700 dark:text-slate-300">
+                      Este usuário é Administrador?
+                    </label>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="text-xs text-rose-600 bg-rose-50 p-2 rounded border border-rose-100">
+                    {error}
+                  </div>
+                )}
+
+                <div className="pt-4 flex justify-end gap-3">
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    onClick={closeModal}
+                    className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] transition-colors font-bold shadow-sm dark:bg-blue-600 dark:hover:bg-blue-700"
+                  >
+                    Salvar
                   </button>
                 </div>
+              </form>
+            </div>
+          </div>
+        )
+      }
+
+      {
+        deleteConfirmationId && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 text-center dark:bg-slate-800">
+              <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400">
+                <Trash2 size={24} />
               </div>
-
-              {isSuperAdmin && (
-                <div className="flex items-center gap-2 pt-2">
-                  <input
-                    type="checkbox"
-                    id="isAdmin"
-                    checked={isAdmin}
-                    onChange={(e) => setIsAdmin(e.target.checked)}
-                    className="w-4 h-4 text-[#204294] rounded focus:ring-[#204294] dark:bg-slate-700 dark:border-slate-600"
-                  />
-                  <label htmlFor="isAdmin" className="text-sm text-slate-700 dark:text-slate-300">
-                    Este usuário é Administrador?
-                  </label>
-                </div>
-              )}
-
-              {error && (
-                <div className="text-xs text-rose-600 bg-rose-50 p-2 rounded border border-rose-100">
-                  {error}
-                </div>
-              )}
-
-              <div className="pt-4 flex justify-end gap-3">
+              <h3 className="text-lg font-bold text-slate-800 mb-2 dark:text-white">
+                Excluir Usuário?
+              </h3>
+              <p className="text-slate-500 mb-6 text-sm dark:text-slate-400">
+                Tem certeza? Esta ação não pode ser desfeita.
+              </p>
+              <div className="flex justify-center gap-3">
                 <button
-                  type="button"
-                  onClick={closeModal}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
+                  onClick={() => setDeleteConfirmationId(null)}
+                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium dark:text-slate-300 dark:hover:bg-slate-700"
                 >
                   Cancelar
                 </button>
                 <button
-                  type="submit"
-                  className="px-6 py-2 bg-[#204294] text-white rounded-lg hover:bg-[#1a367a] transition-colors font-bold shadow-sm dark:bg-blue-600 dark:hover:bg-blue-700"
+                  onClick={confirmDelete}
+                  className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors shadow-sm font-medium dark:bg-rose-600 dark:hover:bg-rose-700"
                 >
-                  Salvar
+                  Sim, Excluir
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {deleteConfirmationId && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 text-center dark:bg-slate-800">
-            <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400">
-              <Trash2 size={24} />
-            </div>
-            <h3 className="text-lg font-bold text-slate-800 mb-2 dark:text-white">
-              Excluir Usuário?
-            </h3>
-            <p className="text-slate-500 mb-6 text-sm dark:text-slate-400">
-              Tem certeza? Esta ação não pode ser desfeita.
-            </p>
-            <div className="flex justify-center gap-3">
-              <button
-                onClick={() => setDeleteConfirmationId(null)}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium dark:text-slate-300 dark:hover:bg-slate-700"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors shadow-sm font-medium dark:bg-rose-600 dark:hover:bg-rose-700"
-              >
-                Sim, Excluir
-              </button>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 
