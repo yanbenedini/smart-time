@@ -944,7 +944,6 @@ const AbsenceManager: React.FC<AbsenceManagerProps> = ({ currentUser }) => {
                 <div
                   key={abs.id}
                   onClick={() => handleEdit(abs)}
-                  // group transition-all duration-200 hover:bg-[#204294]/5 cursor-pointer dark:hover:bg-slate-700/50
                   className="p-4 hover:bg-[#204294]/5 transition-all duration-200 cursor-pointer group dark:hover:bg-slate-700/50"
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
