@@ -622,7 +622,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                     </label>
                     <input
                       type="date"
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                      className="dark:[color-scheme:dark] w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                       value={filters.startDate}
                       onChange={(e) =>
                         setFilters({ ...filters, startDate: e.target.value })
@@ -635,7 +635,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                     </label>
                     <input
                       type="date"
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                      className="dark:[color-scheme:dark] w-full text-sm border border-slate-200 rounded-lg p-2 outline-none focus:border-[#204294] dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                       value={filters.endDate}
                       onChange={(e) =>
                         setFilters({ ...filters, endDate: e.target.value })
@@ -727,12 +727,12 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
         </div>
 
         {isLoading ? (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={`sk-oncall-${i}`} className="p-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-center gap-3 md:w-1/3">
-                    <div className="w-10 h-10 rounded-full bg-slate-100 animate-pulse" />
+                    <div className="min-w-10 min-h-10 rounded-full bg-slate-100 animate-pulse dark:bg-slate-700" />
                     <div className="flex-1">
                       <IonSkeletonText
                         animated
@@ -765,7 +765,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                     />
                   </div>
                   <div className="md:justify-end">
-                    <div className="w-8 h-8 rounded bg-slate-100 animate-pulse" />
+                    <div className="min-w-8 min-h-8 rounded bg-slate-100 animate-pulse dark:bg-slate-700" />
                   </div>
                 </div>
               </div>
@@ -800,15 +800,15 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                 <div
                   key={shift.id}
                   onClick={() => handleEdit(shift)}
-                  className="p-4 hover:bg-[#204294]/5 transition-colors duration-200 cursor-pointer group hover:shadow-sm dark:hover:bg-[#204294]/20"
+                  className="p-4 hover:bg-[#204294]/5 transition-colors duration-200 cursor-pointer group hover:shadow-sm dark:hover:bg-slate-700/50"
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-3 md:w-1/3">
-                      <div className="w-10 h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold group-hover:bg-[#204294] group-hover:text-white transition-colors dark:bg-slate-700 dark:text-white dark:group-hover:text-white">
+                      <div className="min-w-10 min-h-10 rounded-full bg-[#E5E5E5] flex items-center justify-center text-[#1E1E1E] font-bold transition-colors dark:bg-slate-700 dark:text-white">
                         <User size={18} />
                       </div>
                       <div>
-                        <div className="font-bold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
+                        <div className="font-bold text-[#1E1E1E] flex items-center gap-2 dark:text-white dark:group-hover:text-blue-400">
                           {emp
                             ? `${emp.firstName} ${emp.lastName}`
                             : "Funcionário removido"}
@@ -1033,8 +1033,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                     <select
                       required
                       disabled={!!editingId}
-                      className={`w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900 ${editingId ? "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400" : "dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:ring-blue-500"
-                        }`}
+                      className={`w-full border border-slate-300 dark:border-slate-600 rounded-lg p-2 focus:ring-2 focus:ring-[#204294] outline-none bg-white text-slate-900 bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-white`}
                       value={selectedEmpId}
                       onChange={(e) => setSelectedEmpId(e.target.value)}
                     >
@@ -1054,7 +1053,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                     <input
                       required
                       type="date"
-                      className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
+                      className="dark:[color-scheme:dark] w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
                     />
@@ -1068,7 +1067,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                       <input
                         required
                         type="time"
-                        className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
+                        className="dark:[color-scheme:dark] w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
                         value={startTime}
                         onChange={(e) => setStartTime(e.target.value)}
                       />
@@ -1080,7 +1079,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                       <input
                         required
                         type="time"
-                        className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
+                        className="dark:[color-scheme:dark] w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
                         value={endTime}
                         onChange={(e) => setEndTime(e.target.value)}
                       />
@@ -1094,7 +1093,7 @@ const OnCallManager: React.FC<OnCallManagerProps> = ({ currentUser }) => {
                     <textarea
                       rows={3}
                       placeholder="Ex: Sobreaviso remoto, Plantão presencial..."
-                      className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 resize-none dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
+                      className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 resize-none dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
                       value={observation}
                       onChange={(e) => setObservation(e.target.value)}
                     />

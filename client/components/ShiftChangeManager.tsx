@@ -1245,7 +1245,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                     <input
                       required
                       type="date"
-                      className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
+                      className="dark:[color-scheme:dark] w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
                     />
@@ -1257,7 +1257,7 @@ const ShiftChangeManager: React.FC<ShiftChangeManagerProps> = ({
                     <input
                       required
                       type="date"
-                      className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
+                      className="dark:[color-scheme:dark] w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-[#204294] bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:focus:border-blue-500"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
                     />
