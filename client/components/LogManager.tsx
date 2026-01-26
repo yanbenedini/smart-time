@@ -167,7 +167,6 @@ const LogManager: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[#1E1E1E] flex items-center gap-2 dark:text-white">
-            <ScrollText className="text-[#204294] dark:text-blue-400" />
             Logs do Sistema
           </h1>
           <p className="text-slate-500 dark:text-slate-400">
@@ -322,7 +321,8 @@ const LogManager: React.FC = () => {
 
       {/* Logs Table */}
       <div className="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden dark:bg-slate-800 dark:border-slate-700">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-sm table-fixed">
             <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 dark:bg-slate-700/50 dark:text-white dark:border-slate-700">
               <tr>
@@ -334,7 +334,7 @@ const LogManager: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
               {isLoading ? (
-                Array.from({ length: 10 }).map((_, i) => (
+                Array.from({ length: 5 }).map((_, i) => (
                   <tr key={`sk-log-${i}`}>
                     <td className="p-4 w-48">
                       <div className="flex items-center gap-2">
@@ -426,6 +426,60 @@ const LogManager: React.FC = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile List View */}
+        <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-700">
+          {isLoading ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <div key={`sk-mobile-${i}`} className="p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-slate-100 animate-pulse dark:bg-slate-700" />
+                    <IonSkeletonText animated style={{ width: "100px", height: "12px" }} />
+                  </div>
+                  <IonSkeletonText animated style={{ width: "60px", height: "10px" }} />
+                </div>
+                <IonSkeletonText animated style={{ width: "100%", height: "12px" }} />
+              </div>
+            ))
+          ) : paginatedLogs.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 dark:text-slate-500">
+              Nenhuma atividade encontrada.
+            </div>
+          ) : (
+            paginatedLogs.map((log) => (
+              <div key={log.id} className="p-4 space-y-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 dark:bg-slate-700 dark:text-slate-300">
+                      <User size={14} />
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-slate-700 dark:text-white">
+                        {log.userName || "Sistema"}
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-500">
+                        <Clock size={10} />
+                        {formatDate(log.createdAt)}
+                      </div>
+                    </div>
+                  </div>
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase ${getActionColor(
+                      log.action
+                    )}`}
+                  >
+                    {log.action}
+                  </span>
+                </div>
+                <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300 pl-1">
+                  <Activity size={14} className="mt-0.5 text-slate-400 flex-shrink-0 dark:text-slate-500" />
+                  <span className="leading-snug">{log.description}</span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* --- RODAPÉ DE PAGINAÇÃO --- */}
