@@ -210,7 +210,7 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     {/* Avatar Skeleton */}
-                    <div className="w-10 h-10 rounded-full bg-slate-100 animate-pulse" />
+                    <div className="min-w-10 min-h-10 rounded-full bg-slate-100 animate-pulse dark:bg-slate-700" />
                     <div className="space-y-2">
                       {/* Name Skeleton */}
                       <IonSkeletonText
@@ -225,7 +225,7 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
                     </div>
                   </div>
                   {/* Action Button Skeleton */}
-                  <div className="w-8 h-8 rounded bg-slate-100 animate-pulse" />
+                  <div className="min-w-8 min-h-8 rounded bg-slate-100 animate-pulse dark:bg-slate-700" />
                 </div>
               </div>
             ))
@@ -235,7 +235,7 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
               <div
                 key={user.id}
                 onClick={() => handleEdit(user)}
-                className="p-4 hover:bg-[#204294]/5 transition-colors duration-200 cursor-pointer group hover:shadow-sm dark:hover:bg-[#204294]/20"
+                className="p-4 hover:bg-[#204294]/5 transition-colors duration-200 cursor-pointer group hover:shadow-sm dark:hover:bg-slate-700/50"
               >
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
@@ -263,7 +263,7 @@ const UserManager: React.FC<UserManagerProps> = ({ currentUser }) => {
                         e.stopPropagation();
                         requestDelete(user.id);
                       }}
-                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors dark:text-slate-500 dark:hover:bg-rose-900/20"
+                      className="p-2 text-slate-400 hover:text-rose-600 rounded-lg transition duration-200 dark:text-slate-500 dark:hover:text-rose-600"
                     >
                       <Trash2 size={16} />
                     </button>
